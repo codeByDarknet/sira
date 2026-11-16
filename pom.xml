@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-parent</artifactId>
+    <version>4.1.2</version>
+    <relativePath/>
+  </parent>
+
+  <groupId>bf.sira</groupId>
+  <artifactId>sira</artifactId>
+  <version>0.1.0</version>
+  <packaging>pom</packaging>
+  <name>Sira</name>
+  <description>Socle libre d'interopérabilité entre administrations</description>
+
+  <!-- Un dossier par couche (voir README.md). Journal, consentement et résilience sont des
+       bibliothèques assemblées dans le processus de la passerelle : une seule transaction couvre
+       l'accord, l'échange et la ligne de journal. -->
+  <modules>
+    <!-- Hors couches : bibliothèque partagée et administration du socle. -->
+    <module>commun</module>
+    <module>console</module>
+    <!-- Couches du socle, réutilisables. -->
+    <module>journal</module>
+    <module>resilience</module>
+    <module>consentement-minimisation/consentement</module>
+    <module>consentement-minimisation/connecteur</module>
+    <module>passerelle/kit</module>
+    <module>passerelle/serveur</module>
+    <module>espace-usager/serveur</module>
+    <!-- Simulation : registres et services demandeurs fictifs. -->
+    <module>registres/serveur</module>
+    <module>guichet-agent/serveur</module>
+  </modules>
+
+  <properties>
+    <java.version>21</java.version>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+
+    <!-- Hors du BOM Spring Boot : versions exactes, épinglées ici et nulle part ailleurs. -->
+    <nimbus-jose-jwt.version>10.10</nimbus-jose-jwt.version>
+    <resilience4j.version>2.4.0</resilience4j.version>
+    <bouncycastle.version>1.87</bouncycastle.version>
+    <spotless.version>3.11.0</spotless.version>
+    <!-- Tests de conformité aux spécifications OpenAPI (schémas JSON 2020-12, licence Apache 2.0). -->
+    <json-schema-validator.version>3.0.5</json-schema-validator.version>
+  </properties>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>bf.sira</groupId>
+        <artifactId>sira-commun</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <!-- Outils de test partagés (PKI de test) : à déclarer en scope test. -->
+      <dependency>
+        <groupId>bf.sira</groupId>
+        <artifactId>sira-commun</artifactId>
+        <version>${project.version}</version>
+        <type>test-jar</type>
+      </dependency>
+      <dependency>
+        <groupId>bf.sira</groupId>
+        <artifactId>sira-kit</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>bf.sira</groupId>
+        <artifactId>sira-journal</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>bf.sira</groupId>
+        <artifactId>sira-consentement</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>bf.sira</groupId>
+        <artifactId>sira-resilience</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.nimbusds</groupId>
+        <artifactId>nimbus-jose-jwt</artifactId>
+        <version>${nimbus-jose-jwt.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.github.resilience4j</groupId>
+        <artifactId>resilience4j-spring-boot4</artifactId>
+        <version>${resilience4j.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.bouncycastle</groupId>
+        <artifactId>bcpkix-jdk18on</artifactId>
+        <version>${bouncycastle.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.networknt</groupId>
+        <artifactId>json-schema-validator</artifactId>
+        <version>${json-schema-validator.version}</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-enforcer-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>regles</id>
+            <goals>
+              <goal>enforce</goal>
+            </goals>
+            <configuration>
+              <rules>
+                <requireJavaVersion>
+                  <version>[21,)</version>
+                </requireJavaVersion>
+                <requireMavenVersion>
+                  <version>[3.9,)</version>
+                </requireMavenVersion>
+              </rules>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+      <!-- Mise en forme unique : « ./mvnw spotless:apply » corrige, « verify » contrôle. -->
+      <plugin>
+        <groupId>com.diffplug.spotless</groupId>
+        <artifactId>spotless-maven-plugin</artifactId>
+        <version>${spotless.version}</version>
+        <configuration>
+          <java>
+            <googleJavaFormat>
+              <style>AOSP</style>
+            </googleJavaFormat>
+            <removeUnusedImports/>
+          </java>
+        </configuration>
+        <executions>
+          <execution>
+            <phase>verify</phase>
+            <goals>
+              <goal>check</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+</project>

@@ -1,0 +1,18 @@
+target/
+node_modules/
+dist/
+.angular/
+*.log
+.env
+.idea/
+.vscode/
+*.iml
+/deploiement/secrets/
+*.pem
+*.key
+*.p12
+test-results/
+playwright-report/
+
+# Clés TOTP des comptes enrôlés par les tests de bout en bout
+tests/e2e/.totp/

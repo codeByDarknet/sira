@@ -1,0 +1,15 @@
+# Fins de ligne Unix partout, même sur un poste Windows : les scripts et les fichiers de
+# configuration sont exécutés ou lus dans des conteneurs Linux, où un retour chariot (CRLF)
+# les casse.
+* text=auto eol=lf
+
+# Fichiers binaires : jamais convertis.
+*.png    binary
+*.jpg    binary
+*.jpeg   binary
+*.gif    binary
+*.ico    binary
+*.pdf    binary
+*.woff   binary
+*.woff2  binary
+*.jar    binary
