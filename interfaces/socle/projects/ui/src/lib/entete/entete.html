@@ -1,0 +1,90 @@
+<a class="sira-evitement" href="#contenu" (click)="allerAuContenu($event)">Aller au contenu</a>
+<header
+  class="sira-entete"
+  [class.sira-entete--laterale]="laterale()"
+  [class.sira-entete--barre]="!laterale()"
+  [class.sira-entete--plein]="plein()"
+  [class.sira-entete--replie]="laterale() && menu.replie()"
+>
+  <div class="sira-entete__barre">
+    <a class="sira-entete__marque" routerLink="/">
+      @if (signe(); as icone) {
+        <svg class="sira-entete__signe sira-entete__signe--icone" aria-hidden="true">
+          <use [attr.href]="'assets/sira/icones.svg#' + icone" />
+        </svg>
+      } @else {
+        <img
+          class="sira-entete__signe sira-entete__signe--logo"
+          src="assets/sira/marque/sira-symbole.png"
+          alt=""
+          width="192"
+          height="104"
+        />
+      }
+      <span class="sira-entete__textes">
+        <span class="sira-entete__nom">{{ nom() }}</span>
+        @if (service()) {
+          <span class="sira-entete__service">{{ service() }}</span>
+        }
+      </span>
+    </a>
+
+    @if (liens().length > 0) {
+      <nav class="sira-entete__nav" aria-label="Menu principal">
+        @if (laterale()) {
+          <p class="sira-entete__rubrique" aria-hidden="true">Menu</p>
+        }
+        <ul class="sira-entete__menu">
+          @for (lien of liens(); track lien.chemin) {
+            <li>
+              <a
+                [routerLink]="lien.chemin"
+                routerLinkActive
+                ariaCurrentWhenActive="page"
+                [routerLinkActiveOptions]="{ exact: lien.exact ?? false }"
+                [attr.title]="menu.replie() ? lien.libelle : null"
+              >
+                @if (laterale()) {
+                  <sira-icone [nom]="lien.icone ?? 'chevron-right'" />
+                }
+                <span>{{ lien.libelle }}</span>
+              </a>
+            </li>
+          }
+        </ul>
+      </nav>
+    }
+
+    <div class="sira-entete__outils">
+      <ng-content select="[entete-outils]" />
+      @if (utilisateur() || connecte()) {
+        <div class="sira-entete__compte">
+          <span class="sira-entete__avatar" aria-hidden="true">
+            @if (utilisateur()) {
+              {{ initiales() }}
+            } @else {
+              <sira-icone nom="user" />
+            }
+          </span>
+          <span class="sira-entete__utilisateur">
+            <span class="sira-masque">Connecté : </span>
+            <span class="sira-entete__personne">{{ utilisateur() || 'Mon compte' }}</span>
+            @if (laterale() && service()) {
+              <span class="sira-entete__role" aria-hidden="true">{{ service() }}</span>
+            }
+          </span>
+        </div>
+        <button
+          siraBouton
+          variante="secondaire"
+          type="button"
+          class="sira-entete__deconnexion"
+          (click)="deconnexion.emit()"
+        >
+          <sira-icone nom="log-out" />
+          Se déconnecter
+        </button>
+      }
+    </div>
+  </div>
+</header>

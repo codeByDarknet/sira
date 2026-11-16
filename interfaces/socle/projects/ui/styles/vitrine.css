@@ -1,0 +1,767 @@
+/* ---------- Pages d'accueil publiques (« vitrine ») ----------
+   Composition : barre foncée avec menu en pilule, bandeau d'accueil foncé (titre, actions,
+   chiffres, téléphone), rangée photo + services, section « à propos », chiffres soulignés,
+   cartes. Bleu Sira en action, moutarde du logo en accent. Aucun dégradé, aucune ombre. */
+
+:root {
+  --sv-nuit: #0c2433;
+  --sv-nuit-2: #14364a;
+  --sv-nuit-trait: #24506a;
+  --sv-texte-clair: #c9dbe6;
+  --sv-fond: #f6f8fa;
+  --sv-rayon: 18px;
+}
+
+.sira-application--vitrine {
+  display: block;
+  background: var(--sv-fond);
+}
+.sira-application--vitrine > main.sira-vitrine-page {
+  padding: 0;
+  max-width: none;
+}
+
+.sira-vitrine__largeur {
+  width: 100%;
+  max-width: 76rem;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+/* Barre */
+.sira-barre-vitrine {
+  display: block;
+  background: var(--sv-nuit);
+  color: #fff;
+}
+.sira-barre-vitrine__contenu {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  min-height: 5.5rem;
+}
+.sira-barre-vitrine__marque {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: #fff;
+  text-decoration: none;
+}
+.sira-barre-vitrine__marque img {
+  width: auto;
+  height: 2.6rem;
+}
+.sira-barre-vitrine__service {
+  padding-left: 0.75rem;
+  font-size: 0.85rem;
+  color: var(--sv-texte-clair);
+  border-left: 1px solid var(--sv-nuit-trait);
+}
+.sira-barre-vitrine__liens {
+  display: flex;
+  gap: 0.25rem;
+  margin: 0 auto;
+  padding: 0.35rem;
+  border: 1px solid var(--sv-nuit-trait);
+  border-radius: 999px;
+}
+.sira-barre-vitrine__lien {
+  padding: 0.55rem 1.1rem;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--sv-texte-clair);
+  text-decoration: none;
+  border-radius: 999px;
+}
+.sira-barre-vitrine__lien:hover,
+.sira-barre-vitrine__lien--actif {
+  color: #fff;
+  background: var(--sv-nuit-2);
+}
+.sira-barre-vitrine__action {
+  margin-left: auto;
+}
+
+/* Boutons en pilule de la vitrine */
+.sv-bouton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.8rem 1.4rem;
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #fff;
+  text-decoration: none;
+  cursor: pointer;
+  background: var(--sira-action);
+  border: 0;
+  border-radius: 999px;
+}
+.sv-bouton:hover {
+  background: var(--sira-action-survol);
+}
+.sv-bouton--clair {
+  color: var(--sv-nuit);
+  background: #fff;
+}
+.sv-bouton--clair:hover {
+  background: #e8f1f6;
+}
+.sv-bouton--sombre {
+  background: var(--sv-nuit);
+}
+.sv-bouton--sombre:hover {
+  background: var(--sv-nuit-2);
+}
+.sv-bouton .sira-icone {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+.sv-rond {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  color: var(--sv-nuit);
+  background: #fff;
+  border-radius: 50%;
+}
+.sv-lien-rond {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-weight: 700;
+  color: #fff;
+  text-decoration: none;
+}
+
+/* Étiquette au-dessus d'un titre */
+.sv-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0 0 1.25rem;
+  padding: 0.4rem 1rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--sira-action);
+  border: 1px solid currentColor;
+  border-radius: 999px;
+}
+.sv-badge--clair {
+  color: var(--sv-nuit);
+  background: #e6f5fc;
+  border-color: #cbeaf8;
+}
+
+/* Bandeau d'accueil */
+.sv-heros {
+  color: #fff;
+  background: var(--sv-nuit);
+}
+.sv-heros__grille {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+  gap: 3rem;
+  align-items: center;
+  padding-top: 3.5rem;
+  padding-bottom: 5rem;
+}
+.sv-heros__titre {
+  margin: 0;
+  font-size: clamp(2.3rem, 4.2vw, 3.6rem);
+  font-weight: 800;
+  line-height: 1.12;
+  color: #fff;
+}
+.sv-heros__titre em {
+  font-style: normal;
+  color: var(--sira-action);
+}
+.sv-heros__chapeau {
+  max-width: 34rem;
+  margin: 1.4rem 0 2rem;
+  font-size: 1.08rem;
+  line-height: 1.65;
+  color: var(--sv-texte-clair);
+}
+.sv-heros__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1.25rem;
+}
+.sv-heros__repere {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2rem;
+  margin-top: 2.75rem;
+  padding-top: 1.75rem;
+  border-top: 1px solid var(--sv-nuit-trait);
+}
+.sv-repere {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+}
+.sv-repere__valeur {
+  font-size: 2.2rem;
+  font-weight: 800;
+  line-height: 1;
+  color: #fff;
+}
+.sv-repere__libelle {
+  max-width: 10rem;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  color: var(--sv-texte-clair);
+}
+
+/* Téléphone dessiné, avec une pastille posée dessus */
+.sv-visuel {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  padding: 1rem 0 3rem;
+}
+.sv-telephone {
+  width: min(19rem, 100%);
+  padding: 0.7rem;
+  background: #071820;
+  border: 1px solid var(--sv-nuit-trait);
+  border-radius: 2.6rem;
+}
+.sv-telephone__ecran {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  min-height: 27rem;
+  padding: 1.6rem 1.2rem 1.3rem;
+  color: #1d2b36;
+  background: #fff;
+  border-radius: 2rem;
+}
+.sv-telephone__ilot {
+  width: 5.5rem;
+  height: 1.3rem;
+  margin: -0.8rem auto 0.4rem;
+  background: #071820;
+  border-radius: 999px;
+}
+.sv-telephone__app {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--sira-action);
+}
+.sv-telephone__titre {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 800;
+  line-height: 1.3;
+}
+.sv-telephone__service {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #5b6b78;
+}
+.sv-telephone__liste {
+  display: grid;
+  gap: 0.55rem;
+  margin: 0.3rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+.sv-telephone__liste li {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.65rem 0.75rem;
+  font-size: 0.86rem;
+  font-weight: 600;
+  background: #f2f6f9;
+  border-radius: 12px;
+}
+.sv-telephone__coche {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 1.4rem;
+  height: 1.4rem;
+  font-size: 0.75rem;
+  color: #fff;
+  background: var(--sira-action);
+  border-radius: 50%;
+}
+.sv-telephone__boutons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+  margin-top: auto;
+}
+.sv-telephone__boutons span {
+  padding: 0.65rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-align: center;
+  border-radius: 999px;
+}
+.sv-telephone__oui {
+  color: #fff;
+  background: var(--sira-action);
+}
+.sv-telephone__non {
+  color: #5b6b78;
+  background: #eef2f5;
+}
+.sv-pastille {
+  position: absolute;
+  right: 0;
+  bottom: -2.75rem;
+  min-width: 10rem;
+  padding: 1.1rem 1.3rem;
+  color: var(--sv-nuit);
+  background: var(--sira-or);
+  border-radius: var(--sv-rayon);
+}
+.sv-pastille__valeur {
+  display: block;
+  font-size: 2.1rem;
+  font-weight: 800;
+  line-height: 1;
+}
+.sv-pastille__libelle {
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+.sv-bulle {
+  position: absolute;
+  top: 6rem;
+  left: -1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  max-width: 12rem;
+  padding: 0.7rem 0.9rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  line-height: 1.4;
+  color: #fff;
+  background: var(--sv-nuit-2);
+  border: 1px solid var(--sv-nuit-trait);
+  border-radius: 14px;
+}
+.sv-bulle .sira-icone {
+  flex: none;
+  color: var(--sira-or);
+}
+
+/* Rangée : photo + bande foncée de services */
+.sv-rangee {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2.6fr);
+  gap: 1.25rem;
+  margin-top: -2.5rem;
+}
+.sv-photo-carte {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  min-height: 14rem;
+  padding: 1.4rem;
+  overflow: hidden;
+  color: #fff;
+  text-decoration: none;
+  background: var(--sv-nuit-2) center / cover no-repeat;
+  border-radius: var(--sv-rayon);
+}
+.sv-photo-carte::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgb(12 36 51 / 0.55);
+}
+.sv-photo-carte > * {
+  position: relative;
+}
+.sv-photo-carte__titre {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 800;
+}
+.sv-photo-carte__lien {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.4rem;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--sira-or);
+}
+.sv-services {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background: var(--sv-nuit);
+  border-radius: var(--sv-rayon);
+}
+.sv-service {
+  padding: 1.5rem 1.3rem;
+  color: #fff;
+  background: var(--sv-nuit-2);
+  border-radius: 14px;
+}
+.sv-service__icone,
+.sv-icone-ronde {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  color: var(--sv-nuit);
+  background: var(--sira-action);
+  border-radius: 50%;
+}
+.sv-service__icone .sira-icone,
+.sv-icone-ronde .sira-icone {
+  width: 1.35rem;
+  height: 1.35rem;
+}
+.sv-service__titre {
+  margin: 1.1rem 0 0.45rem;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #fff;
+}
+.sv-service__texte {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.55;
+  color: var(--sv-texte-clair);
+}
+
+/* Sections claires */
+.sv-section {
+  padding: 5.5rem 0 0;
+}
+.sv-section__titre {
+  margin: 0;
+  font-size: clamp(1.8rem, 3vw, 2.5rem);
+  font-weight: 800;
+  line-height: 1.2;
+  color: var(--sv-nuit);
+}
+.sv-section__texte {
+  margin: 1rem 0 0;
+  font-size: 1rem;
+  line-height: 1.65;
+  color: #50606c;
+}
+.sv-entete-section {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  gap: 2rem;
+  align-items: end;
+  margin-bottom: 2.25rem;
+}
+
+.sv-apropos {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 3rem;
+  align-items: start;
+}
+.sv-apropos__photo {
+  width: 100%;
+  height: 22rem;
+  object-fit: cover;
+  border-radius: var(--sv-rayon);
+}
+.sv-valeurs {
+  display: grid;
+  gap: 1.5rem;
+  margin: 2rem 0;
+}
+.sv-valeur {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 1rem;
+  align-items: start;
+}
+.sv-valeur__titre {
+  margin: 0 0 0.3rem;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--sv-nuit);
+}
+.sv-valeur__texte {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.6;
+  color: #50606c;
+}
+.sv-pilule-sombre {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.6rem 0.6rem 0.6rem 1.4rem;
+  color: #fff;
+  background: var(--sv-nuit);
+  border-radius: 999px;
+}
+.sv-pilule-sombre p {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0;
+  font-size: 0.92rem;
+}
+.sv-pilule-sombre .sira-icone {
+  color: var(--sira-or);
+}
+
+/* Chiffres soulignés */
+.sv-chiffres {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 2rem;
+}
+.sv-chiffre {
+  padding-top: 1.4rem;
+  border-top: 1px solid #dfe6ec;
+}
+.sv-chiffre::before {
+  content: '';
+  display: block;
+  width: 3.5rem;
+  height: 4px;
+  margin: calc(-1.4rem - 2.5px) 0 1.4rem;
+  background: var(--sira-action);
+  border-radius: 2px;
+}
+.sv-chiffre__valeur {
+  display: block;
+  font-size: 3rem;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--sv-nuit);
+}
+.sv-chiffre__valeur span {
+  color: var(--sira-or);
+}
+.sv-chiffre__libelle {
+  display: block;
+  margin-top: 0.7rem;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: #50606c;
+}
+
+/* Cartes à bandeau foncé */
+.sv-cartes {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.25rem;
+}
+.sv-carte {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  color: inherit;
+  text-decoration: none;
+  background: #fff;
+  border-radius: var(--sv-rayon);
+}
+.sv-carte__visuel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 11rem;
+  color: var(--sira-action);
+  background: #e6f5fc;
+}
+.sv-carte__visuel .sira-icone {
+  width: 3.5rem;
+  height: 3.5rem;
+}
+.sv-carte__visuel--or {
+  color: #9a6a00;
+  background: #fdf1d6;
+}
+.sv-carte__visuel--nuit {
+  color: #fff;
+  background: var(--sv-nuit-2);
+}
+.sv-carte__bas {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  margin: -1.6rem 1rem 1rem;
+  padding: 1rem 1.1rem;
+  color: #fff;
+  background: var(--sv-nuit);
+  border-radius: 14px;
+}
+.sv-carte__bas .sv-icone-ronde {
+  flex: none;
+  width: 2.5rem;
+  height: 2.5rem;
+}
+.sv-carte__nom {
+  display: block;
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 800;
+}
+.sv-carte__detail {
+  display: block;
+  margin: 0.15rem 0 0;
+  font-size: 0.82rem;
+  color: var(--sv-texte-clair);
+}
+.sv-carte__fleche {
+  margin-left: auto;
+  color: var(--sira-or);
+}
+a.sv-carte:hover .sv-carte__bas {
+  background: var(--sv-nuit-2);
+}
+
+/* Étapes numérotées */
+.sv-etapes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 1.25rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.sv-etape {
+  padding: 1.5rem;
+  background: #fff;
+  border-radius: var(--sv-rayon);
+}
+.sv-etape__numero {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.4rem;
+  height: 2.4rem;
+  font-weight: 800;
+  color: #fff;
+  background: var(--sv-nuit);
+  border-radius: 50%;
+}
+.sv-etape__titre {
+  display: block;
+  margin: 1rem 0 0.35rem;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--sv-nuit);
+}
+.sv-etape__detail {
+  font-size: 0.9rem;
+  line-height: 1.55;
+  color: #50606c;
+}
+
+/* Pied foncé */
+.sv-pied {
+  margin-top: 6rem;
+  padding: 3rem 0;
+  color: var(--sv-texte-clair);
+  background: var(--sv-nuit);
+}
+.sv-pied__contenu {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+}
+.sv-pied img {
+  width: auto;
+  height: 2.2rem;
+}
+.sv-pied p {
+  margin: 0;
+  font-size: 0.9rem;
+}
+.sv-pied nav {
+  display: flex;
+  gap: 1.5rem;
+}
+.sv-pied a {
+  font-size: 0.9rem;
+  color: #fff;
+  text-decoration: none;
+}
+.sv-pied a:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 60rem) {
+  .sira-barre-vitrine__liens {
+    display: none;
+  }
+  .sv-heros__grille,
+  .sv-apropos,
+  .sv-entete-section,
+  .sv-rangee {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .sv-services,
+  .sv-cartes {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .sv-chiffres {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .sv-rangee {
+    margin-top: 1.5rem;
+  }
+  .sv-bulle {
+    display: none;
+  }
+}
+
+/* Photo de l'équipe (fond des cartes photo). */
+.sv-photo-carte--equipe {
+  background-image: url('/assets/sira/photos/equipe.jpg');
+}
+
+/* Autres pages publiques (aide, droits) : contenu centré sous la barre. */
+.sira-vitrine-page > :not(router-outlet):not(.sv-pleine) {
+  display: block;
+  max-width: 76rem;
+  margin: 0 auto;
+  padding: 3rem 1.5rem 0;
+}
+.sv-pleine {
+  display: block;
+}
+
+.sv-photo-carte--reunion {
+  background-image: url('/assets/sira/photos/reunion.jpg');
+}
+.sv-carte__photo {
+  display: block;
+  width: 100%;
+  height: 12rem;
+  object-fit: cover;
+}
+
+/* Pas de défilement horizontal : les éléments posés en débord (bulle, pastille) restent dans la
+   page. */
+.sira-application--vitrine,
+.sira-vitrine-page {
+  overflow-x: clip;
+}

@@ -1,0 +1,165 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  scroll-padding-top: var(--sira-esp-8);
+}
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  font-family: var(--sira-police);
+  font-size: var(--sira-texte-s);
+  font-weight: var(--sira-graisse);
+  line-height: var(--sira-interligne);
+  color: var(--sira-texte);
+  background: var(--sira-fond);
+  overflow-wrap: break-word;
+}
+h1,
+h2,
+h3,
+h4 {
+  margin: 0 0 var(--sira-esp-4);
+  font-weight: var(--sira-graisse-forte);
+  line-height: var(--sira-interligne-titre);
+  color: var(--sira-texte-fort);
+  text-wrap: balance;
+}
+h1 {
+  font-size: var(--sira-titre-l);
+  margin-bottom: var(--sira-esp-6);
+}
+h2 {
+  font-size: var(--sira-titre-m);
+}
+h3 {
+  font-size: var(--sira-titre-s);
+}
+h4 {
+  font-size: var(--sira-texte-s);
+}
+/* Le titre de page reçoit le focus à chaque changement d'écran : pas d'anneau pour lui. */
+h1[tabindex='-1']:focus {
+  outline: none;
+  box-shadow: none;
+}
+p,
+ul,
+ol {
+  margin: 0 0 var(--sira-esp-4);
+  max-width: 66ch;
+}
+ul,
+ol {
+  padding-left: var(--sira-esp-6);
+}
+li + li {
+  margin-top: var(--sira-esp-1);
+}
+a {
+  color: var(--sira-lien);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.18em;
+}
+a:hover {
+  color: var(--sira-action-survol);
+  text-decoration-thickness: 2px;
+}
+strong,
+b {
+  font-weight: var(--sira-graisse-forte);
+}
+hr {
+  margin: var(--sira-esp-8) 0;
+  border: 0;
+  border-top: var(--sira-trait) solid var(--sira-bordure);
+}
+img,
+svg {
+  max-width: 100%;
+}
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+/* Focus bicolore : l'un des deux anneaux contraste toujours avec le fond. */
+:focus-visible {
+  outline: 3px solid var(--sira-focus-interieur);
+  outline-offset: 0;
+  box-shadow: 0 0 0 6px var(--sira-focus-exterieur);
+}
+
+/* Utilitaires */
+.sira-masque {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.sira-chapeau {
+  font-size: var(--sira-texte-m);
+  line-height: 1.55;
+}
+.sira-secondaire {
+  color: var(--sira-texte-secondaire);
+}
+.sira-petit {
+  font-size: var(--sira-texte-xs);
+  line-height: 1.45;
+}
+.sira-chiffres {
+  font-variant-numeric: tabular-nums;
+}
+.sira-pile > * + * {
+  margin-top: var(--sira-esp-6);
+}
+.sira-pile--serree > * + * {
+  margin-top: var(--sira-esp-3);
+}
+.sira-marge-haut {
+  margin-top: var(--sira-esp-8);
+}
+.sira-sans-marge {
+  margin: 0;
+}
+.sira-grille {
+  display: grid;
+  gap: var(--sira-esp-4);
+}
+@media (min-width: 40rem) {
+  .sira-grille--2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (min-width: 60rem) {
+  .sira-grille--3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .sira-grille--4 {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}

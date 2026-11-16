@@ -1,0 +1,29 @@
+/*
+ * Thèmes : un attribut data-theme sur <html> (ou sur un bloc) change la couleur d'action.
+ * Tout Sira utilise le même bleu, #25aae2 (demande du 18/11) : services, console et registres.
+ * Les thèmes ne gardent que la densité des écrans de gestion.
+ */
+[data-theme='socle'],
+[data-theme='concours'],
+[data-theme='bourses'],
+[data-theme='entreprises'] {
+  --sira-theme-primaire: var(--sira-bleu-500);
+  --sira-theme-primaire-survol: var(--sira-bleu-600);
+  --sira-theme-teinte: var(--sira-bleu-50);
+}
+[data-theme='console'],
+[data-theme='etat-civil'],
+[data-theme='nationalite'],
+[data-theme='casier'],
+[data-theme='diplomes'] {
+  --sira-theme-primaire: var(--sira-bleu-500);
+  --sira-theme-primaire-survol: var(--sira-bleu-600);
+  --sira-theme-teinte: var(--sira-bleu-50);
+}
+[data-theme='console'] {
+  --sira-largeur-page: var(--sira-largeur-tableau);
+  /* Densité : un cran de moins pour les écrans de gestion */
+  --sira-esp-6: 1rem;
+  --sira-esp-8: 1.5rem;
+  --sira-cible: 2.5rem;
+}

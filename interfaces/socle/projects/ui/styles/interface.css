@@ -1,0 +1,968 @@
+/*
+ * Interface des applications (refonte du 18/11) : barre du haut et fenêtre « Mon compte »,
+ * tableaux façon PrimeNG (titre, recherche, bouton à droite, tri, colonne Actions à icônes),
+ * champs de taille raisonnable, formulaires dans une fenêtre, indicateurs chiffrés à icône,
+ * étapes sur le Stepper de PrimeNG, fiches de détail qui expliquent chaque information.
+ * Ni dégradé ni ombre.
+ */
+
+/* ---------- Disposition : la barre du haut au-dessus de la page ---------- */
+
+@media (min-width: 64rem) {
+  .sira-application--laterale {
+    grid-template-rows: none;
+    align-content: start;
+  }
+  .sira-application--laterale > sira-entete {
+    grid-row: span 3;
+  }
+  .sira-application--laterale > sira-barre-haute {
+    grid-column: 2;
+  }
+}
+/* Le compte et la déconnexion sont dans la barre du haut, plus dans le menu latéral. */
+.sira-entete--laterale .sira-entete__outils {
+  display: none !important;
+}
+
+/* ---------- Barre du haut ---------- */
+
+.sira-barre-haute {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sira-esp-4);
+  min-height: 4rem;
+  padding: var(--sira-esp-2) var(--sira-esp-3) var(--sira-esp-2) var(--sira-esp-6);
+  background: var(--sira-fond);
+  border-radius: var(--sira-rayon-cadre);
+}
+.sira-barre-haute__gauche {
+  min-width: 0;
+  color: var(--sira-texte-secondaire);
+}
+.sira-barre-haute__compte {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sira-esp-3);
+  margin-left: auto;
+  padding: 0.35rem 0.6rem 0.35rem 1rem;
+  font: inherit;
+  color: var(--sira-texte);
+  cursor: pointer;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  transition:
+    background-color 0.15s,
+    border-color 0.15s;
+}
+.sira-barre-haute__compte:hover,
+.sira-barre-haute__compte[aria-expanded='true'] {
+  background: var(--sira-fond-champ);
+  border-color: var(--sira-bordure);
+}
+.sira-barre-haute__textes {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  line-height: 1.2;
+}
+.sira-barre-haute__nom {
+  font-weight: 700;
+  color: var(--sira-texte-fort);
+}
+.sira-barre-haute__service {
+  font-size: var(--sira-texte-xs);
+  color: var(--sira-texte-secondaire);
+}
+.sira-barre-haute__avatar,
+.sira-fenetre-compte__avatar {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 2.5rem;
+  height: 2.5rem;
+  font-size: 0.875rem;
+  font-weight: 800;
+  color: var(--sira-blanc);
+  background: var(--sira-action);
+  border-radius: 50%;
+}
+.sira-barre-haute__fleche {
+  width: 1rem;
+  height: 1rem;
+  color: var(--sira-texte-secondaire);
+}
+@media (max-width: 39.99rem) {
+  .sira-barre-haute__textes {
+    display: none;
+  }
+}
+
+/* ---------- Fenêtre « Mon compte » ---------- */
+
+.sira-fenetre-compte .p-tablist-tab-list {
+  background: transparent;
+}
+.sira-fenetre-compte .p-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sira-esp-2);
+  font-weight: 700;
+}
+.sira-fenetre-compte .p-tab .sira-icone {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+.sira-fenetre-compte .p-tabpanels {
+  padding: var(--sira-esp-6) 0 0;
+}
+.sira-fenetre-compte__identite {
+  display: flex;
+  align-items: center;
+  gap: var(--sira-esp-4);
+  margin-bottom: var(--sira-esp-4);
+}
+.sira-fenetre-compte__avatar {
+  width: 3.5rem;
+  height: 3.5rem;
+  font-size: 1.1rem;
+}
+.sira-fenetre-compte__nom {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--sira-texte-fort);
+}
+.sira-fenetre-compte__service,
+.sira-fenetre-compte__aide {
+  margin: 0;
+  font-size: var(--sira-texte-xs);
+  line-height: 1.5;
+  color: var(--sira-texte-secondaire);
+}
+.sira-fenetre-compte__rubrique {
+  margin: var(--sira-esp-4) 0 var(--sira-esp-2);
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--sira-gris-400);
+}
+.sira-fenetre-compte__roles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sira-esp-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.sira-fenetre-compte__roles li {
+  padding: 0.25rem 0.75rem;
+  font-size: var(--sira-texte-xs);
+  font-weight: 700;
+  color: var(--sira-bleu-700);
+  background: var(--sira-bleu-50);
+  border-radius: 999px;
+}
+.sira-fenetre-compte__ligne {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--sira-esp-3);
+  padding: var(--sira-esp-3) 0;
+  border-top: 1px solid var(--sira-bordure);
+}
+.sira-fenetre-compte__titre {
+  margin: 0;
+  font-weight: 700;
+  color: var(--sira-texte-fort);
+}
+.sira-fenetre-compte__icone {
+  display: inline-grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  color: var(--sira-action);
+  background: var(--sira-bleu-50);
+  border-radius: 10px;
+}
+.sira-fenetre-compte__icone .sira-icone {
+  width: 1.2rem;
+  height: 1.2rem;
+}
+.sira-fenetre-compte__icone--grande {
+  width: 3.5rem;
+  height: 3.5rem;
+  color: var(--sira-erreur);
+  background: var(--sira-erreur-fond);
+}
+.sira-fenetre-compte__depart {
+  display: grid;
+  justify-items: center;
+  gap: var(--sira-esp-2);
+  padding: var(--sira-esp-2) 0;
+  text-align: center;
+}
+.sira-fenetre-compte__boutons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--sira-esp-2);
+  margin-top: var(--sira-esp-4);
+}
+
+/* ---------- Tableaux : en-tête, outils, tri, colonne Actions ---------- */
+
+sira-tableau .p-datatable-header {
+  padding: var(--sira-esp-4) var(--sira-esp-6);
+  background: var(--sira-fond);
+  border: 0;
+  border-bottom: 1px solid var(--sira-bordure);
+}
+.sira-tableau__entete {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sira-esp-3) var(--sira-esp-4);
+}
+.sira-tableau__titres {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sira-esp-3);
+}
+.sira-tableau__titre {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--sira-texte-fort);
+}
+.sira-tableau__titres .sira-tableau__compte {
+  margin: 0;
+  padding: 0.1rem 0.6rem;
+  font-size: var(--sira-texte-xs);
+  font-weight: 700;
+  color: var(--sira-texte-secondaire);
+  background: var(--sira-fond-champ);
+  border-radius: 999px;
+}
+sira-tableau .sira-tableau__outils {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--sira-esp-2);
+  margin-left: auto;
+  padding: 0;
+  border: 0;
+}
+sira-tableau .sira-tableau__recherche {
+  display: block;
+  flex: 0 1 17rem;
+  min-width: 12rem;
+  min-height: 0;
+  padding: 0;
+  background: none;
+  border: 0;
+}
+sira-tableau .sira-tableau__recherche input.p-inputtext {
+  width: 100%;
+  min-height: 2.6rem;
+  padding-block: 0.5rem;
+  font-size: 0.95rem;
+}
+sira-tableau .sira-tableau__recherche input:focus-visible,
+sira-tableau .p-select:focus-visible {
+  outline: none;
+}
+sira-tableau .sira-tableau__recherche .p-inputicon {
+  display: inline-flex;
+  margin-top: -0.55rem;
+  color: var(--sira-texte-indice);
+}
+sira-tableau .sira-tableau__recherche .p-inputicon .sira-icone {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+sira-tableau .sira-tableau__filtre {
+  flex: 0 0 11rem;
+  min-width: 0;
+}
+sira-tableau .sira-tableau__filtre .p-select {
+  width: 100%;
+  min-height: 2.6rem;
+}
+sira-tableau .sira-tableau__filtre .p-select-label {
+  padding-block: 0.5rem;
+  font-size: 0.95rem;
+}
+sira-tableau .sira-tableau__outils .sira-bouton.p-button {
+  min-height: 2.6rem;
+  padding-block: 0.45rem;
+}
+.sira-tableau thead th {
+  padding: var(--sira-esp-3) var(--sira-esp-4);
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--sira-texte-secondaire);
+  background: var(--sira-fond-alt);
+  border-bottom: 1px solid var(--sira-bordure);
+}
+.sira-tableau thead th:first-child,
+.sira-tableau td:first-child {
+  padding-left: var(--sira-esp-6);
+}
+.sira-tableau__tri {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sira-esp-2);
+  white-space: nowrap;
+}
+.sira-tableau .p-sortable-column-icon {
+  width: 0.8rem;
+  height: 0.8rem;
+  color: var(--sira-gris-400);
+}
+.sira-tableau th[aria-sort='ascending'] .p-sortable-column-icon,
+.sira-tableau th[aria-sort='descending'] .p-sortable-column-icon {
+  color: var(--sira-action);
+}
+.sira-tableau td {
+  padding: var(--sira-esp-3) var(--sira-esp-4);
+  vertical-align: middle;
+}
+.sira-tableau th.sira-tableau__actions,
+.sira-tableau td.sira-tableau__actions {
+  width: 1%;
+  padding-right: var(--sira-esp-6);
+  text-align: right;
+  white-space: nowrap;
+}
+.sira-tableau__boutons {
+  display: inline-flex;
+  justify-content: flex-end;
+  gap: var(--sira-esp-1);
+}
+/* Texte principal d'une ligne (nom) : gras, sans lien */
+.sira-tableau__principal {
+  font-weight: 700;
+  color: var(--sira-texte-fort);
+}
+.sira-tableau__secondaire {
+  display: block;
+  font-size: 0.82rem;
+  color: var(--sira-texte-secondaire);
+}
+
+/* ---------- Bouton d'action à icône seule ---------- */
+
+.sira-action {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  color: var(--sira-texte-secondaire);
+  text-decoration: none;
+  cursor: pointer;
+  background: var(--sira-fond);
+  border: 1px solid var(--sira-bordure);
+  border-radius: 50%;
+  transition:
+    color 0.15s,
+    background-color 0.15s,
+    border-color 0.15s;
+}
+.sira-action .sira-icone {
+  width: 1.05rem;
+  height: 1.05rem;
+}
+.sira-action:hover {
+  color: var(--sira-action);
+  background: var(--sira-bleu-50);
+  border-color: var(--sira-bleu-100);
+}
+.sira-action--danger:hover {
+  color: var(--sira-erreur);
+  background: var(--sira-erreur-fond);
+  border-color: #f6c9c6;
+}
+.sira-action--succes:hover {
+  color: var(--sira-succes);
+  background: var(--sira-succes-fond);
+  border-color: #bfe5cf;
+}
+.sira-action:focus-visible {
+  outline: 3px solid var(--sira-bleu-200);
+  outline-offset: 1px;
+}
+
+/* ---------- Champs : taille raisonnable, alignés ---------- */
+
+.sira-saisie.p-inputtext,
+.sira-champ__flottant .sira-saisie.p-inputtext {
+  min-height: 3.1rem;
+  font-size: 0.97rem;
+}
+.sira-champ__flottant textarea.sira-saisie.p-inputtext {
+  min-height: 6.5rem;
+}
+.sira-champ__aide {
+  margin-top: 0.3rem;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: var(--sira-texte-secondaire);
+}
+.sira-groupe {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.sira-groupe__legende {
+  margin-bottom: var(--sira-esp-2);
+  padding: 0;
+  font-size: 0.9rem;
+}
+.sira-choix {
+  padding: 0.7rem 1rem;
+  background: var(--sira-fond-champ);
+  border: 2px solid transparent;
+}
+.sira-choix:has(input:checked) {
+  background: var(--sira-bleu-50);
+  border-color: var(--sira-action);
+}
+
+/* ---------- Formulaire dans une fenêtre (PrimeNG Dialog) ---------- */
+
+.sira-fenetre-formulaire .p-dialog-header {
+  padding: var(--sira-esp-6) var(--sira-esp-6) var(--sira-esp-2);
+}
+.sira-fenetre-formulaire .p-dialog-title {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: var(--sira-titre-page);
+}
+.sira-fenetre-formulaire .p-dialog-content {
+  padding: var(--sira-esp-2) var(--sira-esp-6) var(--sira-esp-6);
+}
+.sira-fenetre-formulaire__intro {
+  margin: 0 0 var(--sira-esp-4);
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--sira-texte-secondaire);
+}
+.sira-grille-formulaire {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--sira-esp-4);
+}
+@media (min-width: 40rem) {
+  .sira-grille-formulaire {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .sira-grille-formulaire > .sira-pleine-largeur {
+    grid-column: 1 / -1;
+  }
+}
+.sira-grille-formulaire sira-champ,
+.sira-grille-formulaire .sira-champ {
+  margin: 0;
+}
+.sira-grille-formulaire .sira-saisie--courte.p-inputtext {
+  max-width: none;
+}
+.sira-fenetre-formulaire__pied {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--sira-esp-2);
+  margin-top: var(--sira-esp-6);
+  padding-top: var(--sira-esp-4);
+  border-top: 1px solid var(--sira-bordure);
+}
+
+/* Liste de valeurs saisies une à une (adresses) */
+.sira-liste-saisie {
+  display: grid;
+  gap: var(--sira-esp-2);
+}
+.sira-liste-saisie__titre {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--sira-texte-fort);
+}
+.sira-liste-saisie__ligne {
+  display: flex;
+  align-items: center;
+  gap: var(--sira-esp-2);
+}
+.sira-liste-saisie__ligne .p-inputtext {
+  flex: 1;
+  min-height: 2.75rem;
+}
+.sira-liste-saisie__vide {
+  margin: 0;
+  padding: var(--sira-esp-3) var(--sira-esp-4);
+  font-size: 0.88rem;
+  color: var(--sira-texte-secondaire);
+  background: var(--sira-fond-champ);
+  border-radius: var(--sira-rayon);
+}
+
+/* ---------- Indicateurs chiffrés (tableaux de bord) ---------- */
+
+.sira-indicateurs {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  gap: var(--sira-esp-4);
+}
+.sira-indicateurs--2 {
+  grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr));
+}
+.sira-indicateur {
+  display: block;
+}
+.sira-indicateur__cadre {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sira-esp-4);
+  height: 100%;
+  padding: var(--sira-esp-6);
+  color: var(--sira-texte);
+  text-decoration: none;
+  background: var(--sira-fond);
+  border: 1px solid var(--sira-bordure);
+  border-radius: var(--sira-rayon-carte);
+  transition: border-color 0.15s;
+}
+a.sira-indicateur__cadre:hover {
+  color: var(--sira-texte);
+  text-decoration: none;
+  border-color: var(--sira-bleu-200);
+}
+.sira-indicateur__icone {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 12px;
+}
+.sira-indicateur__icone .sira-icone {
+  width: 1.4rem;
+  height: 1.4rem;
+}
+.sira-indicateur__textes {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+.sira-indicateur__libelle {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--sira-texte-secondaire);
+}
+.sira-indicateur__valeur {
+  font-size: 2.1rem;
+  font-weight: 800;
+  line-height: 1.1;
+  color: var(--sira-texte-fort);
+}
+.sira-indicateur__note {
+  font-size: 0.82rem;
+  line-height: 1.4;
+  color: var(--sira-texte-secondaire);
+}
+.sira-indicateur__fleche {
+  position: absolute;
+  top: var(--sira-esp-4);
+  right: var(--sira-esp-4);
+  width: 1.1rem;
+  height: 1.1rem;
+  color: var(--sira-gris-400);
+}
+.sira-indicateur--bleu .sira-indicateur__icone {
+  color: #1a96cc;
+  background: #e3f4fc;
+}
+.sira-indicateur--vert .sira-indicateur__icone {
+  color: #15803d;
+  background: #e3f6ea;
+}
+.sira-indicateur--orange .sira-indicateur__icone {
+  color: #c2410c;
+  background: #fff0e3;
+}
+.sira-indicateur--rouge .sira-indicateur__icone {
+  color: #c4302b;
+  background: #fdeceb;
+}
+.sira-indicateur--violet .sira-indicateur__icone {
+  color: #6d28d9;
+  background: #f0eafd;
+}
+.sira-indicateur--gris .sira-indicateur__icone {
+  color: var(--sira-gris-700);
+  background: var(--sira-gris-50);
+}
+
+/* ---------- Étapes d'un parcours (PrimeNG Stepper horizontal) ---------- */
+
+.sira-etapes {
+  margin-bottom: var(--sira-esp-8);
+  padding: var(--sira-esp-4) var(--sira-esp-6);
+  background: var(--sira-fond);
+  border: 1px solid var(--sira-bordure);
+  border-radius: var(--sira-rayon-carte);
+}
+.sira-etapes__stepper .p-steplist {
+  padding: 0;
+}
+.sira-etapes__stepper .p-step-header {
+  gap: var(--sira-esp-3);
+  cursor: default;
+  opacity: 1;
+}
+.sira-etapes__stepper .p-step-number {
+  width: 2.25rem;
+  height: 2.25rem;
+  font-weight: 800;
+  color: var(--sira-texte-secondaire);
+  background: var(--sira-fond);
+  border: 2px solid var(--sira-bordure-champ);
+  box-shadow: none;
+}
+.sira-etapes__stepper .p-step-title {
+  font-weight: 700;
+  color: var(--sira-texte-secondaire);
+}
+.sira-etapes__stepper .p-step-active .p-step-number {
+  color: var(--sira-blanc);
+  background: var(--sira-action);
+  border-color: var(--sira-action);
+}
+.sira-etapes__stepper .p-step-active .p-step-title {
+  color: var(--sira-texte-fort);
+}
+.sira-etapes__stepper .sira-etapes__etape--faite .p-step-number {
+  font-size: 0;
+  color: transparent;
+  background: var(--sira-succes)
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E")
+    center / 1rem no-repeat;
+  border-color: var(--sira-succes);
+}
+.sira-etapes__stepper .sira-etapes__etape--faite .p-step-title {
+  color: var(--sira-texte-fort);
+}
+.sira-etapes__stepper .sira-etapes__etape--faite .p-stepper-separator {
+  background: var(--sira-succes);
+}
+.sira-etapes .sira-etapes__position {
+  margin: var(--sira-esp-3) 0 0;
+  padding-top: var(--sira-esp-3);
+  font-size: 0.9rem;
+  border-top: 1px solid var(--sira-bordure);
+}
+@media (max-width: 47.99rem) {
+  .sira-etapes__stepper .p-step-title {
+    display: none;
+  }
+}
+
+/* ---------- Sections du tableau de bord ---------- */
+
+.co-section__entete {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sira-esp-2) var(--sira-esp-4);
+}
+.co-registre {
+  display: grid;
+  align-content: start;
+  gap: var(--sira-esp-3);
+  padding: var(--sira-esp-6);
+  background: var(--sira-fond);
+  border: 1px solid var(--sira-bordure);
+  border-radius: var(--sira-rayon-carte);
+}
+.co-registre__entete {
+  display: flex;
+  align-items: center;
+  gap: var(--sira-esp-3);
+}
+.co-registre__icone {
+  width: 2.5rem;
+  height: 2.5rem;
+  color: #1a96cc;
+  background: #e3f4fc;
+}
+.co-registre__nom {
+  flex: 1;
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+/* ---------- Fiche de détail : chaque information avec ce qu'elle veut dire ---------- */
+
+.sira-fiche {
+  display: grid;
+  gap: var(--sira-esp-6);
+}
+.sira-fiche__grille {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
+  gap: var(--sira-esp-4);
+}
+.sira-fiche__case {
+  display: grid;
+  align-content: start;
+  gap: 0.35rem;
+  padding: var(--sira-esp-4) var(--sira-esp-6);
+  background: var(--sira-fond);
+  border: 1px solid var(--sira-bordure);
+  border-radius: var(--sira-rayon-carte);
+}
+.sira-fiche__case--large {
+  grid-column: 1 / -1;
+}
+.sira-fiche__cle {
+  display: flex;
+  align-items: center;
+  gap: var(--sira-esp-2);
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--sira-texte-secondaire);
+}
+.sira-fiche__cle .sira-icone {
+  width: 1rem;
+  height: 1rem;
+  color: var(--sira-action);
+}
+.sira-fiche__valeur {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--sira-texte-fort);
+  overflow-wrap: anywhere;
+}
+.sira-fiche__explication {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--sira-texte-secondaire);
+}
+.sira-fiche__liste {
+  display: grid;
+  gap: 0.3rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.sira-fiche__liste li {
+  padding: 0.35rem 0.7rem;
+  font-family: var(--sira-police-mono);
+  font-size: 0.85rem;
+  background: var(--sira-fond-champ);
+  border-radius: 8px;
+}
+
+/* ---------- Console : rôles d'un membre ---------- */
+
+.co-choix-roles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  gap: var(--sira-esp-3);
+}
+.co-choix-roles .sira-choix {
+  align-items: flex-start;
+  height: 100%;
+  margin: 0;
+}
+.co-choix-roles .sira-choix input {
+  margin-top: 0.2rem;
+}
+.co-choix-roles__aide {
+  display: block;
+  margin-top: 0.2rem;
+  font-size: 0.82rem;
+  font-weight: 400;
+  line-height: 1.45;
+  color: var(--sira-texte-secondaire);
+}
+.co-roles {
+  display: grid;
+  gap: var(--sira-esp-2);
+  margin: 0.2rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+.co-roles li {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sira-esp-2);
+  padding: var(--sira-esp-3) var(--sira-esp-4);
+  font-size: 0.92rem;
+  line-height: 1.5;
+  color: var(--sira-texte-secondaire);
+  background: var(--sira-fond-champ);
+  border-radius: var(--sira-rayon);
+}
+.co-roles li .sira-icone {
+  flex: none;
+  width: 1.15rem;
+  height: 1.15rem;
+  margin-top: 0.15rem;
+  color: var(--sira-gris-400);
+}
+.co-roles li.co-roles--actif {
+  color: var(--sira-texte);
+  background: var(--sira-bleu-50);
+}
+.co-roles li.co-roles--actif .sira-icone {
+  color: var(--sira-succes);
+}
+.co-decision {
+  margin-top: var(--sira-esp-3);
+  padding-top: var(--sira-esp-4);
+  border-top: 1px solid var(--sira-bordure);
+}
+.co-decision h2 {
+  margin: 0 0 var(--sira-esp-3);
+  font-size: 1rem;
+}
+.sira-titre-page .sira-fiche__actions {
+  align-self: center;
+}
+
+/* ---------- Fenêtres PrimeNG : même titre partout ---------- */
+
+.p-dialog .p-dialog-title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--sira-titre-page);
+}
+
+/* En-tête de tableau : outils sur une ligne tant que la place le permet */
+@media (min-width: 64rem) {
+  .sira-tableau__entete {
+    flex-wrap: nowrap;
+  }
+  .sira-tableau__titres {
+    flex: none;
+  }
+  sira-tableau .sira-tableau__outils {
+    flex-wrap: nowrap;
+  }
+  sira-tableau .sira-tableau__recherche {
+    flex: 0 1 15rem;
+    min-width: 9rem;
+  }
+  sira-tableau .sira-tableau__filtre {
+    flex: 0 1 10rem;
+  }
+}
+sira-tableau .sira-tableau__outils .sira-bouton.p-button {
+  white-space: nowrap;
+}
+
+.co-select.p-select {
+  width: 100%;
+  min-height: 3.1rem;
+}
+.co-select .p-select-label {
+  padding-top: 1.45rem;
+  padding-bottom: 0.45rem;
+}
+.co-groupe-choix {
+  margin: var(--sira-esp-3) 0 var(--sira-esp-2);
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--sira-texte-secondaire);
+}
+
+/* Largeurs des fenêtres (classes plutôt que style en ligne : politique de contenu) */
+.p-dialog.sira-fenetre-compte {
+  width: min(34rem, calc(100vw - 2rem));
+}
+.p-dialog.sira-fenetre-formulaire {
+  width: min(44rem, calc(100vw - 2rem));
+}
+.p-dialog.sira-fenetre-formulaire--large {
+  width: min(60rem, calc(100vw - 2rem));
+}
+
+/* Disposition : la page prend la place libre, la barre du haut garde sa hauteur */
+@media (min-width: 64rem) {
+  .sira-application--laterale {
+    grid-template-rows: auto 1fr auto;
+  }
+  .sira-application--laterale:has(> demo-bandeau, > sira-bandeau) {
+    grid-template-rows: auto auto 1fr auto;
+  }
+}
+.sira-application--laterale > sira-barre-haute {
+  align-self: start;
+}
+
+/* Filtres PrimeNG posés dans l'en-tête d'un tableau */
+sira-tableau p-select.sira-tableau__filtre {
+  flex: 0 0 12.5rem;
+  min-height: 2.6rem;
+}
+sira-tableau p-select.sira-tableau__filtre .p-select-label {
+  padding-block: 0.5rem;
+  font-size: 0.95rem;
+}
+/* Les champs PrimeNG montrent déjà le focus par leur bordure bleue : pas d'anneau en plus. */
+.p-select :focus-visible,
+.p-select-label:focus-visible,
+.p-inputtext:focus-visible,
+.p-checkbox-input:focus-visible,
+.p-radiobutton-input:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
+/* Journal : bloc « Intégrité » en carte */
+.co-integrite {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sira-esp-3) var(--sira-esp-6);
+  margin-bottom: var(--sira-esp-6);
+  padding: var(--sira-esp-4) var(--sira-esp-6);
+  background: var(--sira-fond);
+  border: 1px solid var(--sira-bordure);
+  border-radius: var(--sira-rayon-carte);
+}
+.co-integrite > div[aria-live] {
+  flex-basis: 100%;
+  margin: 0;
+}
+.co-integrite > div[aria-live]:empty {
+  display: none;
+}
+.co-integrite h2 {
+  margin: 0 0 0.2rem;
+  font-size: 1.05rem;
+}
+.co-integrite p {
+  margin: 0;
+}

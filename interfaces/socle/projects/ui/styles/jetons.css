@@ -1,0 +1,125 @@
+/*
+ * Jetons de Sira, en trois niveaux.
+ * Les composants ne lisent que les jetons sémantiques (niveau 3).
+ * Un thème ne redéfinit que les jetons --sira-theme-* (niveau 2).
+ * Les mêmes bleus alimentent le préréglage PrimeNG (coquille/src/lib/apparence/theme.ts) :
+ * les composants PrimeNG et les écrans Sira parlent la même couleur.
+ */
+:root {
+  /*
+   * 1. Primitives : ne pas les utiliser dans les composants.
+   * Le bleu #25aae2 (même bleu que globalstage.bf) pour agir et pour les grands titres, le
+   * jaune moutarde du logo (#f5aa05) en accent (puces, soulignements, repères ; jamais du texte
+   * sur fond blanc), un bleu très sombre pour les autres titres,
+   * des gris légèrement bleutés pour le fond. Le rouge sert aux erreurs seulement.
+   */
+  --sira-blanc: #ffffff;
+  --sira-gris-25: #f8f9fc;
+  --sira-gris-50: #f2f4f8;
+  --sira-gris-100: #e9edf4;
+  --sira-gris-200: #dbe1ea;
+  --sira-gris-400: #8b95a7;
+  --sira-gris-500: #666b75;
+  --sira-gris-700: #475163;
+  --sira-gris-900: #111827;
+  --sira-bleu-50: #eaf7fd;
+  --sira-bleu-100: #cbeaf8;
+  --sira-bleu-200: #97d5f1;
+  --sira-bleu-500: #25aae2;
+  --sira-bleu-600: #1a96cc;
+  --sira-bleu-700: #147aa7;
+  --sira-bleu-800: #126182;
+  --sira-bleu-900: #0f4c66;
+  --sira-bleu-nuit: #062f3b;
+  --sira-or: #f5aa05;
+  --sira-or-clair: #ffc94d;
+
+  /* 2. Thème : seuls jetons qu'un thème a le droit de changer */
+  --sira-theme-primaire: var(--sira-bleu-500);
+  --sira-theme-primaire-survol: var(--sira-bleu-600);
+  --sira-theme-teinte: var(--sira-bleu-50);
+  --sira-theme-sur-primaire: var(--sira-blanc);
+  --sira-theme-profond: var(--sira-bleu-nuit);
+
+  /* 3. Sémantiques : ce que lisent les composants */
+  --sira-fond: var(--sira-blanc);
+  --sira-fond-page: var(--sira-gris-50);
+  --sira-fond-alt: var(--sira-gris-25);
+  --sira-texte: var(--sira-gris-900);
+  --sira-texte-fort: var(--sira-bleu-nuit);
+  --sira-texte-secondaire: var(--sira-gris-500);
+  --sira-bordure: var(--sira-gris-100);
+  --sira-bordure-champ: var(--sira-gris-200);
+  /* Champs façon globalstage : fond gris très clair, pas de trait visible, blanc au focus. */
+  --sira-fond-champ: #f7f7f7;
+  --sira-fond-champ-survol: #f0f1f3;
+  --sira-texte-champ: #333333;
+  --sira-texte-indice: #999999;
+  --sira-titre-page: var(--sira-bleu-500);
+  --sira-bordure-desactive: var(--sira-gris-200);
+  --sira-lien: var(--sira-bleu-600);
+  --sira-action: var(--sira-theme-primaire);
+  --sira-action-survol: var(--sira-theme-primaire-survol);
+  --sira-sur-action: var(--sira-theme-sur-primaire);
+  --sira-selection: var(--sira-theme-teinte);
+  --sira-accent: var(--sira-or);
+
+  --sira-succes: #157347;
+  --sira-succes-fond: #e7f6ee;
+  --sira-erreur: #c4302b;
+  --sira-erreur-survol: #a02520;
+  --sira-erreur-fond: #fdeeed;
+  --sira-alerte: #8a5300;
+  --sira-alerte-fond: #fff5e1;
+  --sira-info: var(--sira-bleu-700);
+  --sira-info-fond: var(--sira-bleu-50);
+
+  --sira-focus-interieur: var(--sira-bleu-200);
+  --sira-focus-exterieur: var(--sira-bleu-500);
+
+  /* Typographie */
+  --sira-police: 'Nunito', 'Public Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --sira-police-mono: ui-monospace, 'Cascadia Mono', 'DejaVu Sans Mono', monospace;
+  --sira-texte-xs: 0.8125rem;
+  --sira-texte-s: 0.9375rem;
+  --sira-texte-m: 1.1rem;
+  --sira-titre-s: 1.125rem;
+  --sira-titre-m: 1.375rem;
+  --sira-titre-l: 1.8rem;
+  --sira-interligne: 1.55;
+  --sira-interligne-titre: 1.2;
+  --sira-graisse: 400;
+  --sira-graisse-forte: 700;
+
+  /* Espacement (base 4 px) */
+  --sira-esp-1: 0.25rem;
+  --sira-esp-2: 0.5rem;
+  --sira-esp-3: 0.75rem;
+  --sira-esp-4: 1rem;
+  --sira-esp-6: 1.5rem;
+  --sira-esp-8: 2rem;
+  --sira-esp-12: 3rem;
+  --sira-esp-16: 4rem;
+
+  /* Formes : coins légèrement arrondis, partout */
+  --sira-rayon: 12px;
+  --sira-rayon-carte: 12px;
+  --sira-rayon-cadre: 14px;
+  --sira-rayon-pilule: 999px;
+  --sira-trait: 1px;
+  --sira-trait-champ: 1px;
+  --sira-trait-alerte: 4px;
+  /* Aucune ombre : les surfaces se séparent par un trait fin. */
+  --sira-ombre: none;
+  --sira-ombre-forte: none;
+  --sira-cible: 2.75rem; /* 44 px */
+  --sira-largeur-parcours: 48rem; /* 768 px */
+  --sira-largeur-tableau: 76rem; /* 1216 px */
+  --sira-largeur-page: var(--sira-largeur-parcours);
+}
+
+@media (min-width: 40rem) {
+  :root {
+    --sira-titre-l: 2.2rem;
+  }
+}
