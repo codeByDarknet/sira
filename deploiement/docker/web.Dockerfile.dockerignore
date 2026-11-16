@@ -1,0 +1,10 @@
+# Seuls les deux espaces de travail Angular et la configuration nginx entrent dans le contexte.
+*
+!interfaces/socle
+!interfaces/demo
+!deploiement/nginx
+**/node_modules
+**/dist
+**/.angular
+**/out-tsc
+interfaces/demo/bibliotheques

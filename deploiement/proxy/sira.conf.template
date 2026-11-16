@@ -1,0 +1,134 @@
+# Proxy d'entrée de Sira : le seul port publié. Il route par nom d'hôte et ne connaît
+# aucun secret. Les écrans de la démonstration s'ajoutent par demo.conf.template.
+
+map $http_upgrade $connexion_amont {
+  default upgrade;
+  ""      close;
+}
+
+# Nom d'hôte public → amont. Un nom absent de cette table répond 404.
+map $host $amont {
+  default                      "";
+  citoyen.sira.localhost       web-citoyen:8080;
+  console.sira.localhost       web-console:8080;
+}
+
+# SIRA_HTTPS=true : un frontal TLS est placé devant ce proxy. Le navigateur apprend alors à ne
+# plus venir qu'en HTTPS (HSTS), et les amonts savent que l'adresse publique est en https.
+map "${SIRA_HTTPS}" $hsts {
+  true    "max-age=31536000";
+  default "";
+}
+map "${SIRA_HTTPS}" $protocole_public {
+  true    https;
+  default $scheme;
+}
+
+# Frein aux essais en rafale sur les écrans de connexion, par session de connexion (cookie
+# AUTH_SESSION_ID de Keycloak) : un visiteur qui insiste ne bloque pas les autres. Sans cookie,
+# la clé est l'adresse IP. Docker présente les clients locaux sous une seule adresse : sans
+# frontal qui transmet la vraie, la limite par IP vaut pour tous (plafond large, voir la doc).
+map $cookie_AUTH_SESSION_ID $cle_connexion {
+  ""      $binary_remote_addr;
+  default $cookie_AUTH_SESSION_ID;
+}
+limit_req_zone $cle_connexion zone=connexion:2m rate=5r/s;
+limit_req_zone $binary_remote_addr zone=identite:1m rate=50r/s;
+
+# Journal sans chaîne de requête : codes d'autorisation, « state » et identifiants n'y entrent pas.
+log_format sira '$remote_addr [$time_local] "$request_method $host$uri $server_protocol" '
+                '$status $body_bytes_sent $request_time';
+
+server_tokens off;
+
+# Les amonts sont résolus à chaque requête par le DNS de Docker : le proxy démarre
+# même si un service n'existe pas encore, et suit un service recréé.
+resolver 127.0.0.11 valid=10s ipv6=off;
+
+proxy_http_version 1.1;
+proxy_set_header Host               $http_host;
+proxy_set_header X-Forwarded-Host   $http_host;
+proxy_set_header X-Forwarded-Proto  $protocole_public;
+# Le proxy est le premier maillon : il écrase ce que le client prétend.
+proxy_set_header X-Forwarded-For    $remote_addr;
+proxy_set_header X-Forwarded-Port   "";
+proxy_set_header Forwarded          "";
+# Seul acces-identite transmet un certificat client à Keycloak, jamais le navigateur.
+proxy_set_header ssl-client-cert    "";
+proxy_set_header Upgrade            $http_upgrade;
+proxy_set_header Connection         $connexion_amont;
+proxy_connect_timeout 5s;
+proxy_read_timeout 60s;
+proxy_buffer_size 32k;
+proxy_buffers 8 32k;
+client_max_body_size 2m;
+
+# Amont absent, en cours de démarrage ou en panne : une seule page, un seul code.
+error_page 502 503 504 =503 /_indisponible.html;
+
+server {
+  listen 8080 default_server;
+  server_name _;
+  access_log /dev/stdout sira;
+  add_header Strict-Transport-Security $hsts always;
+
+  location = /_sante {
+    access_log off;
+    return 204;
+  }
+
+  location = /_indisponible.html {
+    internal;
+    root /usr/share/nginx/sira;
+    include /etc/nginx/sira/indisponible.conf;
+  }
+
+  location / {
+    if ($amont = "") {
+      return 404;
+    }
+    proxy_pass http://$amont;
+  }
+}
+
+# Keycloak : seuls les écrans de connexion des royaumes applicatifs sont publiés. Console
+# d'administration, royaume « master », compte en ligne et enregistrement de clients : 404.
+server {
+  listen 8080;
+  server_name identite.sira.localhost;
+  access_log /dev/stdout sira;
+  add_header Strict-Transport-Security $hsts always;
+
+  set $keycloak fournisseur-identite:8080;
+
+  location = /_indisponible.html {
+    internal;
+    root /usr/share/nginx/sira;
+    include /etc/nginx/sira/indisponible.conf;
+  }
+
+  location ~ ^/realms/master(/|$) {
+    return 404;
+  }
+
+  location ~ ^/realms/[a-z0-9-]+/login-actions/ {
+    limit_req zone=connexion burst=20 nodelay;
+    limit_req zone=identite burst=100 nodelay;
+    limit_req_status 429;
+    proxy_pass http://$keycloak;
+  }
+
+  location ~ ^/realms/[a-z0-9-]+/(protocol/openid-connect/(auth|logout|logout/logout-confirm|login-status-iframe\.html(/init)?|3p-cookies/[a-z]+\.html)|\.well-known/openid-configuration)$ {
+    limit_req zone=identite burst=100 nodelay;
+    limit_req_status 429;
+    proxy_pass http://$keycloak;
+  }
+
+  location /resources/ {
+    proxy_pass http://$keycloak;
+  }
+
+  location / {
+    return 404;
+  }
+}
