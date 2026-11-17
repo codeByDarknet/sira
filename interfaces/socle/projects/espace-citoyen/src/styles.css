@@ -1,0 +1,94 @@
+/* Styles propres à l'espace citoyen. Tout ce qui peut servir ailleurs va dans @sira/ui. */
+
+/* Liste de cartes : une liste pour les lecteurs d'écran, sans puce à l'œil. */
+.ec-liste {
+  display: grid;
+  gap: var(--sira-esp-4);
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ec-liste > li {
+  margin: 0;
+}
+.ec-liste--separee > li + li {
+  padding-top: var(--sira-esp-4);
+  border-top: var(--sira-trait) solid var(--sira-bordure);
+}
+
+/* Chiffre du résumé de l'accueil. */
+.ec-chiffre {
+  margin: 0;
+  font-size: var(--sira-titre-l);
+  font-weight: var(--sira-graisse-forte);
+  line-height: var(--sira-interligne-titre);
+  font-variant-numeric: tabular-nums;
+}
+
+/* « Scanner un code » : le geste principal sur un téléphone, sur toute la largeur. */
+@media (max-width: 39.99rem) {
+  .ec-bouton-large {
+    display: flex;
+    width: 100%;
+  }
+}
+
+/* Une date tient sur une ligne : la colonne du tableau ne la découpe pas mot à mot. */
+.ec-insecable {
+  white-space: nowrap;
+}
+
+.ec-filtres {
+  margin-bottom: var(--sira-esp-2);
+}
+
+/* Image de la caméra : un cadre carré, pour viser le QR code. */
+.ec-scanner {
+  width: 100%;
+  max-width: 24rem;
+  aspect-ratio: 1;
+  margin-bottom: var(--sira-esp-4);
+  overflow: hidden;
+  border: var(--sira-trait) solid var(--sira-bordure);
+  border-radius: var(--sira-rayon);
+  background: var(--sira-fond-alt);
+}
+.ec-scanner[hidden] {
+  display: none;
+}
+.ec-scanner__video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Code recopié depuis l'écran du service : gros chiffres, lisibles et faciles à taper au pouce. */
+.ec-code-service {
+  margin-bottom: var(--sira-esp-4);
+}
+.ec-code-service input {
+  font-size: var(--sira-titre-l);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.2em;
+}
+
+/* Tableau de bord : actions du titre, puis deux colonnes. */
+.ec-actions-titre {
+  margin-top: 0;
+}
+.ec-colonnes {
+  display: grid;
+  gap: var(--sira-esp-6);
+  margin-top: var(--sira-esp-8);
+}
+@media (min-width: 72rem) {
+  .ec-colonnes {
+    grid-template-columns: 1.5fr 1fr;
+    align-items: start;
+  }
+}
+.ec-colonne > h2 {
+  margin-top: 0;
+}

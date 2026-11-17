@@ -1,0 +1,48 @@
+<h1>Scanner un code</h1>
+
+<div class="ec-scanner" [hidden]="etat() !== 'active'">
+  <video #video class="ec-scanner__video" muted playsinline aria-label="Image de la caméra"></video>
+</div>
+
+<div aria-live="polite">
+  @switch (etat()) {
+    @case ('ouverture') {
+      <p class="sira-secondaire">Ouverture de la caméra…</p>
+    }
+    @case ('active') {
+      @if (codeEtranger()) {
+        <sira-alerte type="attention" titre="Ce QR code n’est pas une demande Sira">
+          <p class="sira-sans-marge">Scannez le code affiché par le service.</p>
+        </sira-alerte>
+      } @else {
+        <p class="sira-secondaire">Visez le QR code affiché par le service.</p>
+      }
+    }
+    @case ('refusee') {
+      <sira-alerte type="attention" titre="La caméra n’est pas autorisée">
+        <p>Autorisez-la dans les réglages du navigateur, ou saisissez le code ci-dessous.</p>
+        <button siraBouton variante="secondaire" type="button" (click)="demarrer()">
+          <sira-icone nom="refresh-cw" />
+          Réessayer
+        </button>
+      </sira-alerte>
+    }
+    @case ('absente') {
+      <sira-alerte type="info" titre="Aucune caméra sur cet appareil">
+        <p class="sira-sans-marge">Saisissez le code ci-dessous.</p>
+      </sira-alerte>
+    }
+    @case ('indisponible') {
+      <sira-alerte type="attention" titre="La caméra ne s’ouvre pas">
+        <p>Fermez les autres applications qui l’utilisent, puis réessayez.</p>
+        <button siraBouton variante="secondaire" type="button" (click)="demarrer()">
+          <sira-icone nom="refresh-cw" />
+          Réessayer
+        </button>
+      </sira-alerte>
+    }
+  }
+</div>
+
+<h2 class="sira-marge-haut">Vous ne pouvez pas scanner ?</h2>
+<ec-saisie-code libelle="Saisir le code" />

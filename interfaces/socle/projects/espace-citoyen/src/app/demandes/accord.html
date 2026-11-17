@@ -1,0 +1,95 @@
+@if (introuvable(); as message) {
+  <h1>Cette demande est introuvable</h1>
+  <sira-alerte type="erreur">
+    <p>{{ message }}</p>
+    <p class="sira-sans-marge">Vérifiez le code, ou demandez-en un nouveau au service.</p>
+  </sira-alerte>
+  <p class="sira-marge-haut">
+    <a siraLien icone="arrow-left" routerLink="/mon-espace">Revenir à l’accueil</a>
+  </p>
+} @else if (decision(); as prise) {
+  @if (prise === 'ACCEPTER') {
+    <h1>Vous avez autorisé l’accès</h1>
+    <sira-alerte type="succes">
+      <p class="sira-sans-marge">
+        {{ demande.value()?.service?.nom }} reçoit les informations. Revenez à l’écran du service.
+      </p>
+    </sira-alerte>
+    <p class="sira-marge-haut">
+      Vous pouvez retirer cet accès à tout moment :
+      <a siraLien routerLink="/acces">Voir mes accès</a>
+    </p>
+  } @else {
+    <h1>Vous avez refusé la demande</h1>
+    <sira-alerte type="info">
+      <p class="sira-sans-marge">
+        {{ demande.value()?.service?.nom }} n’a rien reçu. Vous pouvez lui fournir vos documents
+        vous-même.
+      </p>
+    </sira-alerte>
+  }
+  <p class="sira-marge-haut">
+    <a siraLien icone="arrow-left" routerLink="/mon-espace">Revenir à l’accueil</a>
+  </p>
+} @else if (vue(); as contenu) {
+  @if (close(); as raison) {
+    <h1>Cette demande n’est plus valable</h1>
+    @if (echec(); as message) {
+      <sira-alerte type="erreur" titre="Votre réponse n’a pas été enregistrée">{{
+        message
+      }}</sira-alerte>
+    }
+    <sira-alerte type="info">
+      <p class="sira-sans-marge">{{ raison }}</p>
+    </sira-alerte>
+    <p class="sira-marge-haut">
+      <a siraLien icone="arrow-left" routerLink="/mon-espace">Revenir à l’accueil</a>
+    </p>
+  } @else {
+    <h1>Un service demande vos informations</h1>
+    <p class="sira-chapeau">Pour : {{ demande.value()?.demarche?.libelle }}</p>
+    @if (echec(); as message) {
+      <sira-alerte type="erreur" titre="Votre réponse n’a pas été enregistrée">{{
+        message
+      }}</sira-alerte>
+    }
+    @if (retourEnCours()) {
+      <sira-alerte type="info">Réponse enregistrée. Retour vers le service…</sira-alerte>
+    }
+    @if (codeExige()) {
+      <section class="ec-code-service" aria-labelledby="titre-code-service">
+        <h2 id="titre-code-service">Le code du service</h2>
+        <sira-alerte type="attention">
+          <p class="sira-sans-marge">
+            <strong>Vous n’êtes pas devant ce service ?</strong> Refusez. Ne recopiez jamais un code
+            reçu par message ou dicté au téléphone.
+          </p>
+        </sira-alerte>
+        <sira-champ
+          libelle="Code affiché par le service"
+          aide="6 chiffres, à recopier pour autoriser"
+          identifiant="code-service"
+          [erreur]="erreurCode()"
+        >
+          <input
+            siraSaisie
+            class="sira-saisie--courte"
+            inputmode="numeric"
+            autocomplete="off"
+            maxlength="7"
+            [formControl]="code"
+          />
+        </sira-champ>
+      </section>
+    }
+    <sira-demande-acces
+      [demande]="contenu"
+      [enCours]="envoi()"
+      (autoriser)="decider('ACCEPTER')"
+      (refuser)="decider('REFUSER')"
+    />
+  }
+} @else {
+  <h1>Demande d’accès</h1>
+  <sira-squelette [lignes]="6" libelle="Chargement de la demande" />
+}

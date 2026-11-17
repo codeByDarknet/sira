@@ -1,0 +1,116 @@
+<h1>Qui a consulté mes informations</h1>
+
+@if (signale()) {
+  <sira-alerte type="succes" ephemere>Signalement envoyé. Il sera examiné.</sira-alerte>
+}
+
+<div class="sira-grille sira-grille--2 ec-filtres">
+  <sira-champ libelle="Service" identifiant="filtre-service">
+    <select #choixService siraSaisie (change)="filtrer({ service: choixService.value })">
+      <option value="">Tous les services</option>
+      @for (choix of services(); track choix.code) {
+        <option [value]="choix.code" [selected]="choix.code === filtre().service">
+          {{ choix.nom }}
+        </option>
+      }
+    </select>
+  </sira-champ>
+  <sira-champ libelle="Type" identifiant="filtre-type">
+    <select #choixType siraSaisie (change)="filtrer({ type: choixType.value })">
+      <option value="">Tous les types</option>
+      @for (choix of types; track choix.type) {
+        <option [value]="choix.type" [selected]="choix.type === filtre().type">
+          {{ choix.libelle }}
+        </option>
+      }
+    </select>
+  </sira-champ>
+</div>
+
+<div aria-live="polite">
+  @if (probleme(); as message) {
+    <sira-alerte type="erreur" titre="L’historique n’a pas pu être chargé">
+      <p>{{ message }}</p>
+      <button siraBouton variante="secondaire" type="button" (click)="resultat.reload()">
+        Réessayer
+      </button>
+    </sira-alerte>
+  } @else if (resultat.value(); as liste) {
+    @if (liste.total === 0 && filtree()) {
+      <sira-etat-vide titre="Aucun résultat pour ces filtres" icone="search">
+        <p>
+          <button
+            siraBouton
+            variante="secondaire"
+            type="button"
+            (click)="filtrer({ service: '', type: '' })"
+          >
+            Effacer les filtres
+          </button>
+        </p>
+      </sira-etat-vide>
+    } @else if (liste.total === 0) {
+      <sira-etat-vide titre="Aucun service n’a consulté vos informations" icone="history" />
+    } @else {
+      <sira-tableau
+        [legende]="decompte()"
+        [colonnes]="colonnes"
+        [lignes]="liste.elements"
+        [total]="liste.total"
+        [pageCourante]="liste.page"
+        [parPage]="liste.taille"
+        (requete)="filtrer({ page: $event.page })"
+        [outils]="false"
+      >
+        <ng-template siraCellule="horodatage" let-ligne>
+          <span class="ec-insecable">{{ ligne.horodatage | siraDate: 'jour' }}</span>
+          <br /><span class="sira-secondaire sira-petit"
+            >à {{ ligne.horodatage | siraDate: 'heure' }}</span
+          >
+        </ng-template>
+        <ng-template siraCellule="service" let-ligne>
+          <strong>{{ ligne.service.nom }}</strong>
+          @if (ligne.demarche) {
+            <br /><span class="sira-secondaire sira-petit">{{ ligne.demarche.libelle }}</span>
+          }
+        </ng-template>
+        <ng-template siraCellule="information" let-ligne>
+          @if (ligne.jeu) {
+            {{ ligne.jeu.libelle }}
+            <br /><span class="sira-secondaire sira-petit"
+              >{{ forme(ligne) }}
+              @if (ligne.registre) {
+                · Source : {{ ligne.registre.nom }}
+              }
+            </span>
+          } @else {
+            Toute la demande
+          }
+        </ng-template>
+        <ng-template siraCellule="issue" let-ligne>
+          <sira-etiquette [etat]="decrire(ligne).etat">{{ decrire(ligne).texte }}</sira-etiquette>
+          @if (decrire(ligne).precision; as precision) {
+            <br /><span class="sira-secondaire sira-petit">{{ precision }}</span>
+          }
+        </ng-template>
+        <ng-template siraCellule="recours" let-ligne>
+          @if (ligne.signalee) {
+            <sira-etiquette etat="info">Signalé</sira-etiquette>
+          } @else if (ligne.type !== 'SIGNALEMENT') {
+            <button siraBouton variante="discret" type="button" (click)="aSignaler.set(ligne)">
+              <sira-icone nom="flag" />
+              Signaler<span class="sira-masque">
+                un problème sur l’accès de {{ ligne.service.nom }} du
+                {{ ligne.horodatage | siraDate }}</span
+              >
+            </button>
+          }
+        </ng-template>
+      </sira-tableau>
+    }
+  } @else {
+    <sira-squelette [lignes]="6" libelle="Chargement de l’historique" />
+  }
+</div>
+
+<ec-signalement [ligne]="aSignaler()" (ferme)="aSignaler.set(null)" (envoye)="apresSignalement()" />
