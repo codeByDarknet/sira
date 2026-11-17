@@ -1,0 +1,98 @@
+<sira-fil [elements]="fil()" />
+
+@if (probleme(); as message) {
+  <h1>Dossier</h1>
+  <sira-alerte type="erreur" titre="Le dossier n’a pas pu être affiché">
+    <p>{{ message }}</p>
+    <button
+      siraBouton
+      variante="secondaire"
+      type="button"
+      [enCours]="detail.isLoading()"
+      (click)="detail.reload()"
+    >
+      Réessayer
+    </button>
+  </sira-alerte>
+} @else if (detail.value(); as fiche) {
+  <h1>
+    Dossier n° <span class="sira-chiffres">{{ fiche.dossier.numero }}</span>
+  </h1>
+
+  <dl siraSynthese>
+    <div siraSyntheseLigne cle="État">
+      <sira-etiquette [etat]="mention(fiche.dossier.etat).etat">{{
+        mention(fiche.dossier.etat).texte
+      }}</sira-etiquette>
+    </div>
+    <div siraSyntheseLigne cle="Ouvert le">{{ fiche.dossier.cree_le | siraDate }}</div>
+    <div siraSyntheseLigne cle="Déposé le">
+      {{ fiche.dossier.depose_le ? (fiche.dossier.depose_le | siraDate) : 'Pas encore déposé' }}
+    </div>
+    <div siraSyntheseLigne cle="Dernière réponse">{{ fiche.dossier.modifie_le | siraDate }}</div>
+  </dl>
+
+  <h2>Vérifié par les registres</h2>
+  <ps-verifications [verifications]="fiche.dossier.verifications" [adressePiece]="adressePiece()" />
+
+  <h2 class="sira-marge-haut">Déclaré par l’usager</h2>
+  @if (fiche.dossier.declarations.length > 0) {
+    <p>Aucun registre ne l’a vérifié.</p>
+    <ps-declarations
+      mention="Déclaré par l’usager"
+      [declarations]="fiche.dossier.declarations"
+      [adressePiece]="adressePieceDeclaree()"
+    />
+  } @else {
+    <p class="sira-secondaire">Rien n’a été déclaré.</p>
+  }
+
+  @if (session.peut('VERIFICATIONS_DEMANDER')) {
+    <h2 class="sira-marge-haut">Redemander une vérification</h2>
+    <p>La demande part dans l’espace Sira du citoyen, qui l’accepte ou non.</p>
+    <div aria-live="polite">
+      @if (envoyee()) {
+        <sira-alerte type="succes" ephemere titre="Demande envoyée au citoyen" />
+      }
+      @if (refus(); as message) {
+        <sira-alerte type="attention" titre="La demande n’a pas été envoyée">
+          <p>{{ message }}</p>
+        </sira-alerte>
+      }
+    </div>
+    <div class="sira-groupe-boutons">
+      <button siraBouton type="button" [enCours]="envoi()" (click)="redemander()">
+        <sira-icone nom="refresh-cw" />
+        Redemander au citoyen
+      </button>
+    </div>
+  }
+  <div class="sira-groupe-boutons sira-marge-haut">
+    <button
+      siraBouton
+      variante="secondaire"
+      type="button"
+      [enCours]="detail.isLoading()"
+      (click)="detail.reload()"
+    >
+      Actualiser
+    </button>
+  </div>
+
+  <h2 class="sira-marge-haut">Demandes au citoyen</h2>
+  <sira-tableau
+    legende="Demandes de ce dossier, la plus récente d’abord"
+    legendeMasquee
+    [colonnes]="colonnes"
+    [lignes]="fiche.demandes"
+  >
+    <ng-template siraCellule="creee_le" let-ligne>{{ ligne.creee_le | siraDate }}</ng-template>
+    <ng-template siraCellule="origine" let-ligne>{{
+      ligne.origine === 'AGENT' ? 'Agent' : 'Citoyen'
+    }}</ng-template>
+    <ng-template siraCellule="etat" let-ligne>{{ suite(ligne.etat) }}</ng-template>
+  </sira-tableau>
+} @else {
+  <h1>Dossier</h1>
+  <sira-squelette [lignes]="6" libelle="Chargement du dossier" />
+}

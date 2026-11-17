@@ -1,0 +1,114 @@
+<div class="sira-titre-page">
+  <h1>Personnes</h1>
+  @if (session.peut('PERSONNES_AJOUTER')) {
+    <a siraBouton routerLink="nouvelle">
+      <sira-icone nom="plus" />
+      Ajouter une personne
+    </a>
+  }
+</div>
+
+@if (confirmation(); as message) {
+  <sira-alerte type="succes" ephemere>{{ message }}</sira-alerte>
+}
+
+<div aria-live="polite">
+  @if (probleme(); as message) {
+    <sira-alerte type="erreur" titre="La liste n’a pas pu être chargée">
+      <p>{{ message }}</p>
+      <button siraBouton variante="secondaire" type="button" (click)="resultat.reload()">
+        Réessayer
+      </button>
+    </sira-alerte>
+  } @else if (resultat.value(); as liste) {
+    @if (liste.total === 0 && !recherche()) {
+      <sira-etat-vide titre="Aucune personne dans le registre" icone="users">
+        @if (session.peut('PERSONNES_AJOUTER')) {
+          <p>Ajoutez la première personne avec le bouton ci-dessus.</p>
+        }
+      </sira-etat-vide>
+    } @else {
+      <sira-tableau
+        titre="Personnes du registre"
+        [legende]="liste.total === 1 ? '1 personne' : liste.total + ' personnes'"
+        [colonnes]="colonnes"
+        [lignes]="liste.elements"
+        [total]="liste.total"
+        [pageCourante]="liste.page"
+        [parPage]="liste.taille"
+        (requete)="demander($event)"
+      >
+        <ng-template siraCellule="nom" let-ligne>
+          <span class="sira-tableau__principal">{{ ligne.nom }}</span>
+        </ng-template>
+        <ng-template siraActions let-ligne>
+          <a
+            siraAction="eye"
+            [libelle]="'Voir la fiche de ' + ligne.nom"
+            [routerLink]="ligne.id"
+          ></a>
+          @if (session.peut('PERSONNES_MODIFIER')) {
+            <a
+              siraAction="pencil"
+              [libelle]="'Modifier la fiche de ' + ligne.nom"
+              [routerLink]="[ligne.id, 'correction']"
+            ></a>
+          }
+          @if (session.peut('PERSONNES_SUPPRIMER')) {
+            <button
+              type="button"
+              siraAction="trash-2"
+              [libelle]="'Supprimer ' + ligne.nom"
+              (click)="aSupprimer.set(ligne)"
+            ></button>
+          }
+        </ng-template>
+        <ng-template siraCellule="date_naissance" let-ligne>{{
+          ligne.date_naissance | siraDate: 'jour'
+        }}</ng-template>
+        <ng-template siraCellule="identifiant" let-ligne>
+          <span class="sira-chiffres">{{ ligne.identifiant }}</span>
+        </ng-template>
+      </sira-tableau>
+    }
+  } @else {
+    <sira-squelette [lignes]="5" libelle="Chargement des personnes" />
+  }
+</div>
+
+@if (aSupprimer(); as personne) {
+  <sira-dialogue
+    titre="Supprimer cette personne ?"
+    [ouvert]="true"
+    (ouvertChange)="$event || aSupprimer.set(null)"
+  >
+    <p>
+      La fiche de <strong>{{ personne.nom }} {{ personne.prenoms }}</strong> (<span
+        class="sira-chiffres"
+        >{{ personne.identifiant }}</span
+      >) sera retirée du registre. Sira ne pourra plus rien demander à son sujet.
+    </p>
+    @if (echecSuppression(); as message) {
+      <sira-alerte type="erreur" titre="Suppression impossible">{{ message }}</sira-alerte>
+    }
+    <button
+      dialogue-actions
+      siraBouton
+      variante="secondaire"
+      type="button"
+      (click)="aSupprimer.set(null)"
+    >
+      Annuler
+    </button>
+    <button
+      dialogue-actions
+      siraBouton
+      variante="danger"
+      type="button"
+      [enCours]="suppression()"
+      (click)="supprimer(personne)"
+    >
+      Supprimer
+    </button>
+  </sira-dialogue>
+}

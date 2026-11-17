@@ -1,0 +1,161 @@
+<div class="sira-titre-page">
+  <div>
+    <h1>Pannes</h1>
+    <p>
+      Choisissez comment le registre répond à Sira. Les écrans des agents, eux, restent normaux.
+    </p>
+  </div>
+  <button
+    siraBouton
+    variante="secondaire"
+    type="button"
+    [enCours]="etat.isLoading()"
+    (click)="etat.reload()"
+  >
+    <sira-icone nom="refresh-cw" />
+    Actualiser
+  </button>
+</div>
+
+@if (probleme(); as message) {
+  <sira-alerte type="erreur" titre="L’état du registre n’a pas pu être lu">
+    <p>{{ message }}</p>
+    <button
+      siraBouton
+      variante="secondaire"
+      type="button"
+      [enCours]="etat.isLoading()"
+      (click)="etat.reload()"
+    >
+      Réessayer
+    </button>
+  </sira-alerte>
+} @else if (etat.value(); as panne) {
+  <div class="ra-etat" [class.ra-etat--perturbe]="panne.mode !== 'NORMAL'" aria-live="polite">
+    <span class="ra-etat__pastille" aria-hidden="true"></span>
+    <div>
+      <strong>État actuel : {{ libelles[panne.mode] }}</strong>
+      <span>
+        Depuis le {{ panne.modifiee_le | siraDate }}
+        @if (panne.mode === 'LENT') {
+          · attente de {{ enSecondes(panne.delai_ms) }} s
+        }
+      </span>
+    </div>
+  </div>
+
+  @if (echec(); as message) {
+    <sira-alerte type="erreur" titre="L’état n’a pas été changé">{{ message }}</sira-alerte>
+  }
+
+  <div class="ra-modes">
+    @for (mode of modes; track mode) {
+      <section class="ra-mode" [class.ra-mode--actif]="panne.mode === mode">
+        <div class="ra-mode__entete">
+          <h2 class="ra-mode__titre">{{ libelles[mode] }}</h2>
+          @if (panne.mode === mode) {
+            <sira-etiquette etat="info">Actif</sira-etiquette>
+          }
+        </div>
+        <p>{{ effets[mode].registre }}</p>
+        <p class="ra-mode__sira"><strong>Côté Sira :</strong> {{ effets[mode].sira }}</p>
+        @if (mode === 'LENT' && panne.mode === 'LENT') {
+          <p class="ra-mode__sira">Attente actuelle : {{ enSecondes(panne.delai_ms) }} s</p>
+        }
+        @if (session.peut('PANNES_GERER') && (mode === 'LENT' || panne.mode !== mode)) {
+          <button
+            siraBouton
+            variante="secondaire"
+            type="button"
+            [enCours]="envoi() === mode"
+            (click)="activer(mode)"
+          >
+            {{ panne.mode === mode ? 'Changer l’attente' : 'Activer' }}
+          </button>
+        }
+      </section>
+    }
+  </div>
+
+  @if (aConfirmer(); as mode) {
+    <sira-dialogue
+      [titre]="'Activer l’état « ' + libelles[mode] + ' » ?'"
+      [ouvert]="true"
+      (ouvertChange)="$event || aConfirmer.set(null)"
+    >
+      <p>{{ effets[mode].registre }}</p>
+      <p><strong>Côté Sira :</strong> {{ effets[mode].sira }}</p>
+      @if (echec(); as message) {
+        <sira-alerte type="erreur">{{ message }}</sira-alerte>
+      }
+      <button
+        dialogue-actions
+        siraBouton
+        variante="secondaire"
+        type="button"
+        (click)="aConfirmer.set(null)"
+      >
+        Annuler
+      </button>
+      <button
+        dialogue-actions
+        siraBouton
+        type="button"
+        [enCours]="envoi() === mode"
+        (click)="confirmerMode()"
+      >
+        Activer
+      </button>
+    </sira-dialogue>
+  }
+
+  @if (fenetreDelai()) {
+    <sira-dialogue
+      titre="Activer l’état « Lent »"
+      [ouvert]="true"
+      (ouvertChange)="$event || fenetreDelai.set(false)"
+    >
+      <p>Combien de secondes le registre doit-il attendre avant de répondre ?</p>
+      <form id="form-delai" novalidate (ngSubmit)="confirmerDelai()">
+        <sira-champ
+          obligatoire
+          libelle="Attente, en secondes"
+          aide="Entre 0,1 et 30. Sira abandonne au-delà de 2 secondes."
+          identifiant="panne-delai"
+          [libelleFlottant]="false"
+          [erreur]="erreurDelai()"
+        >
+          <input
+            siraSaisie
+            siraFiltre="decimal"
+            name="delai"
+            inputmode="decimal"
+            maxlength="4"
+            autocomplete="off"
+            [(ngModel)]="delai"
+          />
+        </sira-champ>
+      </form>
+      <button
+        dialogue-actions
+        siraBouton
+        variante="secondaire"
+        type="button"
+        (click)="fenetreDelai.set(false)"
+      >
+        Annuler
+      </button>
+      <button
+        dialogue-actions
+        siraBouton
+        type="submit"
+        form="form-delai"
+        [enCours]="envoi() === 'LENT'"
+      >
+        Activer
+      </button>
+    </sira-dialogue>
+  }
+} @else {
+  <sira-squelette [lignes]="6" libelle="Chargement de l’état du registre" />
+}

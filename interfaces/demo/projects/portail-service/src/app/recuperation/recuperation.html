@@ -1,0 +1,63 @@
+<sira-etapes [etapes]="etapes" [courante]="3" />
+<h1>Récupération de vos informations</h1>
+
+@if (absent()) {
+  <sira-etat-vide titre="Aucune démarche sur cet appareil" icone="file-text">
+    <p>Les informations ne s’affichent que sur l’appareil qui a ouvert la démarche.</p>
+    <p><a siraBouton routerLink="/commencer">Commencer</a></p>
+  </sira-etat-vide>
+} @else if (demarche.hasValue()) {
+  <p class="sira-chapeau">
+    Chaque registre répond avec votre accord. Vous n’avez rien à faire pendant ce temps.
+  </p>
+
+  <div aria-live="polite">
+    @if (coupure()) {
+      <sira-alerte type="attention" titre="Connexion interrompue">
+        <p>Nous réessayons. Vous n’avez rien à refaire.</p>
+      </sira-alerte>
+    }
+    <p class="sira-secondaire">
+      @if (terminee()) {
+        Récupération terminée : {{ recues() }} sur {{ lignes().length }} reçues.
+      } @else {
+        <sira-icone nom="refresh-cw" />
+        {{ recues() }} sur {{ lignes().length }} reçues…
+      }
+    </p>
+    <dl class="sira-synthese">
+      @for (ligne of lignes(); track ligne.jeu) {
+        <div class="sira-synthese__ligne">
+          <dt class="sira-synthese__cle">{{ ligne.libelle }}</dt>
+          <dd class="sira-synthese__valeur sira-secondaire">
+            Registre {{ nomRegistre(ligne.registre) }}
+          </dd>
+          <dd class="sira-synthese__action">
+            <sira-etiquette [etat]="ligne.etat">{{ ligne.texte }}</sira-etiquette>
+          </dd>
+        </div>
+      }
+    </dl>
+  </div>
+
+  <div class="sira-groupe-boutons">
+    <button siraBouton type="button" [disabled]="dossier() === null" (click)="continuer()">
+      Continuer
+      <sira-icone nom="chevron-right" />
+    </button>
+  </div>
+  @if (dossier() !== null && !terminee()) {
+    <p class="sira-secondaire sira-petit">
+      Une information en attente arrivera toute seule dans votre dossier.
+    </p>
+  }
+} @else if (demarche.error()) {
+  <sira-alerte type="erreur" titre="Démarche indisponible">
+    <p>Réessayez dans quelques minutes.</p>
+    <button siraBouton variante="secondaire" type="button" (click)="demarche.reload()">
+      Réessayer
+    </button>
+  </sira-alerte>
+} @else {
+  <sira-squelette [lignes]="4" libelle="Récupération de vos informations" />
+}

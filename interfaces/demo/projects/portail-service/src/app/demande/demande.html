@@ -1,0 +1,136 @@
+<sira-etapes [etapes]="etapes" [courante]="1" />
+<h1>Votre demande</h1>
+
+@if (demarche.error()) {
+  <div aria-live="polite">
+    <sira-alerte type="erreur" titre="Démarche indisponible">
+      <p>Réessayez dans quelques minutes.</p>
+      <button siraBouton variante="secondaire" type="button" (click)="demarche.reload()">
+        Réessayer
+      </button>
+    </sira-alerte>
+  </div>
+} @else if (presentation(); as presentation) {
+  <p class="sira-chapeau">
+    {{ presentation.libelle }}. Indiquez votre identifiant unique : le reste vient directement des
+    administrations, si vous êtes d’accord.
+  </p>
+
+  <form class="ra-formulaire" novalidate (submit)="suivant($event)">
+    <sira-champ
+      obligatoire
+      libelle="Votre identifiant unique"
+      aide="Les 12 chiffres inscrits sur votre CNIB."
+      identifiant="identifiant-unique"
+      [erreur]="erreurIdentifiant()"
+    >
+      <input
+        #champIdentifiant
+        siraSaisie
+        class="sira-saisie--courte sira-chiffres"
+        type="text"
+        name="identifiant_unique"
+        inputmode="numeric"
+        autocomplete="off"
+        maxlength="15"
+        required
+        [value]="saisie()"
+        (input)="saisie.set(champIdentifiant.value)"
+      />
+    </sira-champ>
+
+    @for (jeu of presentation.jeux; track jeu.code) {
+      @switch (jeu.niveau) {
+        @case ('STATUT') {
+          <sira-groupe-formulaire
+            [legende]="jeu.libelle"
+            [aide]="'Fourni par ' + nomRegistre(jeu.registre)"
+          >
+            <div class="sira-choix">
+              <input type="radio" disabled [id]="jeu.code + '-oui'" [name]="jeu.code" />
+              <label [for]="jeu.code + '-oui'">Oui</label>
+            </div>
+            <div class="sira-choix">
+              <input type="radio" disabled [id]="jeu.code + '-non'" [name]="jeu.code" />
+              <label [for]="jeu.code + '-non'">Non</label>
+            </div>
+          </sira-groupe-formulaire>
+        }
+        @case ('CHAMPS') {
+          @for (champ of jeu.champs; track champ) {
+            <sira-champ
+              [libelle]="libelleChamp(champ)"
+              [aide]="'Fourni par ' + nomRegistre(jeu.registre)"
+            >
+              <input siraSaisie type="text" disabled [name]="jeu.code + '.' + champ" />
+            </sira-champ>
+          }
+        }
+        @default {
+          <div class="sira-champ">
+            <ps-fichier [nom]="jeu.libelle" [details]="'Fourni par ' + nomRegistre(jeu.registre)" />
+          </div>
+        }
+      }
+    }
+
+    @if (presentation.declarations.length > 0) {
+      <p class="sira-secondaire ra-formulaire__plein">
+        Ensuite, vous compléterez vous-même :
+        @for (declaration of presentation.declarations; track declaration.code; let fin = $last) {
+          {{ declaration.libelle }}{{ fin ? '.' : ', ' }}
+        }
+      </p>
+    }
+
+    <div class="sira-groupe-boutons ra-formulaire__boutons">
+      <button siraBouton type="submit">
+        Suivant
+        <sira-icone nom="chevron-right" />
+      </button>
+    </div>
+  </form>
+
+  <sira-dialogue titre="Ce que nous allons récupérer" [(ouvert)]="confirmation">
+    <ul class="sira-pile sira-pile--serree">
+      @for (jeu of presentation.jeux; track jeu.code) {
+        <li>
+          {{ jeu.libelle }}
+          <span class="ps-source">{{ nomRegistre(jeu.registre) }}</span>
+        </li>
+      }
+    </ul>
+    <p>
+      Après votre accord dans Sira, chaque administration envoie seulement ces informations au
+      service. Rien d’autre.
+    </p>
+    <div aria-live="polite">
+      @if (probleme(); as message) {
+        <sira-alerte type="erreur" titre="La demande n’a pas pu être envoyée">
+          <p>{{ message }}</p>
+        </sira-alerte>
+      }
+    </div>
+    <button dialogue-actions siraBouton type="button" [enCours]="envoi()" (click)="continuer()">
+      <sira-icone nom="shield-check" />
+      Continuer avec Sira
+    </button>
+    <a dialogue-actions siraLien routerLink="/accord/choix">Autres façons de donner mon accord</a>
+    <button
+      dialogue-actions
+      siraBouton
+      variante="discret"
+      type="button"
+      [disabled]="envoi()"
+      (click)="confirmation.set(false)"
+    >
+      Annuler
+    </button>
+  </sira-dialogue>
+} @else {
+  <sira-squelette [lignes]="5" libelle="Chargement de la démarche" />
+}
+
+<p class="sira-marge-haut">
+  <a siraLien icone="arrow-left" routerLink="/">Revenir à l’accueil</a>
+</p>

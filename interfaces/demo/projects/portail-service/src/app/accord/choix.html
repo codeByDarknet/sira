@@ -1,0 +1,65 @@
+<sira-etapes [etapes]="etapes" [courante]="2" />
+<h1>Comment donner votre accord ?</h1>
+<p class="sira-chapeau">Votre identifiant unique sert dans les trois cas.</p>
+
+<div aria-live="polite">
+  @if (probleme(); as message) {
+    <sira-alerte type="erreur" titre="La demande n’a pas pu être envoyée">
+      <p>{{ message }}</p>
+    </sira-alerte>
+  }
+</div>
+
+<div class="sira-pile">
+  <sira-carte titre="Sur cet appareil">
+    <div carte-actions>
+      <button
+        siraBouton
+        type="button"
+        [enCours]="enCours() === 'REDIRECTION'"
+        [disabled]="enCours() !== null"
+        (click)="ouvrir('REDIRECTION')"
+      >
+        <sira-icone nom="shield-check" />
+        Continuer avec Sira
+      </button>
+    </div>
+  </sira-carte>
+
+  <sira-carte titre="Scanner avec mon téléphone">
+    <div carte-actions>
+      <button
+        siraBouton
+        variante="secondaire"
+        type="button"
+        [enCours]="enCours() === 'CODE'"
+        [disabled]="enCours() !== null"
+        (click)="ouvrir('CODE')"
+      >
+        <sira-icone nom="qr-code" />
+        Afficher le code
+      </button>
+    </div>
+  </sira-carte>
+
+  <sira-carte titre="Recevoir la demande sur mon téléphone">
+    <p>La demande arrive dans l’espace Sira lié à votre identifiant unique.</p>
+    <div carte-actions>
+      <button
+        siraBouton
+        variante="secondaire"
+        type="button"
+        [enCours]="enCours() === 'NOTIFICATION'"
+        [disabled]="enCours() !== null"
+        (click)="ouvrir('NOTIFICATION')"
+      >
+        <sira-icone nom="smartphone" />
+        Recevoir la demande
+      </button>
+    </div>
+  </sira-carte>
+</div>
+
+<p class="sira-marge-haut">
+  <a siraLien icone="arrow-left" routerLink="/commencer">Revenir à votre demande</a>
+</p>

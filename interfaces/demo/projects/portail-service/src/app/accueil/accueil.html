@@ -1,0 +1,201 @@
+<div aria-live="polite">
+  @if (indisponible()) {
+    <div class="sira-vitrine__largeur ps-accueil__etat">
+      <h1>{{ configuration.nom }}</h1>
+      <sira-alerte type="erreur" titre="Cette démarche ne répond pas pour le moment">
+        <p>Réessayez dans quelques minutes.</p>
+        <button siraBouton variante="secondaire" type="button" (click)="demarche.reload()">
+          Réessayer
+        </button>
+      </sira-alerte>
+    </div>
+  } @else if (presentation(); as presentation) {
+    <section id="demarche" class="sv-heros" aria-labelledby="ps-titre">
+      <div class="sira-vitrine__largeur sv-heros__grille">
+        <div>
+          <p class="sv-badge"><sira-icone nom="landmark" /> {{ configuration.organisme }}</p>
+          <h1 id="ps-titre" class="sv-heros__titre">{{ presentation.libelle }}</h1>
+          <p class="sv-heros__chapeau">
+            Vous n’apportez aucun papier. Avec votre accord, les administrations confirment
+            elles-mêmes ce dont le service a besoin, et votre dossier se remplit seul.
+          </p>
+          <div class="sv-heros__actions">
+            <a class="sv-bouton" routerLink="/commencer">
+              Commencer ma demande <sira-icone nom="arrow-up-right" />
+            </a>
+            <a class="sv-lien-rond" href="#comment">
+              <span class="sv-rond"><sira-icone nom="chevron-right" /></span>
+              Comment ça se passe
+            </a>
+          </div>
+          <div class="sv-heros__repere">
+            <p class="sv-repere">
+              <span class="sv-repere__valeur">{{ presentation.pieces.length }}</span>
+              <span class="sv-repere__libelle">pièces que vous n’aurez plus à fournir</span>
+            </p>
+            <p class="sv-repere">
+              <span class="sv-repere__valeur">0</span>
+              <span class="sv-repere__libelle">déplacement au guichet</span>
+            </p>
+          </div>
+        </div>
+
+        <div class="sv-visuel" aria-hidden="true">
+          <p class="sv-bulle">
+            <sira-icone nom="circle-check" /> Réponse des administrations en quelques secondes
+          </p>
+          <div class="sv-telephone">
+            <div class="sv-telephone__ecran">
+              <div class="sv-telephone__ilot"></div>
+              <p class="sv-telephone__app">Sira</p>
+              <p class="sv-telephone__titre">Un service vous demande</p>
+              <p class="sv-telephone__service">{{ presentation.libelle }}</p>
+              <ul class="sv-telephone__liste">
+                @for (jeu of presentation.jeux.slice(0, 4); track jeu.code) {
+                  <li><span class="sv-telephone__coche">✓</span> {{ jeu.libelle }}</li>
+                }
+              </ul>
+              <div class="sv-telephone__boutons">
+                <span class="sv-telephone__non">Refuser</span>
+                <span class="sv-telephone__oui">Autoriser</span>
+              </div>
+            </div>
+          </div>
+          <p class="sv-pastille">
+            <span class="sv-pastille__valeur">{{ presentation.jeux.length }}</span>
+            <span class="sv-pastille__libelle">vérifications automatiques</span>
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <div class="sira-vitrine__largeur">
+      <section class="sv-rangee" aria-label="Les étapes">
+        <a class="sv-photo-carte sv-photo-carte--reunion" href="#comment">
+          <span>
+            <span class="sv-photo-carte__titre">Comment ça se passe ?</span>
+            <span class="sv-photo-carte__lien">
+              Les quatre étapes <sira-icone nom="arrow-up-right" />
+            </span>
+          </span>
+        </a>
+        <div class="sv-services">
+          <article class="sv-service">
+            <span class="sv-service__icone"><sira-icone nom="user" /></span>
+            <h2 class="sv-service__titre">Vous vous identifiez</h2>
+            <p class="sv-service__texte">
+              Avec votre identifiant unique et un code reçu sur votre téléphone.
+            </p>
+          </article>
+          <article class="sv-service">
+            <span class="sv-service__icone"><sira-icone nom="shield-check" /></span>
+            <h2 class="sv-service__titre">Vous donnez votre accord</h2>
+            <p class="sv-service__texte">
+              Dans votre espace Sira, vous voyez exactement ce qui sera demandé.
+            </p>
+          </article>
+          <article class="sv-service">
+            <span class="sv-service__icone"><sira-icone nom="send" /></span>
+            <h2 class="sv-service__titre">Vous déposez</h2>
+            <p class="sv-service__texte">
+              Le dossier est rempli par les réponses des administrations : vous vérifiez, puis vous
+              envoyez.
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <section id="verifie" class="sv-section sv-apropos" aria-labelledby="ps-verifie">
+        <div>
+          <p class="sv-badge sv-badge--clair">Ce que nous vérifierons</p>
+          <h2 id="ps-verifie" class="sv-section__titre">
+            Chaque administration répond pour ce qui la concerne
+          </h2>
+          <p class="sv-section__texte">
+            Le service ne voit que la réponse, jamais votre dossier complet. Souvent, c’est un
+            simple oui ou non.
+          </p>
+          <div class="sv-valeurs">
+            @for (jeu of presentation.jeux; track jeu.code) {
+              <div class="sv-valeur">
+                <span class="sv-icone-ronde"><sira-icone nom="shield-check" /></span>
+                <div>
+                  <h3 class="sv-valeur__titre">{{ jeu.libelle }}</h3>
+                  <p class="sv-valeur__texte">{{ nomRegistre(jeu.registre) }}</p>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+        <div>
+          <img class="sv-apropos__photo" src="assets/sira/photos/accord.jpg" alt="" />
+          <div class="ps-pieces-vitrine">
+            <h3 class="sv-valeur__titre">Pièces que vous n’aurez plus à fournir</h3>
+            <ul class="ps-pieces">
+              @for (piece of presentation.pieces; track piece) {
+                <li>
+                  <sira-icone nom="file-text" />
+                  <span>{{ piece }}</span>
+                </li>
+              }
+            </ul>
+          </div>
+          <div class="sv-pilule-sombre">
+            <p><sira-icone nom="circle-check" /> Prêt ? Cela prend quelques minutes.</p>
+            <a class="sv-bouton" routerLink="/commencer">Commencer maintenant</a>
+          </div>
+        </div>
+      </section>
+
+      <section class="sv-section" aria-label="En bref">
+        <div class="sv-chiffres">
+          <p class="sv-chiffre">
+            <span class="sv-chiffre__valeur">{{ presentation.pieces.length }}</span>
+            <span class="sv-chiffre__libelle">pièces en moins dans votre dossier.</span>
+          </p>
+          <p class="sv-chiffre">
+            <span class="sv-chiffre__valeur">{{ presentation.jeux.length }}</span>
+            <span class="sv-chiffre__libelle">réponses envoyées par les administrations.</span>
+          </p>
+          <p class="sv-chiffre">
+            <span class="sv-chiffre__valeur">0</span>
+            <span class="sv-chiffre__libelle">déplacement au guichet.</span>
+          </p>
+          <p class="sv-chiffre">
+            <span class="sv-chiffre__valeur">1<span> clic</span></span>
+            <span class="sv-chiffre__libelle">pour retirer votre accord, à tout moment.</span>
+          </p>
+        </div>
+      </section>
+
+      <section id="comment" class="sv-section" aria-labelledby="ps-comment">
+        <div class="sv-entete-section">
+          <div>
+            <p class="sv-badge sv-badge--clair">Comment ça se passe</p>
+            <h2 id="ps-comment" class="sv-section__titre">Quatre étapes, sans papier</h2>
+          </div>
+          <div>
+            <p class="sv-section__texte">
+              Vous pouvez vous arrêter à tout moment : rien n’est envoyé avant votre dernière
+              validation.
+            </p>
+          </div>
+        </div>
+        <ol class="sv-etapes">
+          @for (etape of etapes; track etape.titre; let numero = $index) {
+            <li class="sv-etape">
+              <span class="sv-etape__numero">{{ numero + 1 }}</span>
+              <span class="sv-etape__titre">{{ etape.titre }}</span>
+              <span class="sv-etape__detail">{{ etape.detail }}</span>
+            </li>
+          }
+        </ol>
+      </section>
+    </div>
+  } @else {
+    <div class="sira-vitrine__largeur ps-accueil__etat">
+      <h1>{{ configuration.nom }}</h1>
+      <sira-squelette [lignes]="4" libelle="Chargement de la démarche" />
+    </div>
+  }
+</div>
