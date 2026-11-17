@@ -1,0 +1,460 @@
+{
+ "_notice": "Fictional demonstration data, derived from registres/donnees/etat-civil. Any resemblance to a real person is coincidental.",
+ "citizens": [
+  {
+   "nin": "990048217350",
+   "name": {
+    "family": "KABORÉ",
+    "given": [
+     "Wendkuni",
+     "Aïcha"
+    ]
+   },
+   "gender": "female",
+   "birth": {
+    "date": "2003-03-14",
+    "place": {
+     "city": "Koudougou",
+     "country": "Burkina Faso"
+    }
+   }
+  },
+  {
+   "nin": "990017734062",
+   "name": {
+    "family": "SANOU",
+    "given": [
+     "Bakary",
+     "Désiré"
+    ]
+   },
+   "gender": "male",
+   "birth": {
+    "date": "2005-11-02",
+    "place": {
+     "city": "Bobo-Dioulasso",
+     "country": "Burkina Faso"
+    }
+   }
+  },
+  {
+   "nin": "990063390218",
+   "name": {
+    "family": "ZONGO",
+    "given": [
+     "Pingdwendé",
+     "Rasmata"
+    ]
+   },
+   "gender": "female",
+   "birth": {
+    "date": "1986-07-27",
+    "place": {
+     "city": "Réo",
+     "country": "Burkina Faso"
+    }
+   }
+  },
+  {
+   "nin": "990029915477",
+   "name": {
+    "family": "SOMÉ",
+    "given": [
+     "Dieudonné",
+     "Yirbar"
+    ]
+   },
+   "gender": "male",
+   "birth": {
+    "date": "1998-01-09",
+    "place": {
+     "city": "Diébougou",
+     "country": "Burkina Faso"
+    }
+   }
+  },
+  {
+   "nin": "990085502641",
+   "name": {
+    "family": "COULIBALY",
+    "given": [
+     "Mariam",
+     "Sita"
+    ]
+   },
+   "gender": "female",
+   "birth": {
+    "date": "2001-05-19",
+    "place": {
+     "city": "Bouaké",
+     "country": "Côte d’Ivoire"
+    }
+   }
+  },
+  {
+   "nin": "990051176839",
+   "name": {
+    "family": "DICKO",
+    "given": [
+     "Hamidou",
+     "Boureima"
+    ]
+   },
+   "gender": "male",
+   "birth": {
+    "date": "1999-09-30",
+    "place": {
+     "city": "Dori",
+     "country": "Burkina Faso"
+    }
+   }
+  },
+  {
+   "nin": "990010452876",
+   "name": {
+    "family": "OUÉDRAOGO",
+    "given": [
+     "Abdoul",
+     "Karim"
+    ]
+   },
+   "gender": "male",
+   "birth": {
+    "date": "1995-06-12",
+    "place": {
+     "city": "Ouahigouya",
+     "country": "Burkina Faso"
+    }
+   }
+  },
+  {
+   "nin": "990011380594",
+   "name": {
+    "family": "SAWADOGO",
+    "given": [
+     "Zalissa"
+    ]
+   },
+   "gender": "female",
+   "birth": {
+    "date": "2000-12-03",
+    "place": {
+     "city": "Kaya",
+     "country": "Burkina Faso"
+    }
+   }
+  },
+  {
+   "nin": "990012907431",
+   "name": {
+    "family": "TRAORÉ",
+    "given": [
+     "Issouf"
+    ]
+   },
+   "gender": "male",
+   "birth": {
+    "date": "1992-02-25",
+    "place": {
+     "city": "Banfora",
+     "country": "Burkina Faso"
+    }
+   }
+  },
+  {
+   "nin": "990013665208",
+   "name": {
+    "family": "COMPAORÉ",
+    "given": [
+     "Nadège",
+     "Wendyam"
+    ]
+   },
+   "gender": "female",
+   "birth": {
+    "date": "2004-08-17",
+    "place": {
+     "city": "Ziniaré",
+     "country": "Burkina Faso"
+    }
+   }
+  },
+  {
+   "nin": "990014239765",
+   "name": {
+    "family": "ILBOUDO",
+    "given": [
+     "Rodrigue"
+    ]
+   },
+   "gender": "male",
+   "birth": {
+    "date": "2009-08-21",
+    "place": {
+     "city": "Ouagadougou",
+     "country": "Burkina Faso"
+    }
+   }
+  },
+  {
+   "nin": "990015718342",
+   "name": {
+    "family": "NIKIÉMA",
+    "given": [
+     "Flore",
+     "Bénéwendé"
+    ]
+   },
+   "gender": "female",
+   "birth": {
+    "date": "1997-04-05",
+    "place": {
+     "city": "Ouagadougou",
+     "country": "Burkina Faso"
+    }
+   }
+  },
+  {
+   "nin": "990016094127",
+   "name": {
+    "family": "BARRY",
+    "given": [
+     "Aminata"
+    ]
+   },
+   "gender": "female",
+   "birth": {
+    "date": "2002-10-29",
+    "place": {
+     "city": "Dori",
+     "country": "Burkina Faso"
+    }
+   }
+  },
+  {
+   "nin": "990018523690",
+   "name": {
+    "family": "DIALLO",
+    "given": [
+     "Ousmane"
+    ]
+   },
+   "gender": "male",
+   "birth": {
+    "date": "1988-01-14",
+    "place": {
+     "city": "Fada N'Gourma",
+     "country": "Burkina Faso"
+    }
+   }
+  },
+  {
+   "nin": "990019846013",
+   "name": {
+    "family": "YAMÉOGO",
+    "given": [
+     "Estelle",
+     "Marie"
+    ]
+   },
+   "gender": "female",
+   "birth": {
+    "date": "2006-03-08",
+    "place": {
+     "city": "Koudougou",
+     "country": "Burkina Faso"
+    }
+   }
+  },
+  {
+   "nin": "990020371459",
+   "name": {
+    "family": "TIENDRÉBÉOGO",
+    "given": [
+     "Wilfried"
+    ]
+   },
+   "gender": "male",
+   "birth": {
+    "date": "1999-07-22",
+    "place": {
+     "city": "Manga",
+     "country": "Burkina Faso"
+    }
+   }
+  },
+  {
+   "nin": "990021659834",
+   "name": {
+    "family": "KONATÉ",
+    "given": [
+     "Djénéba"
+    ]
+   },
+   "gender": "female",
+   "birth": {
+    "date": "2001-11-11",
+    "place": {
+     "city": "Bobo-Dioulasso",
+     "country": "Burkina Faso"
+    }
+   }
+  },
+  {
+   "nin": "990022418067",
+   "name": {
+    "family": "HIEN",
+    "given": [
+     "Sansan",
+     "Olivier"
+    ]
+   },
+   "gender": "male",
+   "birth": {
+    "date": "1994-09-02",
+    "place": {
+     "city": "Gaoua",
+     "country": "Burkina Faso"
+    }
+   }
+  },
+  {
+   "nin": "990023970581",
+   "name": {
+    "family": "LOMPO",
+    "given": [
+     "Yempabou"
+    ]
+   },
+   "gender": "male",
+   "birth": {
+    "date": "2003-05-30",
+    "place": {
+     "city": "Fada N'Gourma",
+     "country": "Burkina Faso"
+    }
+   }
+  },
+  {
+   "nin": "990024135796",
+   "name": {
+    "family": "KINDA",
+    "given": [
+     "Rasmané"
+    ]
+   },
+   "gender": "male",
+   "birth": {
+    "date": "1983-12-19",
+    "place": {
+     "city": "Kaya",
+     "country": "Burkina Faso"
+    }
+   }
+  },
+  {
+   "nin": "990025782940",
+   "name": {
+    "family": "BAMBARA",
+    "given": [
+     "Charlotte"
+    ]
+   },
+   "gender": "female",
+   "birth": {
+    "date": "1996-02-07",
+    "place": {
+     "city": "Tenkodogo",
+     "country": "Burkina Faso"
+    }
+   }
+  },
+  {
+   "nin": "990026340815",
+   "name": {
+    "family": "DEMBÉLÉ",
+    "given": [
+     "Moussa"
+    ]
+   },
+   "gender": "male",
+   "birth": {
+    "date": "2000-06-26",
+    "place": {
+     "city": "Dédougou",
+     "country": "Burkina Faso"
+    }
+   }
+  },
+  {
+   "nin": "990027894603",
+   "name": {
+    "family": "OUATTARA",
+    "given": [
+     "Fatimata"
+    ]
+   },
+   "gender": "female",
+   "birth": {
+    "date": "2005-01-16",
+    "place": {
+     "city": "Banfora",
+     "country": "Burkina Faso"
+    }
+   }
+  },
+  {
+   "nin": "990028061372",
+   "name": {
+    "family": "ZIDA",
+    "given": [
+     "Parfait",
+     "Wendpanga"
+    ]
+   },
+   "gender": "male",
+   "birth": {
+    "date": "1990-10-04",
+    "place": {
+     "city": "Ziniaré",
+     "country": "Burkina Faso"
+    }
+   }
+  },
+  {
+   "nin": "990030257948",
+   "name": {
+    "family": "SIMPORÉ",
+    "given": [
+     "Alimata"
+    ]
+   },
+   "gender": "female",
+   "birth": {
+    "date": "1998-08-13",
+    "place": {
+     "city": "Tenkodogo",
+     "country": "Burkina Faso"
+    }
+   }
+  },
+  {
+   "nin": "990031603275",
+   "name": {
+    "family": "PODA",
+    "given": [
+     "Naapouo",
+     "Éric"
+    ]
+   },
+   "gender": "male",
+   "birth": {
+    "date": "2002-04-21",
+    "place": {
+     "city": "Diébougou",
+     "country": "Burkina Faso"
+    }
+   }
+  }
+ ]
+}

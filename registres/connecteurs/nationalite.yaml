@@ -1,0 +1,45 @@
+# Politique locale du registre de la nationalité (démonstration).
+
+validite:
+  par_defaut: P180D
+  maximale: P365D
+
+champs:
+  # On confirme la nationalité burkinabè ; on ne révèle pas une autre nationalité.
+  - chemin: nationalite
+    libelle: Nationalité
+    type: TEXTE
+    niveau: STATUT
+    operateurs: [EGAL]
+    valeurs: ["BF"]
+
+  # Comment la nationalité a été acquise, et le certificat qui la prouve.
+  - chemin: nom
+    libelle: Nom
+    type: TEXTE
+    niveau: CHAMPS
+  - chemin: prenoms
+    libelle: Prénoms
+    type: TEXTE
+    niveau: CHAMPS
+  - chemin: mode_acquisition
+    libelle: Mode d’acquisition de la nationalité
+    type: TEXTE
+    niveau: CHAMPS
+  - chemin: numero_certificat
+    libelle: Numéro du certificat de nationalité
+    type: TEXTE
+    niveau: CHAMPS
+  - chemin: date_certificat
+    libelle: Date du certificat de nationalité
+    type: DATE
+    niveau: CHAMPS
+
+documents:
+  - certificat-nationalite
+  - attestation-nationalite
+
+# Nom lisible de chaque document, montré dans la console.
+libelles_documents:
+  certificat-nationalite: Certificat de nationalité burkinabè
+  attestation-nationalite: Attestation de nationalité burkinabè
