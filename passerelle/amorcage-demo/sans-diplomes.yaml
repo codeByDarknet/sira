@@ -1,0 +1,173 @@
+# Amorçage de la passerelle pour la démonstration, registre « diplomes » pas encore raccordé.
+# Les formes sont celles des ressources d'administration (docs/architecture/API.md, contrat §7.3).
+# Les adresses de retour suivent le port publié : ${SIRA_PORT:8600} est remplacé à l’import par la passerelle.
+# Le raccordement en direct depuis la console est décrit dans docs/composants/demo-registres.md.
+
+membres:
+  - code: concours
+    nom: Concours directs 2026
+    organisme: Ministère de la Fonction publique
+    roles: [SERVICE]
+    identite: urn:sira:service:concours
+    retours_autorises: ["http://concours.sira.localhost:${SIRA_PORT:8600}/retour"]
+  - code: bourses
+    nom: Bourses d'études
+    organisme: Centre national de l'information, de l'orientation scolaire et des bourses
+    roles: [SERVICE]
+    identite: urn:sira:service:bourses
+    retours_autorises: ["http://bourses.sira.localhost:${SIRA_PORT:8600}/retour"]
+  - code: entreprises
+    nom: Créer son entreprise
+    organisme: Centre de formalités des entreprises 
+    roles: [SERVICE]
+    identite: urn:sira:service:entreprises
+    retours_autorises: ["http://entreprises.sira.localhost:${SIRA_PORT:8600}/retour"]
+  - code: etat-civil
+    nom: État civil
+    organisme: Direction de l’état civil 
+    roles: [REGISTRE]
+    identite: urn:sira:registre:etat-civil
+  - code: nationalite
+    nom: Nationalité
+    organisme: Service de la nationalité 
+    roles: [REGISTRE]
+    identite: urn:sira:registre:nationalite
+  - code: casier
+    nom: Casier judiciaire
+    organisme: Service du casier judiciaire 
+    roles: [REGISTRE]
+    identite: urn:sira:registre:casier
+
+registres:
+  - code: etat-civil
+    nom: État civil
+    membre: etat-civil
+    adresse: https://connecteur-etat-civil:8443
+    transport: ${SIRA_DEMO_TRANSPORT:DIRECT}
+  - code: nationalite
+    nom: Nationalité
+    membre: nationalite
+    adresse: https://connecteur-nationalite:8443
+    transport: ${SIRA_DEMO_TRANSPORT:DIRECT}
+  - code: casier
+    nom: Casier judiciaire
+    membre: casier
+    adresse: https://connecteur-casier:8443
+    transport: ${SIRA_DEMO_TRANSPORT:DIRECT}
+
+jeux:
+  - code: etat-civil.majeur
+    registre: etat-civil
+    niveau: STATUT
+    libelle: Âge de 18 ans ou plus
+    description: Répond oui ou non. La date de naissance n'est pas transmise.
+    validite: P90D
+    regle: { champ: date_naissance, operateur: AGE_AU_MOINS, valeur: 18 }
+  - code: etat-civil.age-35-au-plus
+    registre: etat-civil
+    niveau: STATUT
+    libelle: Âge de 35 ans au plus
+    description: Répond oui ou non. La date de naissance n'est pas transmise.
+    validite: P90D
+    regle: { champ: date_naissance, operateur: AGE_AU_PLUS, valeur: 35 }
+  - code: etat-civil.identite
+    registre: etat-civil
+    niveau: CHAMPS
+    libelle: Nom, prénoms et date de naissance
+    validite: P90D
+    champs: [nom, prenoms, date_naissance]
+  - code: etat-civil.nom-prenoms
+    registre: etat-civil
+    niveau: CHAMPS
+    libelle: Nom et prénoms
+    description: La date de naissance n'est pas transmise.
+    validite: P90D
+    champs: [nom, prenoms]
+  - code: etat-civil.extrait-naissance
+    registre: etat-civil
+    niveau: DOCUMENT
+    libelle: Extrait d'acte de naissance
+    validite: P90D
+    document: extrait-naissance
+  - code: etat-civil.lieu-naissance
+    registre: etat-civil
+    niveau: CHAMPS
+    libelle: Lieu de naissance
+    validite: P90D
+    champs: [lieu_naissance]
+  - code: etat-civil.filiation
+    registre: etat-civil
+    niveau: CHAMPS
+    libelle: Nom du père et nom de la mère
+    validite: P90D
+    champs: [nom_pere, nom_mere]
+  - code: etat-civil.copie-integrale
+    registre: etat-civil
+    niveau: DOCUMENT
+    libelle: Copie intégrale d'acte de naissance
+    validite: P90D
+    document: copie-integrale-naissance
+  - code: nationalite.burkinabe
+    registre: nationalite
+    niveau: STATUT
+    libelle: Nationalité burkinabè
+    description: Répond oui ou non. Une autre nationalité n'est jamais révélée.
+    validite: P180D
+    regle: { champ: nationalite, operateur: EGAL, valeur: BF }
+  - code: nationalite.certificat
+    registre: nationalite
+    niveau: DOCUMENT
+    libelle: Certificat de nationalité burkinabè
+    validite: P180D
+    document: certificat-nationalite
+  - code: casier.neant
+    registre: casier
+    niveau: STATUT
+    libelle: Casier judiciaire vierge
+    description: Répond oui ou non. Le contenu du casier n'est jamais transmis.
+    validite: P30D
+    regle: { champ: condamnations, operateur: AUCUN }
+  - code: casier.bulletin-3
+    registre: casier
+    niveau: DOCUMENT
+    libelle: Extrait de casier judiciaire (bulletin n°3)
+    validite: P30D
+    document: bulletin-3
+
+demarches:
+  - code: concours-direct
+    libelle: Inscription à un concours direct de la fonction publique
+    finalite: Vérifier vos conditions d'inscription au concours.
+    base_legale: Loi n° 081-2015/CNT portant statut général de la fonction publique d'État
+    service: concours
+    duree_autorisation_jours: 30
+  - code: bourse-etudes
+    libelle: Demande de bourse d'études
+    finalite: Constituer votre dossier de bourse.
+    base_legale: Décret portant régime des bourses d'études nationales
+    service: bourses
+    duree_autorisation_jours: 90
+  - code: immatriculation-commercant
+    libelle: Immatriculation d'un commerçant au registre du commerce
+    finalite: Immatriculer votre entreprise individuelle.
+    base_legale: Acte uniforme OHADA relatif au droit commercial général du 15 décembre 2010 (articles 7, 10 et 44)
+    service: entreprises
+    duree_autorisation_jours: 30
+
+habilitations:
+  - service: concours
+    demarche: concours-direct
+    jeux: [etat-civil.nom-prenoms, etat-civil.lieu-naissance, etat-civil.majeur, etat-civil.age-35-au-plus, nationalite.burkinabe, casier.neant]
+    etat: APPROUVEE
+    justification: Les conditions du concours sont l'âge, la nationalité et un casier vierge. Quatre réponses par oui ou non suffisent ; le nom et les prénoms identifient le candidat sur la liste des inscrits, sans sa date de naissance.
+  - service: bourses
+    demarche: bourse-etudes
+    jeux: [nationalite.burkinabe, etat-civil.identite]
+    etat: APPROUVEE
+    justification: L'attribution d'une bourse demande l'identité de l'étudiant et sa nationalité. Le baccalauréat reste fourni sur papier tant que le registre des diplômes n'est pas raccordé.
+  - service: entreprises
+    demarche: immatriculation-commercant
+    jeux: [etat-civil.identite, etat-civil.filiation, etat-civil.extrait-naissance, nationalite.burkinabe, nationalite.certificat, casier.neant]
+    etat: APPROUVEE
+    justification: >-
+      Le registre du commerce inscrit le nom, les prénoms et la date de naissance du commerçant ; la date établit aussi qu'il n'est pas mineur. L'extrait d'acte de naissance est la pièce d'état civil versée au dossier d'immatriculation. La nationalité ne décide que du régime applicable, un oui ou un non suffit. Le casier remplace l'extrait demandé à l'immatriculation, mais seul « vierge : oui ou non » est transmis, et un « non » renvoie le dossier à un agent, jamais à un refus automatique.
