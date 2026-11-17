@@ -1,0 +1,185 @@
+<sira-fil
+  [elements]="[{ libelle: 'Habilitations', chemin: '/habilitations' }, { libelle: 'Détail' }]"
+/>
+
+@if (probleme(); as message) {
+  <h1>Habilitation introuvable</h1>
+  <sira-alerte type="erreur">{{ message }}</sira-alerte>
+} @else if (fiche(); as habilitation) {
+  @let etat = libelleEtat(habilitation.etat);
+  <div class="sira-titre-page">
+    <div>
+      <h1>
+        {{ noms.membre(habilitation.service) }} pour {{ noms.demarche(habilitation.demarche) }}
+      </h1>
+      <p>
+        Ce que ce service a le droit de demander aux registres pour cette démarche, et qui l’a
+        décidé.
+      </p>
+    </div>
+    @if (permis(); as gestesPermis) {
+      @if (!gestesPermis.explication) {
+        <div class="sira-fiche__actions">
+          @if (gestesPermis.modifier) {
+            <button siraBouton variante="secondaire" type="button" (click)="modification.set(true)">
+              <sira-icone nom="pencil" />
+              Modifier
+            </button>
+          }
+          @if (gestesPermis.soumettre) {
+            <button siraBouton type="button" (click)="proposer('soumission')">
+              <sira-icone nom="send" />
+              {{ gestes.soumission.bouton }}
+            </button>
+          }
+          @for (decision of gestesPermis.decisions; track decision) {
+            <button
+              siraBouton
+              type="button"
+              [variante]="gestes[decision].danger ? 'danger' : 'primaire'"
+              (click)="proposer(decision)"
+            >
+              <sira-icone [nom]="gestes[decision].danger ? 'ban' : 'check'" />
+              {{ gestes[decision].bouton }}
+            </button>
+          }
+        </div>
+      }
+    }
+  </div>
+
+  <div aria-live="polite">
+    @if (annonce(); as message) {
+      <sira-alerte type="succes" ephemere>{{ message }}</sira-alerte>
+    }
+  </div>
+
+  <div class="sira-fiche">
+    <div class="sira-fiche__grille">
+      <section class="sira-fiche__case">
+        <p class="sira-fiche__cle"><sira-icone nom="circle-check" /> État</p>
+        <p class="sira-fiche__valeur">
+          <sira-etiquette [etat]="etat.etat">{{ etat.texte }}</sira-etiquette>
+        </p>
+        <p class="sira-fiche__explication">{{ explicationEtat(habilitation.etat) }}</p>
+      </section>
+      <section class="sira-fiche__case">
+        <p class="sira-fiche__cle"><sira-icone nom="building-2" /> Service</p>
+        <p class="sira-fiche__valeur">
+          <a siraLien [routerLink]="['/membres', habilitation.service]">{{
+            noms.membre(habilitation.service)
+          }}</a>
+        </p>
+        <p class="sira-fiche__explication">Le membre autorisé à poser les questions ci-dessous.</p>
+      </section>
+      <section class="sira-fiche__case">
+        <p class="sira-fiche__cle"><sira-icone nom="file-text" /> Démarche</p>
+        <p class="sira-fiche__valeur">
+          <a siraLien [routerLink]="['/demarches', habilitation.demarche]">{{
+            noms.demarche(habilitation.demarche)
+          }}</a>
+        </p>
+        <p class="sira-fiche__explication">
+          Les questions ne servent que pour cette démarche, avec l’accord du citoyen.
+        </p>
+      </section>
+      <section class="sira-fiche__case">
+        <p class="sira-fiche__cle"><sira-icone nom="user" /> Préparée par</p>
+        <p class="sira-fiche__valeur">{{ habilitation.instruite_par }}</p>
+        <p class="sira-fiche__explication">
+          L’instructeur qui a préparé le dossier. Il ne peut pas le décider lui-même.
+        </p>
+      </section>
+      @if (habilitation.decidee_par) {
+        <section class="sira-fiche__case">
+          <p class="sira-fiche__cle"><sira-icone nom="shield-check" /> Décidée par</p>
+          <p class="sira-fiche__valeur">{{ habilitation.decidee_par }}</p>
+          <p class="sira-fiche__explication">
+            Le {{ habilitation.decidee_le | siraDate }}. Une autre personne que l’instructeur.
+          </p>
+        </section>
+      }
+      <section class="sira-fiche__case sira-fiche__case--large">
+        <p class="sira-fiche__cle"><sira-icone nom="message-square" /> Justification</p>
+        <p class="sira-fiche__valeur">{{ habilitation.justification }}</p>
+        <p class="sira-fiche__explication">
+          Pourquoi le service a besoin de ces questions. L’autorité la lit avant de décider.
+        </p>
+      </section>
+      @if (habilitation.motif) {
+        <section class="sira-fiche__case sira-fiche__case--large">
+          <p class="sira-fiche__cle"><sira-icone nom="info" /> Motif de la décision</p>
+          <p class="sira-fiche__valeur">{{ habilitation.motif }}</p>
+          <p class="sira-fiche__explication">Écrit par l’autorité qui a rejeté ou suspendu.</p>
+        </section>
+      }
+      <section class="sira-fiche__case sira-fiche__case--large">
+        <p class="sira-fiche__cle"><sira-icone nom="list" /> Questions autorisées</p>
+        <ul class="co-roles">
+          @for (question of questions(); track question.code) {
+            <li class="co-roles--actif">
+              <sira-icone nom="circle-check" />
+              <span>
+                <strong>{{ question.jeu?.libelle ?? question.code }}</strong>
+                @if (question.jeu; as jeu) {
+                  · {{ libelleNiveau(jeu.niveau) }}, registre {{ noms.registre(jeu.registre) }}
+                }
+                · <a siraLien [routerLink]="['/questions', question.code]">Voir la question</a>
+              </span>
+            </li>
+          }
+        </ul>
+        <p class="sira-fiche__explication">Le service ne reçoit que la réponse à ces questions</p>
+      </section>
+    </div>
+  </div>
+
+  <co-fenetre
+    large
+    titre="Modifier le brouillon"
+    intro="Le brouillon reste modifiable jusqu’à sa soumission à l’autorité."
+    [(ouvert)]="modification"
+  >
+    @if (modification()) {
+      <co-formulaire-habilitation
+        [id]="habilitation.id"
+        (termine)="apresModification()"
+        (annule)="modification.set(false)"
+      />
+    }
+  </co-fenetre>
+
+  @let choisi = gestes[geste()];
+  <sira-dialogue [titre]="choisi.question" [(ouvert)]="ouvert">
+    <p>{{ choisi.consequence }}</p>
+    @if (envoi.echec(); as message) {
+      <sira-alerte type="erreur" titre="Décision non enregistrée">{{ message }}</sira-alerte>
+    }
+    @if (choisi.avecMotif) {
+      <sira-champ libelle="Motif" identifiant="motif" [erreur]="envoi.erreurs()['motif']">
+        <textarea siraSaisie rows="3" [formControl]="motif"></textarea>
+      </sira-champ>
+    }
+    <button
+      dialogue-actions
+      siraBouton
+      type="button"
+      [variante]="choisi.danger ? 'danger' : 'primaire'"
+      [enCours]="envoi.enCours()"
+      (click)="confirmer()"
+    >
+      {{ choisi.bouton }}
+    </button>
+    <button
+      dialogue-actions
+      siraBouton
+      variante="secondaire"
+      type="button"
+      (click)="ouvert.set(false)"
+    >
+      Annuler
+    </button>
+  </sira-dialogue>
+} @else {
+  <sira-squelette [lignes]="6" libelle="Chargement de l’habilitation" />
+}

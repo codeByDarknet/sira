@@ -1,0 +1,110 @@
+<div class="sira-titre-page">
+  <div>
+    <h1>Tableau de bord</h1>
+  </div>
+</div>
+
+<section class="co-section" aria-labelledby="titre-actions">
+  <h2 id="titre-actions">À traiter</h2>
+  @if (alertesIncompletes()) {
+    <sira-alerte type="erreur">
+      Compteurs indisponibles : ouvrez les habilitations et les signalements.
+    </sira-alerte>
+  }
+  <div class="sira-indicateurs sira-indicateurs--2">
+    <sira-indicateur
+      icone="shield-check"
+      [ton]="habilitations() > 0 ? 'orange' : 'vert'"
+      libelle="Habilitations à décider"
+      [valeur]="habilitations()"
+      [note]="
+        habilitations() > 0
+          ? 'Soumises par un instructeur, en attente de l’autorité'
+          : 'Aucune habilitation n’attend de décision'
+      "
+      lien="/habilitations"
+    />
+    <sira-indicateur
+      icone="flag"
+      [ton]="signalements() > 0 ? 'rouge' : 'vert'"
+      libelle="Signalements sans réponse"
+      [valeur]="signalements()"
+      [note]="
+        signalements() > 0
+          ? 'Des citoyens contestent une information reçue'
+          : 'Aucun signalement en attente'
+      "
+      lien="/signalements"
+    />
+  </div>
+</section>
+
+<section class="co-section" aria-labelledby="titre-activite">
+  <h2 id="titre-activite">Activité</h2>
+  @if (statistiquesIndisponibles(); as message) {
+    <sira-alerte type="erreur" titre="Chiffres indisponibles">{{ message }}</sira-alerte>
+  } @else if (chiffres(); as activite) {
+    <div class="sira-indicateurs">
+      <sira-indicateur
+        icone="file-text"
+        ton="bleu"
+        libelle="Pièces évitées"
+        [valeur]="activite.piecesEvitees"
+        note="Justificatifs que les citoyens n’ont pas eu à fournir, depuis le début"
+      />
+      @for (chiffre of activite.duJour; track chiffre.libelle) {
+        <sira-indicateur
+          [icone]="chiffre.icone"
+          [ton]="chiffre.ton"
+          [libelle]="chiffre.libelle"
+          [valeur]="chiffre.valeur"
+          [note]="chiffre.note"
+        />
+      }
+    </div>
+  } @else {
+    <sira-squelette [lignes]="3" libelle="Chargement des chiffres" />
+  }
+</section>
+
+<section class="co-section" aria-labelledby="titre-reseau">
+  <div class="co-section__entete">
+    <h2 id="titre-reseau">Registres raccordés</h2>
+    @if (reseauActuel()) {
+      <p class="sira-secondaire">
+        Relevé à {{ reseauLuLe() | siraDate: 'heure' }} · {{ phraseFile() }}
+      </p>
+    }
+  </div>
+  @if (reseauInjoignable(); as message) {
+    <sira-alerte type="erreur" titre="Réseau injoignable">
+      {{ message }} Nouvel essai automatique.
+    </sira-alerte>
+  }
+  @if (reseauActuel(); as etat) {
+    @if (etat.registres.length === 0) {
+      <sira-etat-vide titre="Aucun registre raccordé" icone="landmark" />
+    } @else {
+      <div class="sira-indicateurs">
+        @for (registre of etat.registres; track registre.code) {
+          <article class="co-registre">
+            <header class="co-registre__entete">
+              <span class="sira-indicateur__icone co-registre__icone" aria-hidden="true">
+                <sira-icone nom="landmark" />
+              </span>
+              <h3 class="co-registre__nom">{{ registre.nom }}</h3>
+              <a
+                siraAction="eye"
+                [libelle]="'Voir le registre ' + registre.nom"
+                [routerLink]="['/registres', registre.code]"
+              ></a>
+            </header>
+            <co-etat-registre [etat]="registre" />
+          </article>
+        }
+      </div>
+    }
+  } @else if (!reseauInjoignable()) {
+    <sira-squelette [lignes]="4" libelle="Chargement de l’état du réseau" />
+  }
+</section>

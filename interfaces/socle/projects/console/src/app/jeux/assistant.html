@@ -1,0 +1,362 @@
+@if (introuvable(); as message) {
+  <sira-alerte type="erreur">{{ message }}</sira-alerte>
+} @else if (existant.isLoading()) {
+  <sira-squelette [lignes]="6" libelle="Chargement de la question" />
+} @else {
+  <sira-etapes [etapes]="etapes()" [courante]="etape()" />
+  <h2 #titreAffiche class="sira-masque" tabindex="-1">
+    Étape {{ etape() }} sur 5 : {{ titreEtape() }}
+  </h2>
+  <sira-resume-erreurs [erreurs]="resume()" />
+
+  @if (etape() < 5) {
+    <form
+      class="sira-pile co-assistant"
+      novalidate
+      [formGroup]="formulaire"
+      (ngSubmit)="continuer()"
+    >
+      @switch (etape()) {
+        @case (1) {
+          @if (registresIndisponibles(); as message) {
+            <sira-alerte type="erreur" titre="Registres indisponibles">
+              {{ message }}
+            </sira-alerte>
+          }
+          <sira-groupe-formulaire
+            legende="Quel registre détient l’information ?"
+            [aide]="code() ? 'Non modifiable.' : undefined"
+            [erreur]="erreurs()['registre']"
+          >
+            @for (choix of registres(); track choix.code; let premier = $first) {
+              <label class="sira-choix">
+                <input
+                  type="radio"
+                  formControlName="registre"
+                  [attr.id]="premier ? 'registre' : null"
+                  [value]="choix.code"
+                />
+                {{ choix.nom }}
+              </label>
+            }
+          </sira-groupe-formulaire>
+        }
+        @case (2) {
+          <sira-groupe-formulaire
+            legende="Que doit recevoir le service ?"
+            aide="Choisissez la moins révélatrice qui suffit."
+            [erreur]="erreurs()['niveau']"
+          >
+            @for (choix of niveaux; track choix.code; let premier = $first) {
+              <label class="sira-choix">
+                <input
+                  type="radio"
+                  formControlName="niveau"
+                  [attr.id]="premier ? 'niveau' : null"
+                  [value]="choix.code"
+                />
+                <span>
+                  <strong>{{ choix.libelle }}</strong>
+                  <span class="co-ligne sira-secondaire">{{ choix.explication }}</span>
+                </span>
+              </label>
+            }
+          </sira-groupe-formulaire>
+        }
+        @case (3) {
+          @if (schema.isLoading()) {
+            <sira-squelette [lignes]="3" libelle="Lecture des informations du registre" />
+          } @else if (schemaIndisponible()) {
+            <sira-alerte type="erreur" titre="Le registre ne répond pas">
+              Impossible de lire les informations qu’il expose. Réessayez dans un instant.
+            </sira-alerte>
+          } @else {
+            @switch (saisie().niveau) {
+              @case ('CHAMPS') {
+                <div class="sira-champ">
+                  <p-floatlabel variant="in" class="sira-champ__flottant">
+                    <p-multiselect
+                      inputId="champs"
+                      [options]="champsTransmissibles()"
+                      optionLabel="libelle"
+                      optionValue="chemin"
+                      display="chip"
+                      appendTo="body"
+                      class="co-multiselect"
+                      [maxSelectedLabels]="20"
+                      selectedItemsLabel="{0} informations choisies"
+                      placeholder=" "
+                      styleClass="co-select"
+                      [showToggleAll]="false"
+                      [filter]="false"
+                      [invalid]="!!erreurs()['champs']"
+                      [ngModel]="champsCoches()"
+                      [ngModelOptions]="{ standalone: true }"
+                      (ngModelChange)="cocherChamps($event)"
+                    />
+                    <label for="champs"
+                      >Informations transmises
+                      <span class="sira-champ__requis" aria-hidden="true">*</span></label
+                    >
+                  </p-floatlabel>
+                  <span class="sira-champ__aide"
+                    >Seules les informations que le registre accepte de transmettre.</span
+                  >
+                  @if (erreurs()['champs']; as erreur) {
+                    <p class="sira-champ__erreur">{{ erreur }}</p>
+                  }
+                </div>
+              }
+              @case ('DOCUMENT') {
+                <div class="sira-champ">
+                  <p-floatlabel variant="in" class="sira-champ__flottant">
+                    <p-select
+                      inputId="document"
+                      formControlName="document"
+                      [options]="documentsSchema()"
+                      optionLabel="libelle"
+                      optionValue="code"
+                      appendTo="body"
+                      styleClass="co-select"
+                      [invalid]="!!erreurs()['document']"
+                    />
+                    <label for="document"
+                      >Document <span class="sira-champ__requis" aria-hidden="true">*</span></label
+                    >
+                  </p-floatlabel>
+                  @if (erreurs()['document']; as erreur) {
+                    <p class="sira-champ__erreur">{{ erreur }}</p>
+                  }
+                </div>
+              }
+              @default {
+                <div class="sira-champ">
+                  <p-floatlabel variant="in" class="sira-champ__flottant">
+                    <p-select
+                      inputId="regle.champ"
+                      formControlName="champ"
+                      [options]="champsSchema()"
+                      optionLabel="libelle"
+                      optionValue="chemin"
+                      appendTo="body"
+                      styleClass="co-select"
+                      [invalid]="!!erreurs()['regle.champ']"
+                      (onChange)="choisirChamp()"
+                    />
+                    <label for="regle.champ"
+                      >Information à vérifier
+                      <span class="sira-champ__requis" aria-hidden="true">*</span></label
+                    >
+                  </p-floatlabel>
+                  @if (erreurs()['regle.champ']; as erreur) {
+                    <p class="sira-champ__erreur">{{ erreur }}</p>
+                  }
+                </div>
+                @if (champChoisi()) {
+                  <div class="sira-champ">
+                    <p-floatlabel variant="in" class="sira-champ__flottant">
+                      <p-select
+                        inputId="regle.operateur"
+                        formControlName="operateur"
+                        [options]="operateurs()"
+                        optionLabel="libelle"
+                        optionValue="code"
+                        appendTo="body"
+                        styleClass="co-select"
+                        [invalid]="!!erreurs()['regle.operateur']"
+                        (onChange)="choisirOperateur()"
+                      />
+                      <label for="regle.operateur"
+                        >Condition
+                        <span class="sira-champ__requis" aria-hidden="true">*</span></label
+                      >
+                    </p-floatlabel>
+                    @if (operateur(); as choisi) {
+                      <span class="sira-champ__aide">Exemple : {{ choisi.exemple }}</span>
+                    }
+                    @if (erreurs()['regle.operateur']; as erreur) {
+                      <p class="sira-champ__erreur">{{ erreur }}</p>
+                    }
+                  </div>
+                }
+                @if (operateur(); as choisi) {
+                  @if (forme() === 'liste' || forme() === 'booleen') {
+                    <div class="sira-champ">
+                      <p-floatlabel variant="in" class="sira-champ__flottant">
+                        <p-select
+                          inputId="regle.valeur"
+                          formControlName="valeur"
+                          [options]="forme() === 'liste' ? valeursAdmises() : ouiNon"
+                          optionLabel="libelle"
+                          optionValue="valeur"
+                          appendTo="body"
+                          styleClass="co-select"
+                          [invalid]="!!erreurs()['regle.valeur']"
+                        />
+                        <label for="regle.valeur"
+                          >{{ choisi.libelleValeur ?? 'Valeur' }}
+                          <span class="sira-champ__requis" aria-hidden="true">*</span></label
+                        >
+                      </p-floatlabel>
+                      @if (erreurs()['regle.valeur']; as erreur) {
+                        <p class="sira-champ__erreur">{{ erreur }}</p>
+                      }
+                    </div>
+                  } @else if (forme() !== 'aucune') {
+                    <sira-champ
+                      obligatoire
+                      identifiant="regle.valeur"
+                      [libelle]="choisi.libelleValeur ?? 'Valeur'"
+                      [erreur]="erreurs()['regle.valeur']"
+                    >
+                      <input
+                        siraSaisie
+                        class="sira-saisie--courte"
+                        formControlName="valeur"
+                        autocomplete="off"
+                        [attr.type]="forme() === 'date' ? 'date' : 'text'"
+                        [attr.inputmode]="forme() === 'nombre' ? 'decimal' : null"
+                      />
+                    </sira-champ>
+                  }
+                }
+              }
+            }
+          }
+          <div aria-live="polite">
+            @if (apercu(); as phrase) {
+              <sira-alerte titre="Ce que le service recevra">
+                <p>{{ phrase }}</p>
+              </sira-alerte>
+            }
+          </div>
+        }
+        @case (4) {
+          <sira-champ
+            obligatoire
+            libelle="Libellé affiché au citoyen"
+            aide="Exemple : Vous êtes majeur"
+            identifiant="libelle"
+            [erreur]="erreurs()['libelle']"
+          >
+            <input siraSaisie formControlName="libelle" autocomplete="off" />
+          </sira-champ>
+          <sira-champ libelle="Note interne (facultatif)" identifiant="description">
+            <textarea siraSaisie formControlName="description" rows="2"></textarea>
+          </sira-champ>
+          <sira-champ
+            obligatoire
+            libelle="Code de la question"
+            identifiant="code"
+            [aide]="
+              code()
+                ? 'Non modifiable.'
+                : ' Code complet : ' + saisie().registre + '.' + (saisie().suffixe || 'majeur')
+            "
+            [erreur]="erreurs()['code']"
+          >
+            <input
+              siraSaisie
+              class="sira-saisie--courte"
+              siraFiltre="code"
+              formControlName="suffixe"
+              autocomplete="off"
+            />
+          </sira-champ>
+          <sira-champ
+            obligatoire
+            libelle="Validité d’une réponse, en jours"
+            aide="Pendant cette durée, la réponse est réutilisée."
+            identifiant="validite"
+            [erreur]="erreurs()['validite']"
+          >
+            <input
+              siraSaisie
+              class="sira-saisie--courte"
+              siraFiltre="chiffres"
+              maxlength="3"
+              formControlName="validite_jours"
+              inputmode="numeric"
+              autocomplete="off"
+            />
+          </sira-champ>
+        }
+      }
+
+      <div class="sira-fenetre-formulaire__pied co-assistant__pied">
+        <button siraBouton type="submit">
+          Continuer
+          <sira-icone nom="chevron-right" />
+        </button>
+        @if (etape() > 1) {
+          <button siraBouton variante="secondaire" type="button" (click)="revenir()">
+            <sira-icone nom="arrow-left" />
+            Étape précédente
+          </button>
+        } @else {
+          <button siraBouton variante="secondaire" type="button" (click)="annule.emit()">
+            Annuler
+          </button>
+        }
+      </div>
+    </form>
+  } @else {
+    <div class="sira-fiche">
+      <div class="sira-fiche__grille">
+        <section class="sira-fiche__case">
+          <p class="sira-fiche__cle"><sira-icone nom="landmark" /> Registre</p>
+          <p class="sira-fiche__valeur">{{ nomRegistre() }}</p>
+          <p class="sira-fiche__explication">Le registre qui répondra à la question.</p>
+        </section>
+        <section class="sira-fiche__case">
+          <p class="sira-fiche__cle"><sira-icone nom="shield-check" /> Forme</p>
+          <p class="sira-fiche__valeur">{{ libelleNiveau(question().niveau) }}</p>
+          <p class="sira-fiche__explication">Ce que le service recevra.</p>
+        </section>
+        <section class="sira-fiche__case">
+          <p class="sira-fiche__cle"><sira-icone nom="clock" /> Validité</p>
+          <p class="sira-fiche__valeur">{{ phraseValidite(question().validite) }}</p>
+          <p class="sira-fiche__explication">Durée pendant laquelle la réponse est réutilisée.</p>
+        </section>
+        <section class="sira-fiche__case sira-fiche__case--large">
+          <p class="sira-fiche__cle"><sira-icone nom="send" /> Contenu transmis</p>
+          <p class="sira-fiche__valeur">{{ apercu() }}</p>
+        </section>
+        <section class="sira-fiche__case sira-fiche__case--large">
+          <p class="sira-fiche__cle"><sira-icone nom="message-square" /> Libellé affiché</p>
+          <p class="sira-fiche__valeur">{{ question().libelle }}</p>
+          <p class="sira-fiche__explication">Lu par le citoyen avant de donner son accord.</p>
+        </section>
+        <section class="sira-fiche__case sira-fiche__case--large">
+          <p class="sira-fiche__cle"><sira-icone nom="key-round" /> Code</p>
+          <p class="sira-fiche__valeur co-technique">{{ question().code }}</p>
+        </section>
+      </div>
+    </div>
+
+    @if (refus().length > 0) {
+      <sira-alerte type="erreur" titre="Question refusée">
+        <ul>
+          @for (message of refus(); track message) {
+            <li>{{ message }}</li>
+          }
+        </ul>
+        <p>Corrigez-la aux étapes précédentes.</p>
+      </sira-alerte>
+    }
+    @if (publication.echec(); as message) {
+      <sira-alerte type="erreur" titre="La question n’a pas été publiée">{{ message }}</sira-alerte>
+    }
+
+    <div class="sira-fenetre-formulaire__pied">
+      <button siraBouton variante="secondaire" type="button" (click)="revenir()">
+        <sira-icone nom="arrow-left" />
+        Étape précédente
+      </button>
+      <button siraBouton type="button" [enCours]="publication.enCours()" (click)="publier()">
+        <sira-icone nom="check" />
+        Publier la question
+      </button>
+    </div>
+  }
+}

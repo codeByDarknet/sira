@@ -1,0 +1,114 @@
+@if (introuvable(); as message) {
+  <sira-alerte type="erreur">{{ message }}</sira-alerte>
+} @else if (existant.isLoading()) {
+  <sira-squelette [lignes]="5" libelle="Chargement de la démarche" />
+} @else {
+  <sira-resume-erreurs [erreurs]="envoi.resume()" />
+  @if (envoi.echec(); as message) {
+    <sira-alerte type="erreur" titre="Démarche non enregistrée">{{ message }}</sira-alerte>
+  }
+
+  <form novalidate [formGroup]="formulaire" (ngSubmit)="enregistrer()">
+    <div class="sira-grille-formulaire">
+      <sira-champ
+        obligatoire
+        libelle="Code"
+        [aide]="
+          code()
+            ? 'Le code ne change jamais.'
+            : 'Minuscules, chiffres et tirets.  Exemple : concours-direct'
+        "
+        identifiant="code"
+        [erreur]="envoi.erreurs()['code']"
+      >
+        <input siraSaisie siraFiltre="code" formControlName="code" autocomplete="off" />
+      </sira-champ>
+
+      <sira-champ
+        obligatoire
+        libelle="Durée de l’accord, en jours"
+        aide="Combien de temps l’accord du citoyen reste valable. 0 pour une seule consultation, 365 au plus."
+        identifiant="duree_autorisation_jours"
+        [erreur]="envoi.erreurs()['duree_autorisation_jours']"
+      >
+        <input
+          siraSaisie
+          siraFiltre="chiffres"
+          maxlength="3"
+          formControlName="duree"
+          inputmode="numeric"
+          autocomplete="off"
+        />
+      </sira-champ>
+
+      <sira-champ
+        obligatoire
+        class="sira-pleine-largeur"
+        libelle="Nom de la démarche"
+        aide="Lu par le citoyen. Exemple : Inscription aux concours directs 2026"
+        identifiant="libelle"
+        [erreur]="envoi.erreurs()['libelle']"
+      >
+        <input siraSaisie formControlName="libelle" autocomplete="off" />
+      </sira-champ>
+
+      <div class="sira-champ sira-pleine-largeur">
+        <p-floatlabel variant="in" class="sira-champ__flottant">
+          <p-select
+            inputId="service"
+            formControlName="service"
+            [options]="services()"
+            optionLabel="nom"
+            optionValue="code"
+            appendTo="body"
+            styleClass="co-select"
+            [invalid]="!!envoi.erreurs()['service']"
+          />
+          <label for="service"
+            >Service qui rend la démarche
+            <span class="sira-champ__requis" aria-hidden="true">*</span></label
+          >
+        </p-floatlabel>
+        <span class="sira-champ__aide">
+          Le membre qui instruit la démarche et demande les informations. Seuls les membres qui
+          demandent des informations sont proposés.
+        </span>
+        @if (envoi.erreurs()['service']; as erreur) {
+          <p class="sira-champ__erreur">{{ erreur }}</p>
+        }
+      </div>
+
+      <sira-champ
+        obligatoire
+        class="sira-pleine-largeur"
+        libelle="Finalité"
+        aide="Pourquoi le service a besoin de ces informations, en une phrase. Le citoyen la lit avant de donner son accord."
+        identifiant="finalite"
+        [erreur]="envoi.erreurs()['finalite']"
+      >
+        <textarea siraSaisie formControlName="finalite" rows="3"></textarea>
+      </sira-champ>
+
+      <sira-champ
+        obligatoire
+        class="sira-pleine-largeur"
+        libelle="Base légale"
+        aide="Le texte qui autorise la démarche. Exemple : Décret n° 2025-0123 portant organisation des concours"
+        identifiant="base_legale"
+        [erreur]="envoi.erreurs()['base_legale']"
+      >
+        <input siraSaisie formControlName="base_legale" autocomplete="off" />
+      </sira-champ>
+    </div>
+
+    <div class="sira-fenetre-formulaire__pied">
+      <button siraBouton variante="secondaire" type="button" (click)="annule.emit()">
+        Annuler
+      </button>
+      <button siraBouton type="submit" [enCours]="envoi.enCours()">
+        <sira-icone nom="check" />
+        {{ code() ? 'Enregistrer les changements' : 'Ajouter la démarche' }}
+      </button>
+    </div>
+  </form>
+}
