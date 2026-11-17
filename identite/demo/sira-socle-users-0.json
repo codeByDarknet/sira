@@ -1,0 +1,62 @@
+{
+  "realm": "sira-socle",
+  "users": [
+    {
+      "username": "instructeur@sira.example",
+      "enabled": true,
+      "firstName": "Paul Arsène",
+      "lastName": "NIKIÉMA",
+      "email": "instructeur@sira.example",
+      "emailVerified": true,
+      "realmRoles": [
+        "default-roles-sira-socle",
+        "instructeur"
+      ],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "${SIRA_DEMO_MOT_DE_PASSE}",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "username": "autorite@sira.example",
+      "enabled": true,
+      "firstName": "Fatoumata",
+      "lastName": "BARRY",
+      "email": "autorite@sira.example",
+      "emailVerified": true,
+      "realmRoles": [
+        "default-roles-sira-socle",
+        "autorite"
+      ],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "${SIRA_DEMO_MOT_DE_PASSE}",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "username": "auditeur@sira.example",
+      "enabled": true,
+      "firstName": "Issa Rodrigue",
+      "lastName": "SAWADOGO",
+      "email": "auditeur@sira.example",
+      "emailVerified": true,
+      "realmRoles": [
+        "default-roles-sira-socle",
+        "auditeur"
+      ],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "${SIRA_DEMO_MOT_DE_PASSE}",
+          "temporary": false
+        }
+      ]
+    }
+  ]
+}

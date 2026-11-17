@@ -1,0 +1,2 @@
+bf.sira.identite.IdentifiantAuthenticatorFactory
+bf.sira.identite.CodeTotpAuthenticatorFactory
