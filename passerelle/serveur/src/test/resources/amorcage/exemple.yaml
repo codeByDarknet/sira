@@ -1,0 +1,116 @@
+# Exemple complet d'amorçage de la passerelle (format : docs/composants/passerelle.md).
+# Les formes sont celles des ressources de la console (docs/architecture/API.md).
+# Il sert aussi de référentiel aux tests d'intégration du module.
+
+membres:
+  - code: concours
+    nom: Concours directs
+    organisme: Ministère de la Fonction publique
+    roles: [SERVICE]
+    retours_autorises: ["https://concours.exemple.bf/retour"]
+  - code: bourses
+    nom: Bourses d'études
+    organisme: Centre national des bourses
+    roles: [SERVICE]
+  - code: etat-civil
+    nom: État civil
+    organisme: Direction de l'état civil
+    roles: [REGISTRE]
+  - code: nationalite
+    nom: Nationalité
+    organisme: Service de la nationalité
+    roles: [REGISTRE]
+  - code: casier
+    nom: Casier judiciaire
+    organisme: Service du casier judiciaire
+    roles: [REGISTRE]
+  - code: diplomes
+    nom: Diplômes
+    organisme: Office des examens et des diplômes
+    roles: [REGISTRE]
+
+registres:
+  - code: etat-civil
+    nom: État civil
+    membre: etat-civil
+    adresse: https://connecteur-etat-civil:8443
+    transport: DIRECT
+  - code: nationalite
+    nom: Nationalité
+    membre: nationalite
+    adresse: https://connecteur-nationalite:8443
+    transport: DIRECT
+  - code: casier
+    nom: Casier judiciaire
+    membre: casier
+    adresse: https://connecteur-casier:8443
+    transport: DIRECT
+  - code: diplomes
+    nom: Diplômes
+    membre: diplomes
+    adresse: https://connecteur-diplomes:8443
+    transport: DIRECT
+
+jeux:
+  - code: etat-civil.majeur
+    registre: etat-civil
+    niveau: STATUT
+    libelle: Vous êtes majeur
+    description: Répond oui ou non. La date de naissance n'est pas transmise.
+    validite: P90D
+    regle: { champ: date_naissance, operateur: AGE_AU_MOINS, valeur: 18 }
+  - code: etat-civil.identite
+    registre: etat-civil
+    niveau: CHAMPS
+    libelle: Votre nom, vos prénoms et votre date de naissance
+    validite: P90D
+    champs: [nom, prenoms, date_naissance]
+  - code: nationalite.burkinabe
+    registre: nationalite
+    niveau: STATUT
+    libelle: Vous êtes de nationalité burkinabè
+    validite: P180D
+    regle: { champ: nationalite, operateur: EGAL, valeur: BF }
+  - code: casier.neant
+    registre: casier
+    niveau: STATUT
+    libelle: Votre casier judiciaire est vierge
+    validite: P30D
+    regle: { champ: bulletin3, operateur: EGAL, valeur: NEANT }
+  - code: diplomes.baccalaureat
+    registre: diplomes
+    niveau: STATUT
+    libelle: Vous avez obtenu le baccalauréat
+    validite: P365D
+    regle: { champ: baccalaureat_obtenu, operateur: EGAL, valeur: true }
+  - code: diplomes.attestation
+    registre: diplomes
+    niveau: DOCUMENT
+    libelle: Votre attestation de diplôme
+    validite: P365D
+    document: attestation-diplome
+
+demarches:
+  - code: concours-direct
+    libelle: Inscription à un concours direct
+    finalite: Vérifier que vous remplissez les conditions du concours.
+    base_legale: Statut général de la fonction publique d'État
+    service: concours
+    duree_autorisation_jours: 30
+  - code: bourse-etudes
+    libelle: Demande de bourse d'études
+    finalite: Constituer votre dossier de bourse sans pièces justificatives.
+    service: bourses
+    # 0 : l'accord ne vaut que pour cette demande.
+    duree_autorisation_jours: 0
+
+habilitations:
+  - service: concours
+    demarche: concours-direct
+    jeux: [etat-civil.majeur, nationalite.burkinabe, casier.neant]
+    etat: APPROUVEE
+    justification: Les conditions du concours sont l'âge, la nationalité et un casier vierge.
+  - service: bourses
+    demarche: bourse-etudes
+    jeux: [etat-civil.identite, nationalite.burkinabe, diplomes.baccalaureat, diplomes.attestation]
+    justification: Une bourse demande l'identité de l'étudiant, sa nationalité et son baccalauréat.
