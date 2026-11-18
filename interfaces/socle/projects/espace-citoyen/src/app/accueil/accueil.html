@@ -1,0 +1,215 @@
+<section class="sv-heros" aria-labelledby="ec-titre">
+  <div class="sira-vitrine__largeur sv-heros__grille">
+    <div>
+      <p class="sv-badge"><sira-icone nom="shield-check" /> Espace citoyen</p>
+      <h1 id="ec-titre" class="sv-heros__titre">
+        Vos informations circulent entre administrations, <em>avec votre accord</em>
+      </h1>
+      <p class="sv-heros__chapeau">
+        Plus besoin d’apporter vos papiers à chaque démarche. Quand un service a besoin d’une
+        information, il vous la demande ici : vous acceptez ou vous refusez, et vous voyez qui l’a
+        consultée.
+      </p>
+      <div class="sv-heros__actions">
+        @if (session.connecte()) {
+          <a class="sv-bouton" routerLink="/mon-espace">
+            Ouvrir mon espace <sira-icone nom="arrow-up-right" />
+          </a>
+        } @else {
+          <button type="button" class="sv-bouton" (click)="entrer()">
+            Accéder à mon espace <sira-icone nom="arrow-up-right" />
+          </button>
+        }
+        <a class="sv-lien-rond" href="#comment">
+          <span class="sv-rond"><sira-icone nom="chevron-right" /></span>
+          Comment ça marche
+        </a>
+      </div>
+      <div class="sv-heros__repere">
+        <p class="sv-repere">
+          <span class="sv-repere__valeur">0</span>
+          <span class="sv-repere__libelle">papier à apporter au guichet</span>
+        </p>
+        <p class="sv-repere">
+          <span class="sv-repere__valeur">1</span>
+          <span class="sv-repere__libelle">accord donné pour une démarche précise</span>
+        </p>
+      </div>
+    </div>
+
+    <div class="sv-visuel" aria-hidden="true">
+      <p class="sv-bulle"><sira-icone nom="circle-check" /> Le service ne voit que la réponse</p>
+      <div class="sv-telephone">
+        <div class="sv-telephone__ecran">
+          <div class="sv-telephone__ilot"></div>
+          <p class="sv-telephone__app">Sira</p>
+          <p class="sv-telephone__titre">Une administration vous demande</p>
+          <p class="sv-telephone__service">Concours directs de la fonction publique</p>
+          <ul class="sv-telephone__liste">
+            <li><span class="sv-telephone__coche">✓</span> Âge de 18 ans ou plus</li>
+            <li><span class="sv-telephone__coche">✓</span> Nationalité burkinabè</li>
+            <li><span class="sv-telephone__coche">✓</span> Casier judiciaire vierge</li>
+          </ul>
+          <div class="sv-telephone__boutons">
+            <span class="sv-telephone__non">Refuser</span>
+            <span class="sv-telephone__oui">Accepter</span>
+          </div>
+        </div>
+      </div>
+      <p class="sv-pastille">
+        <span class="sv-pastille__valeur">100 %</span>
+        <span class="sv-pastille__libelle">des consultations visibles</span>
+      </p>
+    </div>
+  </div>
+</section>
+
+<div class="sira-vitrine__largeur">
+  <section class="sv-rangee" aria-label="Vos garanties">
+    <a class="sv-photo-carte sv-photo-carte--reunion" routerLink="/aide">
+      <span>
+        <span class="sv-photo-carte__titre">Comment ça marche ?</span>
+        <span class="sv-photo-carte__lien">En savoir plus <sira-icone nom="arrow-up-right" /></span>
+      </span>
+    </a>
+    <div class="sv-services">
+      <article class="sv-service">
+        <span class="sv-service__icone"><sira-icone nom="check" /></span>
+        <h2 class="sv-service__titre">Vous décidez</h2>
+        <p class="sv-service__texte">
+          Rien ne part sans votre accord. Vous voyez ce qui est demandé, et pourquoi.
+        </p>
+      </article>
+      <article class="sv-service">
+        <span class="sv-service__icone"><sira-icone nom="eye" /></span>
+        <h2 class="sv-service__titre">Vous voyez tout</h2>
+        <p class="sv-service__texte">
+          Chaque consultation est notée : quelle administration, quelle information, quand.
+        </p>
+      </article>
+      <article class="sv-service">
+        <span class="sv-service__icone"><sira-icone nom="ban" /></span>
+        <h2 class="sv-service__titre">Vous pouvez arrêter</h2>
+        <p class="sv-service__texte">
+          Retirez un accès quand vous voulez, en un geste, depuis votre espace.
+        </p>
+      </article>
+    </div>
+  </section>
+
+  <section class="sv-section sv-apropos" aria-labelledby="ec-une-fois">
+    <img class="sv-apropos__photo" src="assets/sira/photos/equipe.jpg" alt="" />
+    <div>
+      <p class="sv-badge sv-badge--clair">Dites-le-nous une fois</p>
+      <h2 id="ec-une-fois" class="sv-section__titre">
+        Une information déjà connue de l’État ne se redemande plus
+      </h2>
+      <div class="sv-valeurs">
+        <div class="sv-valeur">
+          <span class="sv-icone-ronde"><sira-icone nom="landmark" /></span>
+          <div>
+            <h3 class="sv-valeur__titre">Les administrations se parlent</h3>
+            <p class="sv-valeur__texte">
+              L’état civil, la nationalité, le casier judiciaire et les diplômes répondent
+              directement au service qui instruit votre dossier.
+            </p>
+          </div>
+        </div>
+        <div class="sv-valeur">
+          <span class="sv-icone-ronde"><sira-icone nom="lock" /></span>
+          <div>
+            <h3 class="sv-valeur__titre">Le strict nécessaire</h3>
+            <p class="sv-valeur__texte">
+              Souvent un simple oui ou non : le service sait que vous avez 18 ans, sans connaître
+              votre date de naissance.
+            </p>
+          </div>
+        </div>
+      </div>
+      <div class="sv-pilule-sombre">
+        <p><sira-icone nom="circle-check" /> Vos droits sont écrits, et vérifiables.</p>
+        <a class="sv-bouton" routerLink="/aide/vos-droits">Vos droits</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="sv-section" aria-label="En bref">
+    <div class="sv-chiffres">
+      <p class="sv-chiffre">
+        <span class="sv-chiffre__valeur">1<span>×</span></span>
+        <span class="sv-chiffre__libelle">Vous donnez une information une seule fois.</span>
+      </p>
+      <p class="sv-chiffre">
+        <span class="sv-chiffre__valeur">0</span>
+        <span class="sv-chiffre__libelle">pièce à scanner ou à photocopier.</span>
+      </p>
+      <p class="sv-chiffre">
+        <span class="sv-chiffre__valeur">24<span>/7</span></span>
+        <span class="sv-chiffre__libelle">Votre historique est consultable à tout moment.</span>
+      </p>
+      <p class="sv-chiffre">
+        <span class="sv-chiffre__valeur">1<span> clic</span></span>
+        <span class="sv-chiffre__libelle">pour retirer un accès donné à un service.</span>
+      </p>
+    </div>
+  </section>
+
+  <section id="comment" class="sv-section" aria-labelledby="ec-espace">
+    <div class="sv-entete-section">
+      <div>
+        <p class="sv-badge sv-badge--clair">Votre espace</p>
+        <h2 id="ec-espace" class="sv-section__titre">
+          Tout ce que vous pouvez faire, au même endroit
+        </h2>
+      </div>
+      <div>
+        <p class="sv-section__texte">
+          Connectez-vous avec votre identifiant unique : un code vous est envoyé pour confirmer que
+          c’est bien vous.
+        </p>
+        @if (!session.connecte()) {
+          <p>
+            <button type="button" class="sv-bouton sv-bouton--sombre" (click)="entrer()">
+              Se connecter <sira-icone nom="arrow-up-right" />
+            </button>
+          </p>
+        }
+      </div>
+    </div>
+    <div class="sv-cartes">
+      <a class="sv-carte" routerLink="/demandes">
+        <img class="sv-carte__photo" src="assets/sira/photos/documents.jpg" alt="" />
+        <span class="sv-carte__bas">
+          <span class="sv-icone-ronde"><sira-icone nom="inbox" /></span>
+          <span>
+            <span class="sv-carte__nom">Demandes</span>
+            <span class="sv-carte__detail">Accepter ou refuser ce qu’un service demande</span>
+          </span>
+          <sira-icone class="sv-carte__fleche" nom="arrow-up-right" />
+        </span>
+      </a>
+      <a class="sv-carte" routerLink="/acces">
+        <img class="sv-carte__photo" src="assets/sira/photos/accord.jpg" alt="" />
+        <span class="sv-carte__bas">
+          <span class="sv-icone-ronde"><sira-icone nom="key-round" /></span>
+          <span>
+            <span class="sv-carte__nom">Mes accès</span>
+            <span class="sv-carte__detail">Voir et retirer les accès en cours</span>
+          </span>
+          <sira-icone class="sv-carte__fleche" nom="arrow-up-right" />
+        </span>
+      </a>
+      <a class="sv-carte" routerLink="/historique">
+        <img class="sv-carte__photo" src="assets/sira/photos/dossiers.jpg" alt="" />
+        <span class="sv-carte__bas">
+          <span class="sv-icone-ronde"><sira-icone nom="history" /></span>
+          <span>
+            <span class="sv-carte__nom">Historique</span>
+            <span class="sv-carte__detail">Qui a consulté quoi, et quand</span>
+          </span>
+          <sira-icone class="sv-carte__fleche" nom="arrow-up-right" />
+        </span>
+      </a>
+    </div>
+  </section>
+</div>
