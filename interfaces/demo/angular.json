@@ -1,0 +1,313 @@
+{
+  "$schema": "./node_modules/@angular/cli/lib/config/schema.json",
+  "version": 1,
+  "cli": {
+    "packageManager": "npm",
+    "analytics": false
+  },
+  "newProjectRoot": "projects",
+  "projects": {
+    "portail-service": {
+      "projectType": "application",
+      "root": "projects/portail-service",
+      "sourceRoot": "projects/portail-service/src",
+      "prefix": "ps",
+      "schematics": {
+        "@schematics/angular:component": {
+          "style": "none",
+          "changeDetection": "OnPush",
+          "skipTests": true
+        }
+      },
+      "architect": {
+        "build": {
+          "builder": "@angular/build:application",
+          "options": {
+            "browser": "projects/portail-service/src/main.ts",
+            "tsConfig": "projects/portail-service/tsconfig.app.json",
+            "outputPath": "dist/portail-service",
+            "assets": [
+              {
+                "glob": "**/*",
+                "input": "projects/portail-service/public"
+              },
+              {
+                "glob": "pdf.worker.min.mjs",
+                "input": "node_modules/pdfjs-dist/build",
+                "output": "assets/pdfjs"
+              },
+              {
+                "glob": "icones.svg",
+                "input": "bibliotheques/ui/assets",
+                "output": "assets/sira"
+              },
+              {
+                "glob": "{marque/*.png,photos/*.jpg}",
+                "input": "bibliotheques/ui/assets",
+                "output": "assets/sira"
+              },
+              {
+                "glob": "favicon.svg",
+                "input": "bibliotheques/ui/assets",
+                "output": "/"
+              }
+            ],
+            "styles": [
+              "bibliotheques/ui/styles/tailwind.css",
+              "bibliotheques/ui/styles/index.css",
+              "commun/demo.css"
+            ]
+          },
+          "configurations": {
+            "production": {
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "750kB",
+                  "maximumError": "900kB"
+                },
+                {
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "4kB",
+                  "maximumError": "8kB"
+                }
+              ],
+              "outputHashing": "all",
+              "optimization": {
+                "scripts": true,
+                "styles": {
+                  "minify": true,
+                  "inlineCritical": false
+                },
+                "fonts": false
+              }
+            },
+            "development": {
+              "optimization": false,
+              "extractLicenses": false,
+              "sourceMap": true
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "serve": {
+          "builder": "@angular/build:dev-server",
+          "options": {
+            "port": 4211
+          },
+          "configurations": {
+            "production": {
+              "buildTarget": "portail-service:build:production"
+            },
+            "development": {
+              "buildTarget": "portail-service:build:development"
+            }
+          },
+          "defaultConfiguration": "development"
+        },
+        "test": {
+          "builder": "@angular/build:unit-test",
+          "options": {
+            "buildTarget": "portail-service:build:development",
+            "tsConfig": "projects/portail-service/tsconfig.spec.json"
+          }
+        }
+      }
+    },
+    "registre-admin": {
+      "projectType": "application",
+      "root": "projects/registre-admin",
+      "sourceRoot": "projects/registre-admin/src",
+      "prefix": "ra",
+      "schematics": {
+        "@schematics/angular:component": {
+          "style": "none",
+          "changeDetection": "OnPush",
+          "skipTests": true
+        }
+      },
+      "architect": {
+        "build": {
+          "builder": "@angular/build:application",
+          "options": {
+            "browser": "projects/registre-admin/src/main.ts",
+            "tsConfig": "projects/registre-admin/tsconfig.app.json",
+            "outputPath": "dist/registre-admin",
+            "assets": [
+              {
+                "glob": "**/*",
+                "input": "projects/registre-admin/public"
+              },
+              {
+                "glob": "pdf.worker.min.mjs",
+                "input": "node_modules/pdfjs-dist/build",
+                "output": "assets/pdfjs"
+              },
+              {
+                "glob": "icones.svg",
+                "input": "bibliotheques/ui/assets",
+                "output": "assets/sira"
+              },
+              {
+                "glob": "{marque/*.png,photos/*.jpg}",
+                "input": "bibliotheques/ui/assets",
+                "output": "assets/sira"
+              },
+              {
+                "glob": "favicon.svg",
+                "input": "bibliotheques/ui/assets",
+                "output": "/"
+              }
+            ],
+            "styles": [
+              "bibliotheques/ui/styles/tailwind.css",
+              "bibliotheques/ui/styles/index.css",
+              "commun/demo.css"
+            ]
+          },
+          "configurations": {
+            "production": {
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "750kB",
+                  "maximumError": "900kB"
+                },
+                {
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "4kB",
+                  "maximumError": "8kB"
+                }
+              ],
+              "outputHashing": "all",
+              "optimization": {
+                "scripts": true,
+                "styles": {
+                  "minify": true,
+                  "inlineCritical": false
+                },
+                "fonts": false
+              }
+            },
+            "development": {
+              "optimization": false,
+              "extractLicenses": false,
+              "sourceMap": true
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "serve": {
+          "builder": "@angular/build:dev-server",
+          "options": {
+            "port": 4212
+          },
+          "configurations": {
+            "production": {
+              "buildTarget": "registre-admin:build:production"
+            },
+            "development": {
+              "buildTarget": "registre-admin:build:development"
+            }
+          },
+          "defaultConfiguration": "development"
+        }
+      }
+    },
+    "telephone": {
+      "projectType": "application",
+      "root": "projects/telephone",
+      "sourceRoot": "projects/telephone/src",
+      "prefix": "te",
+      "schematics": {
+        "@schematics/angular:component": {
+          "style": "none",
+          "changeDetection": "OnPush",
+          "skipTests": true
+        }
+      },
+      "architect": {
+        "build": {
+          "builder": "@angular/build:application",
+          "options": {
+            "browser": "projects/telephone/src/main.ts",
+            "tsConfig": "projects/telephone/tsconfig.app.json",
+            "outputPath": "dist/telephone",
+            "assets": [
+              {
+                "glob": "**/*",
+                "input": "projects/telephone/public"
+              },
+              {
+                "glob": "icones.svg",
+                "input": "bibliotheques/ui/assets",
+                "output": "assets/sira"
+              },
+              {
+                "glob": "{marque/*.png,photos/*.jpg}",
+                "input": "bibliotheques/ui/assets",
+                "output": "assets/sira"
+              },
+              {
+                "glob": "favicon.svg",
+                "input": "bibliotheques/ui/assets",
+                "output": "/"
+              }
+            ],
+            "styles": [
+              "bibliotheques/ui/styles/tailwind.css",
+              "bibliotheques/ui/styles/index.css",
+              "commun/demo.css"
+            ]
+          },
+          "configurations": {
+            "production": {
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "750kB",
+                  "maximumError": "900kB"
+                },
+                {
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "4kB",
+                  "maximumError": "8kB"
+                }
+              ],
+              "outputHashing": "all",
+              "optimization": {
+                "scripts": true,
+                "styles": {
+                  "minify": true,
+                  "inlineCritical": false
+                },
+                "fonts": false
+              }
+            },
+            "development": {
+              "optimization": false,
+              "extractLicenses": false,
+              "sourceMap": true
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "serve": {
+          "builder": "@angular/build:dev-server",
+          "options": {
+            "port": 4213
+          },
+          "configurations": {
+            "production": {
+              "buildTarget": "telephone:build:production"
+            },
+            "development": {
+              "buildTarget": "telephone:build:development"
+            }
+          },
+          "defaultConfiguration": "development"
+        }
+      }
+    }
+  }
+}

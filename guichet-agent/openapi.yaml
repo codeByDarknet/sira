@@ -1,0 +1,1023 @@
+openapi: 3.1.0
+info:
+  title: Sira — Service de démonstration (guichet et agent)
+  version: 0.1.0
+  summary: 'SIMULATION : un service qui se raccorde à Sira avec le kit (concours, bourses, entreprises).'
+  description: |
+    **SIMULATION.** Un même serveur (`sira-demo-service`), lancé une fois par service (profil `concours`,
+    `bourses` ou `entreprises`), derrière le nginx de son interface. Il parle à la passerelle avec `passerelle/kit`.
+
+    - **Parcours du citoyen** (`/api/parcours/**`) : pas de compte, une session anonyme relie le
+      navigateur à sa demande. Aucune route ne prend d'identifiant de dossier.
+    - **Agents** (`/api/agent/**`) : connexion OIDC à l'annuaire `demo-agents`, réservée à
+      l'administration qui tient le service.
+    - Toute autre route est fermée (`401` sans session, `403` avec).
+
+    Toute écriture exige le jeton CSRF (cookie `XSRF-TOKEN` renvoyé dans l'en-tête `X-XSRF-TOKEN`).
+    Erreurs RFC 9457 en `application/problem+json`.
+  license: {name: Licence du dépôt Sira}
+servers:
+- {url: 'http://concours.sira.localhost:8600', description: Service « concours » de la démonstration}
+- {url: 'http://bourses.sira.localhost:8600', description: Service « bourses » de la démonstration}
+- {url: 'http://entreprises.sira.localhost:8600', description: Service « entreprises » de la démonstration}
+tags:
+- {name: Démarche}
+- {name: Parcours, description: 'Le citoyen, sans compte.'}
+- {name: Agent, description: Back-office des agents du service.}
+- {name: Session, description: Connexion OIDC des agents.}
+paths:
+  /api/demarche:
+    get:
+      tags: [Démarche]
+      operationId: presenterDemarche
+      summary: Ce que le service vérifiera, et les pièces évitées
+      x-sira-source: demarche
+      security: []
+      responses:
+        '200':
+          description: La démarche, décrite par Sira (copie gardée 5 minutes, servie encore si Sira ne répond plus).
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Presentation'}
+              example:
+                service: {code: concours, nom: Concours directs 2026, organisme: Ministère de la Fonction publique}
+                code: concours-direct
+                libelle: Inscription à un concours direct
+                jeux:
+                - {code: etat-civil.nom-prenoms, libelle: Votre nom et vos prénoms, niveau: CHAMPS, registre: etat-civil,
+                  champs: [nom, prenoms]}
+                - {code: etat-civil.majeur, libelle: Vous êtes majeur, niveau: STATUT, registre: etat-civil, champs: []}
+                declarations:
+                - {code: telephone, libelle: Téléphone de contact, aide: Facultatif. Pour vous joindre au sujet de votre
+                    dossier., nature: TEXTE}
+                - {code: cv, libelle: Curriculum vitæ, aide: 'Facultatif. Au format PDF, 2 Mo au plus.', nature: PIECE}
+                pieces: [Extrait d'acte de naissance, Copie légalisée du diplôme]
+        '503': {$ref: '#/components/responses/Indisponible'}
+  /api/parcours/demandes:
+    post:
+      tags: [Parcours]
+      operationId: ouvrirDemande
+      summary: Continuer « avec Sira »
+      description: 'Session anonyme : le citoyen n''a pas de compte ici. Pour les trois canaux, `identifiant_unique`
+        part vers Sira, qui vérifie qu''il désigne la personne qui donne son accord ; il n''est ni gardé ni journalisé
+        ici.'
+      x-sira-source: parcours
+      security:
+      - jetonCsrf: []
+      - sessionNavigateur: []
+        jetonCsrf: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/Ouverture'}
+            example: {canal: REDIRECTION, identifiant_unique: '990048217350'}
+      responses:
+        '201':
+          description: Demande ouverte et retenue dans la session du navigateur.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/VueDemande'}
+              example: {id: 0c4e7a12-5b9d-4f3e-a1c8-6d2b9e0f7a35, canal: CODE, etat: EN_ATTENTE_ACCORD, url_accord: 'http://citoyen.sira.localhost:8600/accord/0c4e7a12-5b9d-4f3e-a1c8-6d2b9e0f7a35',
+                code_court: KLPM-4821, code_verification: '492113', expire_le: '2026-11-16T09:45:00Z', dossier_ouvert: false}
+        '400': {$ref: '#/components/responses/SaisieInvalide'}
+        '403': {$ref: '#/components/responses/AccesRefuse'}
+        '413': {$ref: '#/components/responses/CorpsTropVolumineux'}
+        '415': {$ref: '#/components/responses/TypeNonPris'}
+        '422':
+          description: Sira a refusé la demande (`urn:sira:erreur:demande-impossible`) ; son détail n'est pas montré.
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/Probleme'}
+        '429':
+          description: Plus de demandes que la limite par session (`urn:sira:erreur:trop-de-requetes`).
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/Probleme'}
+              example: {type: 'urn:sira:erreur:trop-de-requetes', title: Trop de requêtes, status: 429, detail: 'Trop
+                  de demandes en peu de temps. Patientez une minute, puis réessayez.'}
+        '503': {$ref: '#/components/responses/Indisponible'}
+  /api/parcours/demande:
+    get:
+      tags: [Parcours]
+      operationId: suivreDemande
+      summary: Où en est la demande de ce navigateur
+      description: Appelée à intervalle régulier par l'écran d'attente.
+      x-sira-source: parcours
+      security:
+      - sessionNavigateur: []
+      responses:
+        '200':
+          description: La demande ; `dossier_ouvert` est vrai quand l'accord donné ouvre le dossier à ce navigateur.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/VueDemande'}
+              example: {id: 0c4e7a12-5b9d-4f3e-a1c8-6d2b9e0f7a35, canal: CODE, etat: COMPLETE, url_accord: 'http://citoyen.sira.localhost:8600/accord/0c4e7a12-5b9d-4f3e-a1c8-6d2b9e0f7a35',
+                code_court: KLPM-4821, code_verification: '492113', expire_le: '2026-11-16T09:45:00Z', dossier_ouvert: true}
+        '404': {$ref: '#/components/responses/Introuvable'}
+        '503': {$ref: '#/components/responses/Indisponible'}
+    delete:
+      tags: [Parcours]
+      operationId: abandonnerDemande
+      summary: 'Abandonner : la demande est annulée chez Sira'
+      x-sira-source: parcours
+      security:
+      - sessionNavigateur: []
+        jetonCsrf: []
+      responses:
+        '204': {description: Demande annulée et oubliée par la session.}
+        '403': {$ref: '#/components/responses/AccesRefuse'}
+        '404': {$ref: '#/components/responses/Introuvable'}
+        '503': {$ref: '#/components/responses/Indisponible'}
+  /api/parcours/retour:
+    post:
+      tags: [Parcours]
+      operationId: revenirDeLAccord
+      summary: Retour du navigateur après l'écran d'accord (canal REDIRECTION)
+      description: 'La demande nommée doit être celle de la session : le lien de retour d''un autre navigateur ne
+        donne accès à rien (`404`).'
+      x-sira-source: parcours
+      security:
+      - sessionNavigateur: []
+        jetonCsrf: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/Retour'}
+            example: {demande: 0c4e7a12-5b9d-4f3e-a1c8-6d2b9e0f7a35, code_retour: r3T0ur-Exemple-9QzK}
+      responses:
+        '200':
+          description: Retour confirmé par Sira.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/VueDemande'}
+              example: {id: 0c4e7a12-5b9d-4f3e-a1c8-6d2b9e0f7a35, canal: REDIRECTION, etat: COMPLETE, url_accord: 'http://citoyen.sira.localhost:8600/accord/0c4e7a12-5b9d-4f3e-a1c8-6d2b9e0f7a35',
+                code_court: null, code_verification: null, expire_le: '2026-11-16T09:45:00Z', dossier_ouvert: true}
+        '400': {$ref: '#/components/responses/SaisieInvalide'}
+        '403':
+          description: Jeton CSRF absent ou faux (`urn:sira:erreur:acces-refuse`), ou code de retour refusé par
+            Sira (`urn:sira:erreur:code-invalide`).
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/Probleme'}
+        '404': {$ref: '#/components/responses/Introuvable'}
+        '413': {$ref: '#/components/responses/CorpsTropVolumineux'}
+        '415': {$ref: '#/components/responses/TypeNonPris'}
+        '503': {$ref: '#/components/responses/Indisponible'}
+  /api/parcours/dossier:
+    get:
+      tags: [Parcours]
+      operationId: lireDossierDuParcours
+      summary: Le dossier ouvert par l'accord
+      x-sira-source: parcours
+      security:
+      - sessionNavigateur: []
+      responses:
+        '200':
+          description: Le dossier, sans pseudonyme.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/VueDossier'}
+              example:
+                id: 5a7d3e91-2c48-4b6f-9e01-c3f8a6b2d470
+                numero: CD-2026-000042
+                etat: COMPLET
+                cree_le: '2026-11-16T09:33:14Z'
+                modifie_le: '2026-11-16T09:33:15Z'
+                depose_le: '2026-11-16T09:36:02Z'
+                verifications:
+                - {jeu: etat-civil.majeur, libelle: Vous êtes majeur, niveau: STATUT, registre: etat-civil, etat: OBTENU,
+                  valeur: true, champs: null, piece: null, modifiee_le: '2026-11-16T09:33:14Z'}
+                - jeu: diplomes.bac
+                  libelle: Votre baccalauréat
+                  niveau: CHAMPS
+                  registre: diplomes
+                  etat: OBTENU
+                  valeur: null
+                  champs: {baccalaureat_serie: D, baccalaureat_annee: 2019}
+                  piece: null
+                  modifiee_le: '2026-11-16T09:33:15Z'
+                - jeu: etat-civil.extrait
+                  libelle: Extrait d'acte de naissance
+                  niveau: DOCUMENT
+                  registre: etat-civil
+                  etat: OBTENU
+                  valeur: null
+                  champs: null
+                  piece: {nom: extrait-naissance.pdf, type: application/pdf, taille: 48213}
+                  modifiee_le: '2026-11-16T09:33:15Z'
+                declarations:
+                - {code: cv, libelle: Curriculum vitæ, nature: PIECE, remplace: false, valeur: null, piece: {nom: cv.pdf,
+                    type: application/pdf, taille: 81920}, modifiee_le: '2026-11-16T09:35:40Z'}
+                - {code: telephone, libelle: Téléphone de contact, nature: TEXTE, remplace: false, valeur: +226 70 00 00
+                    00, piece: null, modifiee_le: '2026-11-16T09:35:10Z'}
+                pieces_evitees: [Extrait d'acte de naissance, Copie légalisée du diplôme]
+        '404': {$ref: '#/components/responses/Introuvable'}
+  /api/parcours/dossier/pieces/{jeu}:
+    get:
+      tags: [Parcours]
+      operationId: lirePieceDuParcours
+      summary: Une pièce reçue (niveau DOCUMENT)
+      x-sira-source: parcours
+      security:
+      - sessionNavigateur: []
+      parameters:
+      - {$ref: '#/components/parameters/Jeu'}
+      - {$ref: '#/components/parameters/Apercu'}
+      responses:
+        '200': {$ref: '#/components/responses/PieceRecue'}
+        '400': {$ref: '#/components/responses/RequeteInvalide'}
+        '404': {$ref: '#/components/responses/Introuvable'}
+  /api/parcours/dossier/declarations/{code}:
+    put:
+      tags: [Parcours]
+      operationId: saisirDeclaration
+      summary: Une saisie libre du formulaire du service (nature TEXTE)
+      description: '`code` est une déclaration de nature `TEXTE` du formulaire (`GET /api/demarche`). Une information
+        reçue d''un registre, ou attendue, ne se déclare jamais (`409`). Les valeurs ne sont pas journalisées.'
+      x-sira-source: parcours
+      security:
+      - sessionNavigateur: []
+        jetonCsrf: []
+      parameters:
+      - {$ref: '#/components/parameters/CodeDeclaration'}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/Saisie'}
+            example: {valeur: +226 70 00 00 00}
+      responses:
+        '200': {$ref: '#/components/responses/DossierAJour'}
+        '400': {$ref: '#/components/responses/SaisieInvalide'}
+        '403': {$ref: '#/components/responses/AccesRefuse'}
+        '404': {$ref: '#/components/responses/Introuvable'}
+        '409': {$ref: '#/components/responses/DeclarationRefusee'}
+        '413': {$ref: '#/components/responses/CorpsTropVolumineux'}
+        '415': {$ref: '#/components/responses/TypeNonPris'}
+    delete:
+      tags: [Parcours]
+      operationId: retirerDeclaration
+      summary: Retirer une déclaration (sans effet si elle n'existe pas)
+      x-sira-source: parcours
+      security:
+      - sessionNavigateur: []
+        jetonCsrf: []
+      parameters:
+      - {$ref: '#/components/parameters/CodeDeclaration'}
+      responses:
+        '200': {$ref: '#/components/responses/DossierAJour'}
+        '400': {$ref: '#/components/responses/RequeteInvalide'}
+        '403': {$ref: '#/components/responses/AccesRefuse'}
+        '404': {$ref: '#/components/responses/Introuvable'}
+        '409': {$ref: '#/components/responses/DeclarationRefusee'}
+  /api/parcours/dossier/declarations/{code}/piece:
+    put:
+      tags: [Parcours]
+      operationId: joindrePiece
+      summary: Joindre une pièce PDF (nature PIECE, ou information non transmise par un registre)
+      description: |
+        Le corps est le fichier lui-même, en `application/pdf`, 2 Mio au plus ; il doit commencer par `%PDF-`.
+        `code` est une déclaration de nature `PIECE` du formulaire, ou le jeu d'une condition que le registre n'a
+        définitivement pas transmise (`REFUSE`, `INCONNU`, `EXPIRE`) : la déclaration porte alors `remplace: true`.
+        Une information reçue ou encore attendue (`A_TRAITER`) est refusée (`409`). Le nom est assaini (sans
+        chemin ni caractère spécial, terminé par `.pdf`). La pièce est gardée en base, rattachée au dossier.
+      x-sira-source: parcours
+      security:
+      - sessionNavigateur: []
+        jetonCsrf: []
+      parameters:
+      - {$ref: '#/components/parameters/CodeDeclaration'}
+      - name: nom
+        in: query
+        description: Nom du fichier choisi, pour l'affichage et le téléchargement.
+        schema: {type: string, maxLength: 255}
+        example: cv.pdf
+      requestBody:
+        required: true
+        content:
+          application/pdf:
+            schema: {type: string, format: binary}
+      responses:
+        '200': {$ref: '#/components/responses/DossierAJour'}
+        '400':
+          description: 'Pièce refusée (`urn:sira:erreur:requete-invalide`, code `VALIDATION`, champ `piece`) : pas
+            un PDF, ou information qui se saisit.'
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/Probleme'}
+              example:
+                type: urn:sira:erreur:requete-invalide
+                title: Requête invalide
+                status: 400
+                code: VALIDATION
+                erreurs:
+                - {champ: piece, message: Le fichier n'est pas un PDF.}
+        '403': {$ref: '#/components/responses/AccesRefuse'}
+        '404': {$ref: '#/components/responses/Introuvable'}
+        '409': {$ref: '#/components/responses/DeclarationRefusee'}
+        '413':
+          description: Pièce au-delà de 2 Mio (`urn:sira:erreur:piece-trop-volumineuse`, ou `corps-trop-volumineux`
+            quand la taille annoncée dépasse déjà la borne).
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/Probleme'}
+              example: {type: 'urn:sira:erreur:piece-trop-volumineuse', title: Pièce trop volumineuse, status: 413,
+                detail: La pièce dépasse 2 Mo.}
+        '415':
+          description: Le corps doit être en `application/pdf` (`urn:sira:erreur:format-non-pris-en-charge`).
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/Probleme'}
+    get:
+      tags: [Parcours]
+      operationId: lirePieceDeclaree
+      summary: Une pièce jointe par la personne
+      x-sira-source: parcours
+      security:
+      - sessionNavigateur: []
+      parameters:
+      - {$ref: '#/components/parameters/CodeDeclaration'}
+      - {$ref: '#/components/parameters/Apercu'}
+      responses:
+        '200': {$ref: '#/components/responses/PieceRecue'}
+        '400': {$ref: '#/components/responses/RequeteInvalide'}
+        '404': {$ref: '#/components/responses/Introuvable'}
+  /api/parcours/dossier/depot:
+    post:
+      tags: [Parcours]
+      operationId: deposerDossier
+      summary: '« Déposer mon dossier » : les déclarations sont figées'
+      description: Les réponses des registres encore attendues continuent d'arriver après le dépôt ; le dossier
+        est enregistré même si un registre est en panne.
+      x-sira-source: parcours
+      security:
+      - sessionNavigateur: []
+        jetonCsrf: []
+      responses:
+        '200': {$ref: '#/components/responses/DossierAJour'}
+        '403': {$ref: '#/components/responses/AccesRefuse'}
+        '404': {$ref: '#/components/responses/Introuvable'}
+        '409': {$ref: '#/components/responses/DeclarationRefusee'}
+        '413': {$ref: '#/components/responses/CorpsTropVolumineux'}
+  /api/parcours:
+    delete:
+      tags: [Parcours]
+      operationId: terminerParcours
+      summary: '« Terminer » : ce navigateur oublie la démarche'
+      x-sira-source: parcours
+      security:
+      - jetonCsrf: []
+      - sessionNavigateur: []
+        jetonCsrf: []
+      responses:
+        '204': {description: Session fermée ; le dossier reste enregistré.}
+        '403': {$ref: '#/components/responses/AccesRefuse'}
+  /api/agent/dossiers:
+    get:
+      tags: [Agent]
+      operationId: listerDossiers
+      summary: Les dossiers reçus, les plus récents d'abord
+      description: Agent connecté (royaume `demo-agents`) dont la revendication `administration` vaut le code du
+        service ; sinon `401` sans session, `403` avec la session d'une autre administration.
+      x-sira-source: agent
+      security:
+      - sessionNavigateur: []
+      parameters:
+      - name: page
+        in: query
+        schema: {type: integer, minimum: 1, maximum: 100000, default: 1}
+      - name: taille
+        in: query
+        schema: {type: integer, minimum: 1, maximum: 100, default: 20}
+      - name: etat
+        in: query
+        schema: {$ref: '#/components/schemas/EtatDossier'}
+      responses:
+        '200':
+          description: Page de dossiers.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/PageDeDossiers'}
+              example:
+                elements:
+                - {id: 5a7d3e91-2c48-4b6f-9e01-c3f8a6b2d470, numero: CD-2026-000042, etat: A_EXAMINER, cree_le: '2026-11-16T09:33:14Z',
+                  modifie_le: '2026-11-16T09:40:02Z'}
+                page: 1
+                taille: 20
+                total: 1
+        '400': {$ref: '#/components/responses/RequeteInvalide'}
+        '401': {$ref: '#/components/responses/NonAuthentifie'}
+        '403': {$ref: '#/components/responses/AccesRefuse'}
+  /api/agent/dossiers/{id}:
+    get:
+      tags: [Agent]
+      operationId: lireDossier
+      summary: Un dossier et les demandes qui l'ont rempli
+      description: Agent connecté (royaume `demo-agents`) dont la revendication `administration` vaut le code du
+        service ; sinon `401` sans session, `403` avec la session d'une autre administration.
+      x-sira-source: agent
+      security:
+      - sessionNavigateur: []
+      parameters:
+      - {$ref: '#/components/parameters/IdDossier'}
+      responses:
+        '200':
+          description: Le dossier.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Detail'}
+              example:
+                dossier:
+                  id: 5a7d3e91-2c48-4b6f-9e01-c3f8a6b2d470
+                  numero: CD-2026-000042
+                  etat: COMPLET
+                  cree_le: '2026-11-16T09:33:14Z'
+                  modifie_le: '2026-11-16T09:33:15Z'
+                  depose_le: null
+                  verifications:
+                  - {jeu: etat-civil.majeur, libelle: Vous êtes majeur, niveau: STATUT, registre: etat-civil, etat: OBTENU,
+                    valeur: true, champs: null, piece: null, modifiee_le: '2026-11-16T09:33:14Z'}
+                  - jeu: diplomes.bac
+                    libelle: Votre baccalauréat
+                    niveau: CHAMPS
+                    registre: diplomes
+                    etat: OBTENU
+                    valeur: null
+                    champs: {baccalaureat_serie: D, baccalaureat_annee: 2019}
+                    piece: null
+                    modifiee_le: '2026-11-16T09:33:15Z'
+                  - jeu: etat-civil.extrait
+                    libelle: Extrait d'acte de naissance
+                    niveau: DOCUMENT
+                    registre: etat-civil
+                    etat: OBTENU
+                    valeur: null
+                    champs: null
+                    piece: {nom: extrait-naissance.pdf, type: application/pdf, taille: 48213}
+                    modifiee_le: '2026-11-16T09:33:15Z'
+                  declarations:
+                  - {code: diplomes.bac, libelle: Votre baccalauréat, nature: PIECE, remplace: true, valeur: null, piece: {
+                      nom: releve-bac.pdf, type: application/pdf, taille: 64512}, modifiee_le: '2026-11-16T09:35:40Z'}
+                  pieces_evitees: [Extrait d'acte de naissance, Copie légalisée du diplôme]
+                demandes:
+                - {id: 0c4e7a12-5b9d-4f3e-a1c8-6d2b9e0f7a35, canal: CODE, origine: CITOYEN, etat: COMPLETE, creee_le: '2026-11-16T09:30:00Z'}
+        '400': {$ref: '#/components/responses/RequeteInvalide'}
+        '401': {$ref: '#/components/responses/NonAuthentifie'}
+        '403': {$ref: '#/components/responses/AccesRefuse'}
+        '404': {$ref: '#/components/responses/Introuvable'}
+  /api/agent/dossiers/{id}/pieces/{jeu}:
+    get:
+      tags: [Agent]
+      operationId: lirePiece
+      summary: Une pièce reçue (niveau DOCUMENT)
+      description: Agent connecté (royaume `demo-agents`) dont la revendication `administration` vaut le code du
+        service ; sinon `401` sans session, `403` avec la session d'une autre administration.
+      x-sira-source: agent
+      security:
+      - sessionNavigateur: []
+      parameters:
+      - {$ref: '#/components/parameters/IdDossier'}
+      - {$ref: '#/components/parameters/Jeu'}
+      - {$ref: '#/components/parameters/Apercu'}
+      responses:
+        '200': {$ref: '#/components/responses/PieceRecue'}
+        '400': {$ref: '#/components/responses/RequeteInvalide'}
+        '401': {$ref: '#/components/responses/NonAuthentifie'}
+        '403': {$ref: '#/components/responses/AccesRefuse'}
+        '404': {$ref: '#/components/responses/Introuvable'}
+  /api/agent/dossiers/{id}/declarations/{code}/piece:
+    get:
+      tags: [Agent]
+      operationId: lirePieceDeclareeAgent
+      summary: Une pièce jointe par la personne (déclarée, non vérifiée par un registre)
+      description: Agent connecté (royaume `demo-agents`) dont la revendication `administration` vaut le code du
+        service ; sinon `401` sans session, `403` avec la session d'une autre administration.
+      x-sira-source: agent
+      security:
+      - sessionNavigateur: []
+      parameters:
+      - {$ref: '#/components/parameters/IdDossier'}
+      - {$ref: '#/components/parameters/CodeDeclaration'}
+      - {$ref: '#/components/parameters/Apercu'}
+      responses:
+        '200': {$ref: '#/components/responses/PieceRecue'}
+        '400': {$ref: '#/components/responses/RequeteInvalide'}
+        '401': {$ref: '#/components/responses/NonAuthentifie'}
+        '403': {$ref: '#/components/responses/AccesRefuse'}
+        '404': {$ref: '#/components/responses/Introuvable'}
+  /api/agent/dossiers/{id}/verifications:
+    post:
+      tags: [Agent]
+      operationId: redemanderVerification
+      summary: Redemander une vérification au citoyen
+      description: L'agent ne consulte jamais un registre lui-même. Agent connecté (royaume `demo-agents`) dont
+        la revendication `administration` vaut le code du service ; sinon `401` sans session, `403` avec la session
+        d'une autre administration.
+      x-sira-source: agent
+      security:
+      - sessionNavigateur: []
+        jetonCsrf: []
+      parameters:
+      - {$ref: '#/components/parameters/IdDossier'}
+      responses:
+        '201':
+          description: Demande envoyée dans l'espace du citoyen, désigné par son pseudonyme (canal NOTIFICATION).
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/DemandeDuDossier'}
+              example: {id: 7b1e4c90-3a2f-4d85-b6e7-9f0c1a2d3e48, canal: NOTIFICATION, origine: AGENT, etat: EN_ATTENTE_ACCORD,
+                creee_le: '2026-11-17T08:15:00Z'}
+        '400': {$ref: '#/components/responses/RequeteInvalide'}
+        '401': {$ref: '#/components/responses/NonAuthentifie'}
+        '403': {$ref: '#/components/responses/AccesRefuse'}
+        '404': {$ref: '#/components/responses/Introuvable'}
+        '409':
+          description: Une demande attend déjà la réponse du citoyen (`urn:sira:erreur:demande-deja-envoyee`).
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/Probleme'}
+              example: {type: 'urn:sira:erreur:demande-deja-envoyee', title: Demande déjà envoyée, status: 409,
+                detail: Une demande attend déjà la réponse du citoyen.}
+        '422':
+          description: Sira a refusé la demande (`urn:sira:erreur:demande-impossible`).
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/Probleme'}
+        '503': {$ref: '#/components/responses/Indisponible'}
+  /api/session:
+    get:
+      tags: [Session]
+      operationId: lireSession
+      summary: Qui est connecté (agent)
+      x-sira-source: commun
+      security:
+      - sessionNavigateur: []
+      responses:
+        '200':
+          description: L'agent connecté ; pose aussi le cookie `XSRF-TOKEN`.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Session'}
+              example:
+                nom: Agent de démonstration
+                roles: []
+        '401': {$ref: '#/components/responses/NonAuthentifie'}
+  /api/auth/connexion/sira:
+    get:
+      tags: [Session]
+      operationId: seConnecter
+      summary: Partir vers l'annuaire des agents (royaume `demo-agents`)
+      x-sira-source: securite
+      security: []
+      parameters:
+      - name: retour
+        in: query
+        description: Chemin local où revenir (sinon `/`).
+        schema: {type: string, maxLength: 512}
+        example: /agent
+      responses:
+        '302':
+          description: Redirection vers le point d'autorisation (code d'autorisation avec PKCE).
+          headers:
+            Location:
+              schema: {type: string, format: uri}
+  /api/auth/retour:
+    get:
+      tags: [Session]
+      operationId: revenirDeLAnnuaire
+      summary: Retour de l'annuaire
+      x-sira-source: securite
+      security: []
+      parameters:
+      - name: code
+        in: query
+        schema: {type: string}
+      - name: state
+        in: query
+        schema: {type: string}
+      responses:
+        '302':
+          description: Vers l'adresse publique et le chemin mémorisé ; en cas d'échec vers `/?erreur=connexion`.
+          headers:
+            Location:
+              schema: {type: string, format: uri}
+  /api/auth/deconnexion:
+    post:
+      tags: [Session]
+      operationId: seDeconnecter
+      summary: Fermer la session de l'agent
+      x-sira-source: securite
+      security:
+      - sessionNavigateur: []
+        jetonCsrf: []
+      responses:
+        '200':
+          description: Session fermée ; le navigateur suit `url`.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [url]
+                additionalProperties: false
+                properties:
+                  url: {type: string, format: uri}
+              example: {url: 'http://identite.sira.localhost:8600/realms/demo-agents/protocol/openid-connect/logout?client_id=demo-concours&post_logout_redirect_uri=http%3A%2F%2Fconcours.sira.localhost%3A8600%2F'}
+        '401': {$ref: '#/components/responses/NonAuthentifie'}
+        '403': {$ref: '#/components/responses/AccesRefuse'}
+components:
+  securitySchemes:
+    sessionNavigateur: {type: apiKey, in: cookie, name: JSESSIONID, description: 'Session du navigateur : anonyme
+        pour le citoyen, OIDC pour l''agent.'}
+    jetonCsrf: {type: apiKey, in: header, name: X-XSRF-TOKEN, description: 'Valeur du cookie `XSRF-TOKEN`, exigée
+        pour toute écriture.'}
+  parameters:
+    IdDossier:
+      name: id
+      in: path
+      required: true
+      schema: {type: string, format: uuid}
+    Jeu:
+      name: jeu
+      in: path
+      required: true
+      schema: {type: string, pattern: '^[a-z0-9.-]{1,80}$'}
+      example: etat-civil.extrait
+    CodeDeclaration:
+      name: code
+      in: path
+      required: true
+      description: Code d'une déclaration du formulaire, ou jeu d'une condition non transmise par le registre.
+      schema: {type: string, pattern: '^[a-z0-9.-]{1,80}$'}
+      example: cv
+    Apercu:
+      name: apercu
+      in: query
+      description: 'Vrai : un PDF est servi `inline`, pour être affiché dans un nouvel onglet. Tout autre type reste
+        une pièce jointe.'
+      schema: {type: boolean, default: false}
+  responses:
+    PieceRecue:
+      description: 'La pièce, en pièce jointe (`Content-Disposition: attachment`), ou `inline` pour un PDF demandé
+        en aperçu. Toujours `Cache-Control: no-store` et `X-Content-Type-Options: nosniff` ; un type autre que PDF
+        est servi en `application/octet-stream`.'
+      headers:
+        Content-Disposition:
+          schema: {type: string}
+          example: attachment; filename="extrait-naissance.pdf"
+        X-Content-Type-Options:
+          schema: {type: string, const: nosniff}
+      content:
+        application/pdf:
+          schema: {type: string, format: binary}
+        application/octet-stream:
+          schema: {type: string, format: binary}
+    DossierAJour:
+      description: Le dossier de la session, à jour.
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/VueDossier'}
+    DeclarationRefusee:
+      description: 'Information transmise ou attendue d''un registre (`urn:sira:erreur:information-du-registre`),
+        ou dossier déjà déposé (`urn:sira:erreur:dossier-depose`).'
+      content:
+        application/problem+json:
+          schema: {$ref: '#/components/schemas/Probleme'}
+          example: {type: 'urn:sira:erreur:information-du-registre', title: Information transmise par un registre,
+            status: 409, detail: 'Cette information vient d''un registre : elle ne se déclare pas.'}
+    SaisieInvalide:
+      description: Saisie refusée champ par champ (`urn:sira:erreur:requete-invalide`, code `VALIDATION`) ; chaque
+        message s'affiche tel quel sous son champ.
+      content:
+        application/problem+json:
+          schema: {$ref: '#/components/schemas/Probleme'}
+          example:
+            type: urn:sira:erreur:requete-invalide
+            title: Requête invalide
+            status: 400
+            code: VALIDATION
+            erreurs:
+            - {champ: identifiant_unique, message: L'identifiant unique compte 12 chiffres.}
+    RequeteInvalide:
+      description: Paramètre refusé (`urn:sira:erreur:requete-invalide`).
+      content:
+        application/problem+json:
+          schema: {$ref: '#/components/schemas/Probleme'}
+    NonAuthentifie:
+      description: Pas de session d'agent (`urn:sira:erreur:non-authentifie`).
+      content:
+        application/problem+json:
+          schema: {$ref: '#/components/schemas/Probleme'}
+          example: {type: 'urn:sira:erreur:non-authentifie', title: Authentification requise, status: 401}
+    AccesRefuse:
+      description: Jeton CSRF absent ou faux, ou agent d'une autre administration (`urn:sira:erreur:acces-refuse`).
+      content:
+        application/problem+json:
+          schema: {$ref: '#/components/schemas/Probleme'}
+          example: {type: 'urn:sira:erreur:acces-refuse', title: Accès refusé, status: 403}
+    Introuvable:
+      description: Rien pour cette session, ou objet absent (`urn:sira:erreur:introuvable`).
+      content:
+        application/problem+json:
+          schema: {$ref: '#/components/schemas/Probleme'}
+          example: {type: 'urn:sira:erreur:introuvable', title: Ressource introuvable, status: 404}
+    Indisponible:
+      description: Sira ne répond pas (`urn:sira:erreur:indisponible`) ; le détail de la panne n'est pas montré.
+      content:
+        application/problem+json:
+          schema: {$ref: '#/components/schemas/Probleme'}
+          example: {type: 'urn:sira:erreur:indisponible', title: Service momentanément indisponible, status: 503,
+            detail: Sira ne répond pas pour le moment. Réessayez dans un instant.}
+    TypeNonPris:
+      description: Le corps doit être en `application/json` (`urn:sira:erreur:format-non-pris-en-charge`).
+      content:
+        application/problem+json:
+          schema: {$ref: '#/components/schemas/Probleme'}
+    CorpsTropVolumineux:
+      description: Corps au-delà de 256 Kio, refusé avant toute lecture (`urn:sira:erreur:corps-trop-volumineux`).
+        Seul le dépôt d'une pièce PDF admet 2 Mio.
+      content:
+        application/problem+json:
+          schema: {$ref: '#/components/schemas/Probleme'}
+          example: {type: 'urn:sira:erreur:corps-trop-volumineux', title: Corps trop volumineux, status: 413}
+  schemas:
+    Probleme:
+      type: object
+      description: Problème RFC 9457. `code` (passerelle) et `erreurs` ne sont présents que lorsqu'ils s'appliquent.
+      required: [type, title, status]
+      additionalProperties: false
+      properties:
+        type: {type: string, pattern: '^urn:sira:erreur:[a-z0-9-]+$'}
+        title: {type: string}
+        status: {type: integer, minimum: 400, maximum: 599}
+        detail:
+          type: [string, 'null']
+        instance:
+          type: [string, 'null']
+        code: {type: string, pattern: '^[A-Z0-9_]+$'}
+        erreurs:
+          type: array
+          items:
+            type: object
+            required: [champ]
+            additionalProperties: false
+            properties:
+              champ: {type: string}
+              message: {type: string}
+              regle: {type: string}
+        reference: {type: string, description: Référence à citer pour une erreur interne (500).}
+    PageCommune:
+      type: object
+      required: [elements, page, taille, total]
+      additionalProperties: false
+      properties:
+        elements: {type: array}
+        page: {type: integer, minimum: 1}
+        taille: {type: integer, minimum: 1, maximum: 100}
+        total: {type: integer, minimum: 0}
+    Canal:
+      type: string
+      enum: [REDIRECTION, CODE, NOTIFICATION]
+    Niveau:
+      type: string
+      enum: [STATUT, CHAMPS, DOCUMENT]
+    EtatDemande:
+      type: string
+      enum: [EN_ATTENTE_ACCORD, REFUSEE, EXPIREE, ANNULEE, EN_COURS, PARTIELLE, COMPLETE]
+    EtatElement:
+      type: string
+      enum: [A_TRAITER, OBTENU, REUTILISE, REFUSE, INCONNU, EXPIRE]
+    EtatDossier:
+      type: string
+      enum: [EN_VERIFICATION, COMPLET, A_EXAMINER]
+      description: 'Aucun état ne vaut rejet : un « non » se décide devant un agent.'
+    Jeu:
+      type: object
+      required: [code, libelle, niveau, registre, champs]
+      additionalProperties: false
+      properties:
+        code: {type: string}
+        libelle: {type: string}
+        niveau: {$ref: '#/components/schemas/Niveau'}
+        registre: {type: string}
+        champs:
+          type: array
+          items: {type: string}
+          description: 'Niveau CHAMPS : les champs que le registre transmettra, un champ de formulaire chacun ; vide
+            sinon.'
+    NatureDeclaration:
+      type: string
+      enum: [TEXTE, PIECE]
+    DeclarationAttendue:
+      type: object
+      required: [code, libelle, aide, nature]
+      additionalProperties: false
+      description: Une information que la personne fournit elle-même ; aucun registre ne l'atteste.
+      properties:
+        code: {type: string, pattern: '^[a-z][a-z0-9-]{1,40}$'}
+        libelle: {type: string}
+        aide:
+          type: [string, 'null']
+        nature: {$ref: '#/components/schemas/NatureDeclaration'}
+    Saisie:
+      type: object
+      properties:
+        valeur: {type: string, maxLength: 120}
+    VueDeclaration:
+      type: object
+      additionalProperties: false
+      required: [code, libelle, nature, remplace, valeur, piece, modifiee_le]
+      description: Ce que la personne a déclaré (« Déclaré par l'usager »), à distinguer de ce qu'un registre a vérifié.
+      properties:
+        code: {type: string}
+        libelle: {type: string}
+        nature: {$ref: '#/components/schemas/NatureDeclaration'}
+        remplace:
+          type: boolean
+          description: Vrai si la pièce remplace une information que le registre n'a pas transmise (`code` est alors
+            le jeu).
+        valeur:
+          type: [string, 'null']
+          description: Nature TEXTE.
+        piece:
+          oneOf:
+          - {$ref: '#/components/schemas/Piece'}
+          - {type: 'null'}
+          description: Nature PIECE ; le contenu se lit à part.
+        modifiee_le: {type: string, format: date-time}
+    Presentation:
+      type: object
+      required: [service, code, libelle, jeux, declarations, pieces]
+      additionalProperties: false
+      properties:
+        service:
+          type: object
+          required: [code, nom, organisme]
+          additionalProperties: false
+          properties:
+            code: {type: string}
+            nom: {type: string}
+            organisme: {type: string}
+        code: {type: string}
+        libelle: {type: string}
+        jeux:
+          type: array
+          items: {$ref: '#/components/schemas/Jeu'}
+        declarations:
+          type: array
+          items: {$ref: '#/components/schemas/DeclarationAttendue'}
+          description: Le formulaire du service, propre à chaque démarche.
+        pieces:
+          type: array
+          items: {type: string}
+          description: Pièces que le citoyen n'aura pas à fournir.
+    Ouverture:
+      type: object
+      required: [canal, identifiant_unique]
+      properties:
+        canal: {$ref: '#/components/schemas/Canal'}
+        identifiant_unique:
+          type: string
+          pattern: ^[0-9]{12}$
+          description: Exigé pour les trois canaux ; transmis à Sira, jamais gardé ici.
+    Retour:
+      type: object
+      required: [demande, code_retour]
+      properties:
+        demande: {type: string, format: uuid}
+        code_retour: {type: string, pattern: '^[\x21-\x7E]{1,512}$'}
+    VueDemande:
+      type: object
+      additionalProperties: false
+      required: [id, canal, etat, url_accord, code_court, code_verification, expire_le, dossier_ouvert]
+      properties:
+        id: {type: string, format: uuid}
+        canal: {$ref: '#/components/schemas/Canal'}
+        etat: {$ref: '#/components/schemas/EtatDemande'}
+        url_accord:
+          type: [string, 'null']
+          description: Lien de l'écran d'accord (QR code, redirection).
+        code_court:
+          type: [string, 'null']
+          description: 'Canal CODE : à saisir dans l''espace citoyen.'
+        code_verification:
+          type: [string, 'null']
+          description: À recopier par le citoyen pour accepter.
+        expire_le:
+          type: [string, 'null']
+          format: date-time
+        dossier_ouvert: {type: boolean}
+    Piece:
+      type: object
+      required: [nom, type, taille]
+      additionalProperties: false
+      properties:
+        nom: {type: string}
+        type: {type: string}
+        taille: {type: integer, minimum: 0}
+    VueVerification:
+      type: object
+      additionalProperties: false
+      required: [jeu, libelle, niveau, registre, etat, valeur, champs, piece, modifiee_le]
+      properties:
+        jeu: {type: string}
+        libelle: {type: string}
+        niveau: {$ref: '#/components/schemas/Niveau'}
+        registre: {type: string}
+        etat: {$ref: '#/components/schemas/EtatElement'}
+        valeur:
+          type: [boolean, 'null']
+          description: Niveau STATUT.
+        champs:
+          type: [object, 'null']
+          description: Niveau CHAMPS.
+        piece:
+          oneOf:
+          - {$ref: '#/components/schemas/Piece'}
+          - {type: 'null'}
+          description: Niveau DOCUMENT ; le contenu se lit à part.
+        modifiee_le: {type: string, format: date-time}
+    VueDossier:
+      type: object
+      additionalProperties: false
+      required: [id, numero, etat, cree_le, modifie_le, depose_le, verifications, declarations, pieces_evitees]
+      properties:
+        id: {type: string, format: uuid}
+        numero: {type: string, pattern: '^[A-Z]+-[0-9]{4}-[0-9]{6,}$'}
+        etat: {$ref: '#/components/schemas/EtatDossier'}
+        cree_le: {type: string, format: date-time}
+        modifie_le: {type: string, format: date-time}
+        depose_le:
+          type: [string, 'null']
+          format: date-time
+          description: Instant de « Déposer mon dossier » ; les déclarations ne changent plus ensuite.
+        verifications:
+          type: array
+          items: {$ref: '#/components/schemas/VueVerification'}
+        declarations:
+          type: array
+          items: {$ref: '#/components/schemas/VueDeclaration'}
+        pieces_evitees:
+          type: array
+          items: {type: string}
+    LigneDossier:
+      type: object
+      additionalProperties: false
+      required: [id, numero, etat, cree_le, modifie_le]
+      properties:
+        id: {type: string, format: uuid}
+        numero: {type: string}
+        etat: {$ref: '#/components/schemas/EtatDossier'}
+        cree_le: {type: string, format: date-time}
+        modifie_le: {type: string, format: date-time}
+    PageDeDossiers:
+      allOf:
+      - {$ref: '#/components/schemas/PageCommune'}
+      - type: object
+        properties:
+          elements:
+            type: array
+            items: {$ref: '#/components/schemas/LigneDossier'}
+    DemandeDuDossier:
+      type: object
+      additionalProperties: false
+      required: [id, canal, origine, etat, creee_le]
+      properties:
+        id: {type: string, format: uuid}
+        canal: {$ref: '#/components/schemas/Canal'}
+        origine:
+          type: string
+          enum: [CITOYEN, AGENT]
+        etat: {$ref: '#/components/schemas/EtatDemande'}
+        creee_le: {type: string, format: date-time}
+    Detail:
+      type: object
+      additionalProperties: false
+      required: [dossier, demandes]
+      properties:
+        dossier: {$ref: '#/components/schemas/VueDossier'}
+        demandes:
+          type: array
+          items: {$ref: '#/components/schemas/DemandeDuDossier'}
+    Session:
+      type: object
+      required: [nom, roles]
+      additionalProperties: false
+      properties:
+        nom:
+          type: [string, 'null']
+          description: Nom complet, sinon identifiant de connexion ; null si le jeton ne porte ni l'un ni l'autre.
+        roles:
+          type: array
+          items: {type: string}
+        identifiant:
+          type: [string, 'null']
+          description: Identifiant de connexion.
+        courriel:
+          type: [string, 'null']
+          description: Adresse électronique, si l'annuaire la connaît.
+        permissions:
+          type: array
+          items: {type: string}
+          description: Droits de l'agent, donnés par son rôle (voir docs/composants/agents.md).

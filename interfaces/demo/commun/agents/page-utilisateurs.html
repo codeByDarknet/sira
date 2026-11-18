@@ -1,0 +1,246 @@
+<div class="sira-titre-page">
+  <div>
+    <h1>Utilisateurs</h1>
+    <p>Les agents qui travaillent dans cet espace, et le rôle qui fixe ce qu’ils peuvent faire.</p>
+  </div>
+  @if (gerer()) {
+    <button siraBouton type="button" (click)="ajouter()">
+      <sira-icone nom="plus" />
+      Ajouter un utilisateur
+    </button>
+  }
+</div>
+
+<div aria-live="polite">
+  @if (message(); as m) {
+    <sira-alerte [type]="m.type">{{ m.texte }}</sira-alerte>
+  }
+</div>
+
+@if (probleme(); as texte) {
+  <sira-alerte type="erreur" titre="La liste n’a pas pu être chargée">
+    <p>{{ texte }}</p>
+    <button siraBouton variante="secondaire" type="button" (click)="liste.reload()">
+      Réessayer
+    </button>
+  </sira-alerte>
+} @else if (liste.value(); as page) {
+  <sira-tableau
+    legende="Utilisateurs"
+    [colonnes]="colonnes"
+    [lignes]="page.elements"
+    [total]="page.total"
+    [pageCourante]="page.page"
+    [parPage]="page.taille"
+    [chargement]="liste.isLoading()"
+    (requete)="demander($event)"
+  >
+    <ng-template siraCellule="nom" let-ligne>
+      <span class="sira-tableau__principal">{{ ligne.nom }} {{ ligne.prenom }}</span>
+    </ng-template>
+    <ng-template siraCellule="libelle_role" let-ligne>{{
+      ligne.libelle_role ?? 'Aucun rôle'
+    }}</ng-template>
+    <ng-template siraCellule="actif" let-ligne>
+      @if (!ligne.actif) {
+        <sira-etiquette etat="neutre">Désactivé</sira-etiquette>
+      } @else if (ligne.premiere_connexion) {
+        <sira-etiquette etat="attention">En attente de connexion</sira-etiquette>
+      } @else {
+        <sira-etiquette etat="succes">Actif</sira-etiquette>
+      }
+    </ng-template>
+    <ng-template siraCellule="cree_le" let-ligne>{{
+      ligne.cree_le ? (ligne.cree_le | siraDate: 'jour') : '—'
+    }}</ng-template>
+    @if (gerer()) {
+      <ng-template siraActions let-ligne>
+        <button
+          type="button"
+          siraAction="pencil"
+          [libelle]="'Modifier ' + ligne.prenom + ' ' + ligne.nom"
+          (click)="modifier(ligne)"
+        ></button>
+        <button
+          type="button"
+          siraAction="key-round"
+          [libelle]="'Nouveau mot de passe pour ' + ligne.prenom + ' ' + ligne.nom"
+          (click)="aReinitialiser.set(ligne)"
+        ></button>
+        @if (ligne.identifiant !== moi()) {
+          <button
+            type="button"
+            siraAction="trash-2"
+            [libelle]="'Retirer ' + ligne.prenom + ' ' + ligne.nom"
+            (click)="aSupprimer.set(ligne)"
+          ></button>
+        }
+      </ng-template>
+    }
+  </sira-tableau>
+} @else {
+  <sira-squelette [lignes]="5" libelle="Chargement des utilisateurs" />
+}
+
+@if (fenetre(); as f) {
+  <sira-dialogue
+    [titre]="f.utilisateur ? 'Modifier un utilisateur' : 'Ajouter un utilisateur'"
+    [ouvert]="true"
+    (ouvertChange)="$event || fenetre.set(null)"
+  >
+    @if (!f.utilisateur) {
+      <p class="sira-secondaire">
+        Il recevra par courriel son identifiant et un mot de passe provisoire. À sa première
+        connexion, il choisira son mot de passe puis enregistrera Google Authenticator.
+      </p>
+    }
+    @if (echec(); as texte) {
+      <sira-alerte type="erreur" titre="Enregistrement impossible">{{ texte }}</sira-alerte>
+    }
+    <form class="ra-formulaire" novalidate (ngSubmit)="enregistrer()" id="form-utilisateur">
+      <sira-champ
+        obligatoire
+        libelle="Nom"
+        [libelleFlottant]="false"
+        identifiant="utilisateur-nom"
+        [erreur]="erreurs()['nom']"
+      >
+        <input siraSaisie name="nom" autocomplete="off" maxlength="60" [(ngModel)]="saisie.nom" />
+      </sira-champ>
+      <sira-champ
+        obligatoire
+        libelle="Prénom"
+        [libelleFlottant]="false"
+        identifiant="utilisateur-prenom"
+        [erreur]="erreurs()['prenom']"
+      >
+        <input
+          siraSaisie
+          name="prenom"
+          autocomplete="off"
+          maxlength="60"
+          [(ngModel)]="saisie.prenom"
+        />
+      </sira-champ>
+      <sira-champ
+        obligatoire
+        libelle="Adresse électronique"
+        [libelleFlottant]="false"
+        identifiant="utilisateur-email"
+        [aide]="f.utilisateur ? 'L’identifiant de connexion, lui, ne change pas.' : undefined"
+        [erreur]="erreurs()['email']"
+      >
+        <input
+          siraSaisie
+          type="email"
+          name="email"
+          autocomplete="off"
+          maxlength="64"
+          [(ngModel)]="saisie.email"
+        />
+      </sira-champ>
+      <sira-champ
+        obligatoire
+        libelle="Rôle"
+        [libelleFlottant]="false"
+        identifiant="utilisateur-role"
+        [erreur]="erreurs()['role']"
+      >
+        <select siraSaisie name="role" [(ngModel)]="saisie.role">
+          <option value="" disabled>Choisir un rôle</option>
+          @for (role of roles.value() ?? []; track role.code) {
+            <option [value]="role.code">{{ role.libelle }}</option>
+          }
+        </select>
+      </sira-champ>
+      @if (f.utilisateur && f.utilisateur.identifiant !== moi()) {
+        <label class="sira-choix ra-formulaire__plein">
+          <input type="checkbox" name="actif" [(ngModel)]="saisie.actif" />
+          Compte actif (décochez pour bloquer la connexion sans supprimer le compte)
+        </label>
+      }
+    </form>
+    <button
+      dialogue-actions
+      siraBouton
+      variante="secondaire"
+      type="button"
+      (click)="fenetre.set(null)"
+    >
+      Annuler
+    </button>
+    <button dialogue-actions siraBouton type="submit" form="form-utilisateur" [enCours]="envoi()">
+      {{ f.utilisateur ? 'Enregistrer' : 'Ajouter et envoyer le courriel' }}
+    </button>
+  </sira-dialogue>
+}
+
+@if (aSupprimer(); as u) {
+  <sira-dialogue
+    titre="Retirer cet utilisateur ?"
+    [ouvert]="true"
+    (ouvertChange)="$event || fermerConfirmations()"
+  >
+    <p>
+      Le compte de <strong>{{ u.prenom }} {{ u.nom }}</strong> ({{ u.email }}) sera supprimé. Il ne
+      pourra plus se connecter.
+    </p>
+    @if (echecAction(); as texte) {
+      <sira-alerte type="erreur" titre="Action impossible">{{ texte }}</sira-alerte>
+    }
+    <button
+      dialogue-actions
+      siraBouton
+      variante="secondaire"
+      type="button"
+      (click)="fermerConfirmations()"
+    >
+      Annuler
+    </button>
+    <button
+      dialogue-actions
+      siraBouton
+      variante="danger"
+      type="button"
+      [enCours]="action()"
+      (click)="supprimer(u)"
+    >
+      Retirer
+    </button>
+  </sira-dialogue>
+}
+
+@if (aReinitialiser(); as u) {
+  <sira-dialogue
+    titre="Envoyer un nouveau mot de passe ?"
+    [ouvert]="true"
+    (ouvertChange)="$event || fermerConfirmations()"
+  >
+    <p>
+      Un mot de passe provisoire sera envoyé à <strong>{{ u.email }}</strong
+      >. L’ancien ne marchera plus ; {{ u.prenom }} devra en choisir un nouveau à sa prochaine
+      connexion.
+    </p>
+    @if (echecAction(); as texte) {
+      <sira-alerte type="erreur" titre="Action impossible">{{ texte }}</sira-alerte>
+    }
+    <button
+      dialogue-actions
+      siraBouton
+      variante="secondaire"
+      type="button"
+      (click)="fermerConfirmations()"
+    >
+      Annuler
+    </button>
+    <button
+      dialogue-actions
+      siraBouton
+      type="button"
+      [enCours]="action()"
+      (click)="reinitialiser(u)"
+    >
+      Envoyer
+    </button>
+  </sira-dialogue>
+}

@@ -1,0 +1,34 @@
+<div class="sira-pile">
+  @for (ligne of lignes(); track ligne.verification.jeu) {
+    <sira-carte [titre]="ligne.verification.libelle" [niveauTitre]="3">
+      <sira-etiquette carte-etat [etat]="ligne.mention.etat">{{
+        ligne.mention.texte
+      }}</sira-etiquette>
+      <p class="sira-sans-marge sira-secondaire sira-petit">
+        @if (ligne.verifiee) {
+          Vérifié par {{ ligne.registre }}, le {{ ligne.verification.modifiee_le | siraDate }}
+        } @else if (ligne.verification.etat === 'A_TRAITER') {
+          Attendu de {{ ligne.registre }}
+        } @else {
+          Non transmis par {{ ligne.registre }}, le {{ ligne.verification.modifiee_le | siraDate }}
+        }
+      </p>
+      @if (ligne.champs.length > 0) {
+        <dl siraSynthese>
+          @for (champ of ligne.champs; track champ.libelle) {
+            <div siraSyntheseLigne [cle]="champ.libelle">{{ champ.valeur }}</div>
+          }
+        </dl>
+      }
+      @if (ligne.verification.piece; as piece) {
+        <ps-fichier
+          class="sira-marge-haut"
+          [nom]="piece.nom"
+          [details]="'Vérifié par ' + ligne.registre + ' · ' + ligne.taille"
+          [apercu]="ligne.adresses?.apercu ?? null"
+          [telechargement]="ligne.adresses?.telechargement ?? null"
+        />
+      }
+    </sira-carte>
+  }
+</div>
