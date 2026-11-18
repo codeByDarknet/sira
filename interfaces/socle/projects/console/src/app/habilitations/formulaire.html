@@ -1,0 +1,125 @@
+@if (introuvable(); as message) {
+  <sira-alerte type="erreur">{{ message }}</sira-alerte>
+} @else if (existant.isLoading()) {
+  <sira-squelette [lignes]="6" libelle="Chargement de l’habilitation" />
+} @else {
+  <sira-resume-erreurs [erreurs]="envoi.resume()" />
+  @if (envoi.echec(); as message) {
+    <sira-alerte type="erreur" titre="Brouillon non enregistré">{{ message }}</sira-alerte>
+  }
+  @if (listesIndisponibles(); as message) {
+    <sira-alerte type="erreur" titre="Listes indisponibles">{{ message }}</sira-alerte>
+  }
+
+  <form novalidate [formGroup]="formulaire" (ngSubmit)="enregistrer()">
+    <div class="sira-grille-formulaire">
+      <div class="sira-champ">
+        <p-floatlabel variant="in" class="sira-champ__flottant">
+          <p-select
+            inputId="service"
+            formControlName="service"
+            [options]="services()"
+            optionLabel="nom"
+            optionValue="code"
+            appendTo="body"
+            styleClass="co-select"
+            [invalid]="!!envoi.erreurs()['service']"
+            (onChange)="changerDeService()"
+          />
+          <label for="service"
+            >Service qui demande <span class="sira-champ__requis" aria-hidden="true">*</span></label
+          >
+        </p-floatlabel>
+        <span class="sira-champ__aide">Le membre qui posera les questions.</span>
+        @if (envoi.erreurs()['service']; as erreur) {
+          <p class="sira-champ__erreur">{{ erreur }}</p>
+        }
+      </div>
+
+      <div class="sira-champ">
+        <p-floatlabel variant="in" class="sira-champ__flottant">
+          <p-select
+            inputId="demarche"
+            formControlName="demarche"
+            [options]="demarches()"
+            optionLabel="libelle"
+            optionValue="code"
+            appendTo="body"
+            styleClass="co-select"
+            [invalid]="!!envoi.erreurs()['demarche']"
+          />
+          <label for="demarche"
+            >Démarche <span class="sira-champ__requis" aria-hidden="true">*</span></label
+          >
+        </p-floatlabel>
+        <span class="sira-champ__aide">Seules les démarches du service choisi sont proposées.</span>
+        @if (envoi.erreurs()['demarche']; as erreur) {
+          <p class="sira-champ__erreur">{{ erreur }}</p>
+        }
+      </div>
+
+      <sira-groupe-formulaire
+        class="sira-pleine-largeur"
+        legende="Questions autorisées"
+        [erreur]="envoi.erreurs()['jeux']"
+      >
+        @for (groupe of registres(); track groupe.registre; let premierGroupe = $first) {
+          <p class="co-groupe-choix">Registre {{ groupe.registre }}</p>
+          <div class="co-choix-roles">
+            @for (jeu of groupe.jeux; track jeu.code; let premier = $first) {
+              <label class="sira-choix">
+                <input
+                  #case
+                  type="checkbox"
+                  [attr.id]="premierGroupe && premier ? 'jeux' : null"
+                  [checked]="choisies().includes(jeu.code)"
+                  (change)="cocher(jeu.code, case.checked)"
+                />
+                <span>
+                  <strong>{{ jeu.libelle }}</strong>
+                  <span class="co-choix-roles__aide">{{ libelleNiveau(jeu.niveau) }}</span>
+                </span>
+              </label>
+            }
+          </div>
+        } @empty {
+          <p class="sira-liste-saisie__vide">Aucune question publiée pour l’instant.</p>
+        }
+      </sira-groupe-formulaire>
+
+      <div class="sira-pleine-largeur" aria-live="polite">
+        @if (aRevoir().length > 0) {
+          <sira-alerte type="attention" titre="Un oui ou un non suffirait peut-être">
+            <ul>
+              @for (jeu of aRevoir(); track jeu.code) {
+                <li>{{ jeu.libelle }} ({{ libelleNiveau(jeu.niveau) }})</li>
+              }
+            </ul>
+            <p>Si vous la gardez, justifiez-la.</p>
+          </sira-alerte>
+        }
+      </div>
+
+      <sira-champ
+        obligatoire
+        class="sira-pleine-largeur"
+        libelle="Justification"
+        aide="Décrit les raisons pour lesquelles le service a besoin de ces questions pour cette démarche."
+        identifiant="justification"
+        [erreur]="envoi.erreurs()['justification']"
+      >
+        <textarea siraSaisie formControlName="justification" rows="4"></textarea>
+      </sira-champ>
+    </div>
+
+    <div class="sira-fenetre-formulaire__pied">
+      <button siraBouton variante="secondaire" type="button" (click)="annule.emit()">
+        Annuler
+      </button>
+      <button siraBouton type="submit" [enCours]="envoi.enCours()">
+        <sira-icone nom="check" />
+        Enregistrer le brouillon
+      </button>
+    </div>
+  </form>
+}

@@ -1,0 +1,109 @@
+@if (introuvable(); as message) {
+  <sira-alerte type="erreur">{{ message }}</sira-alerte>
+} @else if (existant.isLoading()) {
+  <sira-squelette [lignes]="5" libelle="Chargement du membre" />
+} @else {
+  <sira-resume-erreurs [erreurs]="envoi.resume()" />
+  @if (envoi.echec(); as message) {
+    <sira-alerte type="erreur" titre="Membre non enregistré">{{ message }}</sira-alerte>
+  }
+
+  <form novalidate [formGroup]="formulaire" (ngSubmit)="enregistrer()">
+    <div class="sira-grille-formulaire">
+      <sira-champ
+        obligatoire
+        libelle="Code"
+        [aide]="
+          code()
+            ? 'Le code ne change jamais.'
+            : 'Minuscules, chiffres et tirets.  Exemple : concours'
+        "
+        identifiant="code"
+        [erreur]="envoi.erreurs()['code']"
+      >
+        <input siraSaisie siraFiltre="code" formControlName="code" autocomplete="off" />
+      </sira-champ>
+
+      <sira-champ
+        obligatoire
+        libelle="Organisme"
+        aide="Administration responsable. Exemple : Ministère de la Fonction publique"
+        identifiant="organisme"
+        [erreur]="envoi.erreurs()['organisme']"
+      >
+        <input siraSaisie formControlName="organisme" autocomplete="organization" />
+      </sira-champ>
+
+      <sira-champ
+        obligatoire
+        class="sira-pleine-largeur"
+        libelle="Nom"
+        aide="Nom lu par le citoyen quand ce membre lui demande son accord. Exemple : Concours directs 2026"
+        identifiant="nom"
+        [erreur]="envoi.erreurs()['nom']"
+      >
+        <input siraSaisie formControlName="nom" autocomplete="off" />
+      </sira-champ>
+
+      <sira-groupe-formulaire
+        class="sira-pleine-largeur"
+        legende="Ce que fait ce membre"
+        aide="Un même membre peut faire les deux : cochez les deux cases."
+        [erreur]="envoi.erreurs()['roles']"
+      >
+        <div class="co-choix-roles">
+          <label class="sira-choix">
+            <input id="roles" type="checkbox" formControlName="service" />
+            <span>
+              <strong>Demande des informations</strong>
+              <span class="co-choix-roles__aide">
+                C’est un service : il pose des questions aux registres, avec l’accord du citoyen.
+              </span>
+            </span>
+          </label>
+          <label class="sira-choix">
+            <input type="checkbox" formControlName="registre" />
+            <span>
+              <strong>Fournit des informations</strong>
+              <span class="co-choix-roles__aide">
+                C’est un registre : il répond aux questions des services habilités.
+              </span>
+            </span>
+          </label>
+        </div>
+      </sira-groupe-formulaire>
+
+      @if (formulaire.controls.service.value) {
+        <div class="sira-pleine-largeur">
+          <co-adresses
+            formControlName="retours"
+            titre="Adresses de retour autorisées"
+            identifiant="retours_autorises"
+            exemple="https://concours.gov.bf/retour"
+          />
+          <p class="sira-champ__aide">
+            @if (code()) {
+            } @else {
+              Après l’accord du citoyen, Sira le renvoie sur le site du service, et seulement vers
+              une de ces adresses : un lien piégé ne peut pas le détourner ailleurs. Ajoutez
+              l’adresse complète de la page de retour du site.
+            }
+          </p>
+          @if (envoi.erreurs()['retours_autorises']; as erreur) {
+            <p class="sira-champ__erreur">{{ erreur }}</p>
+          }
+        </div>
+      }
+    </div>
+
+    <div class="sira-fenetre-formulaire__pied">
+      <button siraBouton variante="secondaire" type="button" (click)="annule.emit()">
+        Annuler
+      </button>
+      <button siraBouton type="submit" [enCours]="envoi.enCours()">
+        <sira-icone nom="check" />
+        {{ code() ? 'Enregistrer les changements' : 'Ajouter le membre' }}
+      </button>
+    </div>
+  </form>
+}

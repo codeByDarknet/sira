@@ -1,0 +1,122 @@
+<sira-fil
+  [elements]="[
+    { libelle: 'Démarches', chemin: '/demarches' },
+    { libelle: fiche()?.libelle ?? 'Détail' },
+  ]"
+/>
+
+@if (message(); as texte) {
+  <sira-alerte type="succes" ephemere>{{ texte }}</sira-alerte>
+}
+
+@if (probleme(); as message) {
+  <h1>Démarche introuvable</h1>
+  <sira-alerte type="erreur">{{ message }}</sira-alerte>
+} @else if (fiche(); as demarche) {
+  @let etat = libelleActif(demarche.actif);
+  <div class="sira-titre-page">
+    <div>
+      <h1>{{ demarche.libelle }}</h1>
+      <p>Fiche de la démarche : ce que le citoyen lit avant de donner son accord.</p>
+    </div>
+    @if (droits.ecriture()) {
+      <div class="sira-fiche__actions">
+        <button siraBouton variante="secondaire" type="button" (click)="modification.set(true)">
+          <sira-icone nom="pencil" />
+          Modifier
+        </button>
+        @if (demarche.actif) {
+          <button siraBouton variante="danger" type="button" (click)="desactivation.set(true)">
+            <sira-icone nom="ban" />
+            Désactiver
+          </button>
+        }
+      </div>
+    }
+  </div>
+
+  <div class="sira-fiche">
+    <div class="sira-fiche__grille">
+      <section class="sira-fiche__case">
+        <p class="sira-fiche__cle"><sira-icone nom="key-round" /> Code</p>
+        <p class="sira-fiche__valeur">{{ demarche.code }}</p>
+        <p class="sira-fiche__explication">
+          Identifiant court de la démarche. Les habilitations s’y réfèrent. Il ne change jamais.
+        </p>
+      </section>
+      <section class="sira-fiche__case">
+        <p class="sira-fiche__cle"><sira-icone nom="building-2" /> Service</p>
+        <p class="sira-fiche__valeur">
+          <a siraLien [routerLink]="['/membres', demarche.service]">{{
+            noms.membre(demarche.service)
+          }}</a>
+        </p>
+        <p class="sira-fiche__explication">
+          Le membre qui rend la démarche et demande les informations, avec l’accord du citoyen.
+        </p>
+      </section>
+      <section class="sira-fiche__case">
+        <p class="sira-fiche__cle"><sira-icone nom="clock" /> Durée de l’accord</p>
+        <p class="sira-fiche__valeur">{{ phraseDuree(demarche.duree_autorisation_jours) }}</p>
+        <p class="sira-fiche__explication">
+          @if (demarche.duree_autorisation_jours === 0) {
+            L’accord ne sert qu’une fois : pour une nouvelle consultation, le citoyen le redonne.
+          } @else {
+            Pendant cette durée, le service peut redemander les mêmes informations sans redemander
+            l’accord. Le citoyen peut le retirer à tout moment.
+          }
+        </p>
+      </section>
+      <section class="sira-fiche__case">
+        <p class="sira-fiche__cle"><sira-icone nom="circle-check" /> État</p>
+        <p class="sira-fiche__valeur">
+          <sira-etiquette [etat]="etat.etat">{{ etat.texte }}</sira-etiquette>
+        </p>
+        <p class="sira-fiche__explication">
+          @if (demarche.actif) {
+            Active : les citoyens peuvent l’entamer et donner leur accord.
+          } @else {
+            Désactivée : plus aucune demande n’est possible.
+          }
+        </p>
+      </section>
+      <section class="sira-fiche__case sira-fiche__case--large">
+        <p class="sira-fiche__cle"><sira-icone nom="info" /> Finalité</p>
+        <p class="sira-fiche__valeur">{{ demarche.finalite }}</p>
+        <p class="sira-fiche__explication">
+          Pourquoi le service a besoin des informations. Le citoyen la lit avant de donner son
+          accord ; Sira refuse tout usage qui n’y correspond pas.
+        </p>
+      </section>
+      <section class="sira-fiche__case sira-fiche__case--large">
+        <p class="sira-fiche__cle"><sira-icone nom="file-text" /> Base légale</p>
+        <p class="sira-fiche__valeur">{{ demarche.base_legale }}</p>
+        <p class="sira-fiche__explication">
+          Le texte qui autorise cette démarche et justifie la demande d’informations.
+        </p>
+      </section>
+    </div>
+  </div>
+
+  <co-fenetre titre="Modifier la démarche" intro="Le code ne change pas." [(ouvert)]="modification">
+    @if (modification()) {
+      <co-formulaire-demarche
+        [code]="demarche.code"
+        (termine)="apresModification($event)"
+        (annule)="modification.set(false)"
+      />
+    }
+  </co-fenetre>
+
+  <co-confirmation
+    [question]="'Désactiver « ' + demarche.libelle + ' » ?'"
+    confirmer="Désactiver"
+    [(ouvert)]="desactivation"
+    [appel]="desactiver"
+    (fait)="apresDesactivation()"
+  >
+    <p>Plus aucune demande ne sera possible pour cette démarche. L’historique est conservé.</p>
+  </co-confirmation>
+} @else {
+  <sira-squelette [lignes]="6" libelle="Chargement de la démarche" />
+}

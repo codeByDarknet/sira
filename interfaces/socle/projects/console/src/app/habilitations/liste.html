@@ -1,0 +1,96 @@
+<div class="sira-titre-page">
+  <div>
+    <h1>Habilitations</h1>
+    <p class="sira-compte">
+      {{ liste.chargement() && !liste.total() ? 'Chargement…' : compte(liste.total()) }}
+    </p>
+    <p>
+      Une habilitation autorise un service à poser certaines questions aux registres, pour une
+      démarche précise. L’instructeur la prépare, l’autorité la décide.
+    </p>
+  </div>
+</div>
+
+<co-separation-des-roles />
+
+@if (message(); as texte) {
+  <sira-alerte type="succes" ephemere>{{ texte }}</sira-alerte>
+}
+
+@if (liste.probleme(); as probleme) {
+  <sira-alerte type="erreur" titre="Liste indisponible">{{ probleme }}</sira-alerte>
+}
+<div class="co-liste">
+  <sira-tableau
+    legende="Habilitations"
+    [colonnes]="colonnes"
+    [lignes]="liste.lignes()"
+    [total]="liste.total()"
+    [chargement]="liste.chargement()"
+    [pageCourante]="liste.page()"
+    [parPage]="liste.taille()"
+    (requete)="liste.demander($event)"
+  >
+    <p-select
+      tableau-filtres
+      class="sira-tableau__filtre"
+      [options]="choixEtats"
+      optionLabel="libelle"
+      optionValue="valeur"
+      appendTo="body"
+      ariaLabel="Filtrer par état"
+      [ngModel]="liste.filtres()['etat'] ?? ''"
+      (ngModelChange)="liste.filtrer('etat', $event)"
+    />
+    @if (droits.ecriture()) {
+      <button tableau-actions siraBouton type="button" (click)="preparer()">
+        <sira-icone nom="plus" />
+        Préparer une habilitation
+      </button>
+    }
+    <ng-template siraCellule="service" let-ligne>
+      <span class="sira-tableau__principal">{{ noms.membre(ligne.service) }}</span>
+      <span class="sira-tableau__secondaire">pour {{ noms.demarche(ligne.demarche) }}</span>
+    </ng-template>
+    <ng-template siraCellule="jeux" let-ligne>
+      @for (jeu of ligne.jeux; track jeu) {
+        <span class="co-ligne">{{ noms.jeu(jeu) }}</span>
+      }
+    </ng-template>
+    <ng-template siraCellule="etat" let-ligne>
+      <sira-etiquette [etat]="libelleEtat(ligne.etat).etat">{{
+        libelleEtat(ligne.etat).texte
+      }}</sira-etiquette>
+    </ng-template>
+    <ng-template siraActions let-ligne>
+      <a
+        siraAction="eye"
+        [libelle]="'Voir l’habilitation de ' + noms.membre(ligne.service)"
+        [routerLink]="ligne.id"
+      ></a>
+      @if (droits.ecriture() && ligne.etat === 'BROUILLON') {
+        <button
+          siraAction="pencil"
+          [libelle]="'Modifier le brouillon de ' + ligne.service"
+          (click)="fenetre.set({ id: ligne.id })"
+        ></button>
+      }
+    </ng-template>
+  </sira-tableau>
+</div>
+
+<co-fenetre
+  large
+  [titre]="fenetre()?.id ? 'Modifier le brouillon' : 'Préparer une habilitation'"
+  intro="Choisissez le service, sa démarche et les questions dont il a besoin. Le brouillon reste modifiable jusqu’à sa soumission à l’autorité."
+  [ouvert]="fenetre() !== null"
+  (ouvertChange)="!$event && fenetre.set(null)"
+>
+  @if (fenetre(); as ouverte) {
+    <co-formulaire-habilitation
+      [id]="ouverte.id"
+      (termine)="apresEnregistrement($event)"
+      (annule)="fenetre.set(null)"
+    />
+  }
+</co-fenetre>

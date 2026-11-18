@@ -1,0 +1,111 @@
+<div class="sira-titre-page">
+  <div>
+    <h1>Signalements</h1>
+    <p class="sira-compte">
+      {{ liste.chargement() && !liste.total() ? 'Chargement…' : compte(liste.total()) }}
+    </p>
+    <p>
+      Un citoyen qui conteste un accès à ses informations le signale depuis son espace. Lisez son
+      motif, vérifiez dans le journal, puis répondez-lui : il lira votre réponse.
+    </p>
+  </div>
+</div>
+
+<div aria-live="polite">
+  @if (annonce(); as message) {
+    <sira-alerte type="succes" ephemere>{{ message }}</sira-alerte>
+  }
+</div>
+
+@if (!droits.traitement()) {
+  <sira-alerte>Lecture seule. Seuls un instructeur ou l’autorité y répondent.</sira-alerte>
+}
+
+@if (liste.probleme(); as probleme) {
+  <sira-alerte type="erreur" titre="Liste indisponible">{{ probleme }}</sira-alerte>
+}
+<div class="co-liste">
+  <sira-tableau
+    legende="Signalements"
+    [outils]="false"
+    [colonnes]="colonnes"
+    [lignes]="liste.lignes()"
+    [total]="liste.total()"
+    [chargement]="liste.chargement()"
+    [pageCourante]="liste.page()"
+    [parPage]="liste.taille()"
+    (requete)="liste.demander($event)"
+  >
+    <p-select
+      tableau-filtres
+      class="sira-tableau__filtre"
+      [options]="choixEtats"
+      optionLabel="libelle"
+      optionValue="valeur"
+      appendTo="body"
+      ariaLabel="Filtrer par état"
+      [ngModel]="liste.filtres()['etat'] ?? ''"
+      (ngModelChange)="liste.filtrer('etat', $event)"
+    />
+    <ng-template siraCellule="cree_le" let-ligne>{{ ligne.cree_le | siraDate }}</ng-template>
+    <ng-template siraCellule="ligne" let-ligne>{{
+      acces(ligne.ligne) ?? 'Voir le journal'
+    }}</ng-template>
+    <ng-template siraCellule="etat" let-ligne>
+      @if (estTraite(ligne)) {
+        <sira-etiquette etat="succes">Traité</sira-etiquette>
+      } @else {
+        <sira-etiquette etat="attention">À traiter</sira-etiquette>
+      }
+    </ng-template>
+    <ng-template siraCellule="suite" let-ligne>
+      @if (estTraite(ligne)) {
+        {{ ligne.reponse }}
+        <span class="co-ligne sira-secondaire">
+          {{ ligne.traite_par }}, le {{ ligne.traite_le | siraDate }}
+        </span>
+      } @else {
+        <span class="sira-secondaire">En attente de réponse</span>
+      }
+    </ng-template>
+    <ng-template siraActions let-ligne>
+      @if (!estTraite(ligne) && droits.traitement()) {
+        <button
+          siraAction="message-square"
+          [libelle]="'Répondre au signalement du ' + (ligne.cree_le | siraDate)"
+          (click)="repondre(ligne)"
+        ></button>
+      }
+    </ng-template>
+  </sira-tableau>
+</div>
+
+<sira-dialogue titre="Répondre au citoyen" [(ouvert)]="ouvert">
+  @if (choisi(); as signalement) {
+    <p class="sira-secondaire">Reçu le {{ signalement.cree_le | siraDate }} :</p>
+    <p>« {{ signalement.motif }} »</p>
+    @if (envoi.echec(); as message) {
+      <sira-alerte type="erreur" titre="Réponse non enregistrée">{{ message }}</sira-alerte>
+    }
+    <sira-champ
+      libelle="Votre réponse"
+      aide="Lue par le citoyen : ce qui a été vérifié et décidé."
+      identifiant="reponse"
+      [erreur]="envoi.erreurs()['reponse']"
+    >
+      <textarea siraSaisie rows="4" [formControl]="reponse"></textarea>
+    </sira-champ>
+  }
+  <button dialogue-actions siraBouton type="button" [enCours]="envoi.enCours()" (click)="envoyer()">
+    Envoyer la réponse
+  </button>
+  <button
+    dialogue-actions
+    siraBouton
+    variante="secondaire"
+    type="button"
+    (click)="ouvert.set(false)"
+  >
+    Annuler
+  </button>
+</sira-dialogue>

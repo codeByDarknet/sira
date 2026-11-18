@@ -1,0 +1,130 @@
+<div class="sira-titre-page">
+  <div>
+    <h1>Questions</h1>
+    <p class="sira-compte">
+      {{ liste.chargement() && !liste.total() ? 'Chargement…' : compte(liste.total()) }}
+    </p>
+    <p>
+      Les questions qu’un service peut poser à un registre. Chacune dit ce que le service recevra.
+    </p>
+  </div>
+</div>
+
+@if (message(); as texte) {
+  <sira-alerte type="succes" ephemere>{{ texte }}</sira-alerte>
+}
+
+@if (liste.probleme(); as probleme) {
+  <sira-alerte type="erreur" titre="Liste indisponible">{{ probleme }}</sira-alerte>
+}
+<div class="co-liste">
+  <sira-tableau
+    legende="Questions publiées"
+    [colonnes]="colonnes"
+    [lignes]="liste.lignes()"
+    [total]="liste.total()"
+    [chargement]="liste.chargement()"
+    [pageCourante]="liste.page()"
+    [parPage]="liste.taille()"
+    (requete)="liste.demander($event)"
+  >
+    <p-select
+      tableau-filtres
+      class="sira-tableau__filtre"
+      [options]="choixRegistres()"
+      optionLabel="nom"
+      optionValue="code"
+      appendTo="body"
+      ariaLabel="Filtrer par registre"
+      [ngModel]="liste.filtres()['registre'] ?? ''"
+      (ngModelChange)="liste.filtrer('registre', $event)"
+    />
+    <p-select
+      tableau-filtres
+      class="sira-tableau__filtre"
+      [options]="choixNiveaux"
+      optionLabel="libelle"
+      optionValue="code"
+      appendTo="body"
+      ariaLabel="Filtrer par forme"
+      [ngModel]="liste.filtres()['niveau'] ?? ''"
+      (ngModelChange)="liste.filtrer('niveau', $event)"
+    />
+    <p-select
+      tableau-filtres
+      class="sira-tableau__filtre"
+      [options]="choixActif"
+      optionLabel="libelle"
+      optionValue="valeur"
+      appendTo="body"
+      ariaLabel="Filtrer par état"
+      [ngModel]="liste.filtres()['actif'] ?? ''"
+      (ngModelChange)="liste.filtrer('actif', $event)"
+    />
+    @if (droits.ecriture()) {
+      <button tableau-actions siraBouton type="button" (click)="creer()">
+        <sira-icone nom="plus" />
+        Créer une question
+      </button>
+    }
+    <ng-template siraCellule="libelle" let-ligne>
+      <span class="sira-tableau__principal">{{ ligne.libelle }}</span>
+      <span class="sira-tableau__secondaire co-technique">{{ ligne.code }}</span>
+    </ng-template>
+    <ng-template siraCellule="registre" let-ligne>{{ noms.registre(ligne.registre) }}</ng-template>
+    <ng-template siraCellule="niveau" let-ligne>{{ libelleNiveau(ligne.niveau) }}</ng-template>
+    <ng-template siraCellule="contenu" let-ligne>{{ phraseContenu(ligne) }}</ng-template>
+    <ng-template siraCellule="actif" let-ligne>
+      @let etat = libelleActif(ligne.actif);
+      <sira-etiquette [etat]="etat.etat">{{ etat.texte }}</sira-etiquette>
+    </ng-template>
+    <ng-template siraActions let-ligne>
+      <a
+        siraAction="eye"
+        [libelle]="'Voir la question ' + ligne.libelle"
+        [routerLink]="ligne.code"
+      ></a>
+      @if (droits.ecriture()) {
+        <button
+          siraAction="pencil"
+          [libelle]="'Modifier la question ' + ligne.libelle"
+          (click)="fenetre.set({ code: ligne.code })"
+        ></button>
+        @if (ligne.actif) {
+          <button
+            siraAction="ban"
+            ton="danger"
+            [libelle]="'Désactiver la question ' + ligne.libelle"
+            (click)="aDesactiver.set(ligne)"
+          ></button>
+        }
+      }
+    </ng-template>
+  </sira-tableau>
+</div>
+
+<co-fenetre
+  large
+  [titre]="fenetre()?.code ? 'Modifier la question' : 'Créer une question'"
+  [ouvert]="fenetre() !== null"
+  (ouvertChange)="!$event && fenetre.set(null)"
+>
+  @if (fenetre(); as ouverte) {
+    <co-assistant-jeu
+      [code]="ouverte.code"
+      (termine)="apresPublication($event, ouverte.code)"
+      (annule)="fenetre.set(null)"
+    />
+  }
+</co-fenetre>
+
+<co-confirmation
+  [question]="'Désactiver « ' + (aDesactiver()?.libelle ?? '') + ' » ?'"
+  confirmer="Désactiver"
+  [ouvert]="aDesactiver() !== null"
+  (ouvertChange)="!$event && aDesactiver.set(null)"
+  [appel]="desactiver"
+  (fait)="apresDesactivation()"
+>
+  <p>Plus aucun service ne pourra la poser. L’historique est conservé.</p>
+</co-confirmation>

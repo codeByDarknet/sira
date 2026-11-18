@@ -1,0 +1,114 @@
+<div class="sira-titre-page">
+  <div>
+    <h1>Registres</h1>
+    <p class="sira-compte">
+      {{ liste.chargement() && !liste.total() ? 'Chargement…' : compte(liste.total()) }}
+    </p>
+    <p>
+      Les systèmes des administrations qui fournissent des informations : état civil, nationalité,
+      casier, diplômes…
+    </p>
+  </div>
+</div>
+
+@if (message(); as texte) {
+  <sira-alerte type="succes" ephemere>{{ texte }}</sira-alerte>
+}
+
+@if (liste.probleme(); as probleme) {
+  <sira-alerte type="erreur" titre="Liste indisponible">{{ probleme }}</sira-alerte>
+}
+<div class="co-liste">
+  <sira-tableau
+    legende="Registres raccordés"
+    [colonnes]="colonnes"
+    [lignes]="liste.lignes()"
+    [total]="liste.total()"
+    [chargement]="liste.chargement()"
+    [pageCourante]="liste.page()"
+    [parPage]="liste.taille()"
+    (requete)="liste.demander($event)"
+  >
+    <p-select
+      tableau-filtres
+      class="sira-tableau__filtre"
+      [options]="choixActif"
+      optionLabel="libelle"
+      optionValue="valeur"
+      appendTo="body"
+      ariaLabel="Filtrer par état"
+      [ngModel]="liste.filtres()['actif'] ?? ''"
+      (ngModelChange)="liste.filtrer('actif', $event)"
+    />
+
+    @if (droits.ecriture()) {
+      <button tableau-actions siraBouton type="button" (click)="ajouter()">
+        <sira-icone nom="plus" />
+        Ajouter un registre
+      </button>
+    }
+    <ng-template siraCellule="nom" let-ligne>
+      <span class="sira-tableau__principal">{{ ligne.nom }}</span>
+      <span class="sira-tableau__secondaire">{{ ligne.code }}</span>
+    </ng-template>
+    <ng-template siraCellule="membre" let-ligne>{{ noms.membre(ligne.membre) }}</ng-template>
+    <ng-template siraCellule="actif" let-ligne>
+      @let etat = libelleActif(ligne.actif);
+      <sira-etiquette [etat]="etat.etat">{{ etat.texte }}</sira-etiquette>
+    </ng-template>
+    <ng-template siraActions let-ligne>
+      <a siraAction="eye" [libelle]="'Voir la fiche de ' + ligne.nom" [routerLink]="ligne.code"></a>
+      <a
+        siraAction="message-square"
+        [libelle]="'Voir les questions de ' + ligne.nom"
+        routerLink="/questions"
+        [queryParams]="{ registre: ligne.code }"
+      ></a>
+      @if (droits.ecriture()) {
+        <button
+          siraAction="pencil"
+          [libelle]="'Modifier ' + ligne.nom"
+          (click)="modifier(ligne.code)"
+        ></button>
+        @if (ligne.actif) {
+          <button
+            siraAction="ban"
+            ton="danger"
+            [libelle]="'Désactiver ' + ligne.nom"
+            (click)="aDesactiver.set(ligne)"
+          ></button>
+        }
+      }
+    </ng-template>
+  </sira-tableau>
+</div>
+
+<co-fenetre
+  [titre]="fenetre()?.code ? 'Modifier le registre' : 'Ajouter un registre'"
+  [intro]="
+    fenetre()?.code
+      ? 'Le code ne change pas. L’adresse du connecteur se décide sur la fiche du registre.'
+      : 'Un registre est le système d’une administration (état civil, casier…).'
+  "
+  [ouvert]="fenetre() !== null"
+  (ouvertChange)="!$event && fenetre.set(null)"
+>
+  @if (fenetre(); as ouverte) {
+    <co-formulaire-registre
+      [code]="ouverte.code"
+      (termine)="apresEnregistrement($event, ouverte.code)"
+      (annule)="fenetre.set(null)"
+    />
+  }
+</co-fenetre>
+
+<co-confirmation
+  [question]="'Désactiver « ' + (aDesactiver()?.nom ?? '') + ' » ?'"
+  confirmer="Désactiver"
+  [ouvert]="aDesactiver() !== null"
+  (ouvertChange)="!$event && aDesactiver.set(null)"
+  [appel]="desactiver"
+  (fait)="apresDesactivation()"
+>
+  <p>Ses questions resteront sans réponse. L’historique est conservé.</p>
+</co-confirmation>
