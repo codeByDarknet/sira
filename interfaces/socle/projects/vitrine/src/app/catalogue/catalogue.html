@@ -1,0 +1,234 @@
+<h1>Catalogue des composants</h1>
+<p class="sira-chapeau">Les composants de <code>&#64;sira/ui</code>, à recopier.</p>
+
+<sira-champ libelle="Thème affiché">
+  <select #theme siraSaisie (change)="changerDeTheme(theme.value)">
+    @for (choix of themes; track choix.id) {
+      <option [value]="choix.id">{{ choix.libelle }}</option>
+    }
+  </select>
+</sira-champ>
+
+<section class="vi-section sira-marge-haut" aria-labelledby="vi-couleurs">
+  <h2 id="vi-couleurs">Couleurs et texte</h2>
+  <ul class="vi-nuancier">
+    <li><span class="vi-nuance vi-nuance--principal"></span>Principale</li>
+    <li><span class="vi-nuance vi-nuance--principal-fond"></span>Fond teinté</li>
+    <li><span class="vi-nuance vi-nuance--accent"></span>Accent</li>
+    <li><span class="vi-nuance vi-nuance--texte"></span>Texte</li>
+    <li><span class="vi-nuance vi-nuance--succes"></span>Succès</li>
+    <li><span class="vi-nuance vi-nuance--erreur"></span>Erreur</li>
+  </ul>
+  <p class="sira-chapeau">Chapeau : une phrase d’aide, au plus.</p>
+  <p>Texte courant, en 18 px. <span class="sira-secondaire">Texte secondaire.</span></p>
+  <p class="sira-petit">Petit texte, pour une précision.</p>
+</section>
+
+<section class="vi-section" aria-labelledby="vi-boutons">
+  <h2 id="vi-boutons">Boutons et liens</h2>
+  <div class="sira-groupe-boutons">
+    <button siraBouton type="button">Continuer</button>
+    <button siraBouton variante="secondaire" type="button">
+      <sira-icone nom="download" />
+      Télécharger le reçu
+    </button>
+    <button siraBouton variante="danger" type="button">Retirer l’accès</button>
+    <button siraBouton variante="discret" type="button">Annuler</button>
+    <button siraBouton type="button" enCours>Envoi en cours…</button>
+  </div>
+  <p class="sira-marge-haut">
+    <a siraLien icone="arrow-left" href="#vi-boutons">Retour à la liste</a>
+  </p>
+  <p>
+    <a siraLien externe href="https://interoperable-europe.ec.europa.eu/collection/eupl"
+      >Lire la licence</a
+    >
+  </p>
+</section>
+
+<section class="vi-section" aria-labelledby="vi-formulaires">
+  <h2 id="vi-formulaires">Formulaires</h2>
+  <div class="sira-pile">
+    <sira-resume-erreurs [erreurs]="erreurs" />
+    <sira-champ
+      libelle="Numéro d’identification"
+      aide="12 chiffres, au dos de votre carte"
+      identifiant="catalogue-numero"
+      erreur="Saisissez les 12 chiffres de votre numéro."
+    >
+      <input
+        siraSaisie
+        class="sira-saisie--courte"
+        inputmode="numeric"
+        autocomplete="off"
+        value="1234"
+      />
+    </sira-champ>
+    <sira-champ libelle="Centre d’examen">
+      <select siraSaisie>
+        <option>Ouagadougou</option>
+        <option>Bobo-Dioulasso</option>
+        <option>Koudougou</option>
+      </select>
+    </sira-champ>
+    <sira-champ libelle="Votre message" aide="Décrivez ce qui vous semble anormal">
+      <textarea siraSaisie rows="3"></textarea>
+    </sira-champ>
+    <sira-groupe-formulaire legende="Comment voulez-vous être prévenu ?" aide="Un seul choix">
+      <label class="sira-choix"><input type="radio" name="canal" checked />Par courriel</label>
+      <label class="sira-choix"><input type="radio" name="canal" />Par SMS</label>
+    </sira-groupe-formulaire>
+    <label class="sira-choix"
+      ><input type="checkbox" />Je certifie que ces informations sont exactes</label
+    >
+  </div>
+</section>
+
+<section class="vi-section" aria-labelledby="vi-messages">
+  <h2 id="vi-messages">Messages</h2>
+  <div class="sira-pile">
+    <sira-alerte>Votre demande est en cours de traitement.</sira-alerte>
+    <sira-alerte type="succes" titre="L’accès a été retiré" />
+    <sira-alerte type="attention">Cette demande expire dans 2 minutes.</sira-alerte>
+    <sira-alerte type="erreur" titre="L’état civil ne répond pas">
+      Rien n’a été transmis. Réessayez plus tard.
+    </sira-alerte>
+  </div>
+</section>
+
+<section class="vi-section" aria-labelledby="vi-cartes">
+  <h2 id="vi-cartes">Cartes et étiquettes</h2>
+  <div class="sira-grille sira-grille--2">
+    <sira-carte titre="Agence des concours" [niveauTitre]="3">
+      <sira-etiquette carte-etat etat="succes">Accès en cours</sira-etiquette>
+      <p>Nationalité, oui ou non, jusqu’au 16 décembre 2026</p>
+      <a carte-actions siraLien href="#vi-cartes">Voir le détail</a>
+    </sira-carte>
+    <sira-carte titre="Office des bourses" [niveauTitre]="3" teintee>
+      <sira-etiquette carte-etat etat="attention">À traiter</sira-etiquette>
+      <p>Diplôme du baccalauréat</p>
+      <a carte-actions siraLien href="#vi-cartes">Répondre</a>
+    </sira-carte>
+  </div>
+  <p class="vi-rangee sira-marge-haut">
+    <sira-etiquette>Neutre</sira-etiquette>
+    <sira-etiquette etat="info">Information</sira-etiquette>
+    <sira-etiquette etat="succes">Accepté</sira-etiquette>
+    <sira-etiquette etat="attention">En attente</sira-etiquette>
+    <sira-etiquette etat="erreur">Refusé</sira-etiquette>
+  </p>
+</section>
+
+<section class="vi-section" aria-labelledby="vi-tableau">
+  <h2 id="vi-tableau">Tableau et pagination</h2>
+  <p>Sous 640 px de large, chaque ligne devient une carte.</p>
+  <sira-tableau legende="Accès donnés à vos informations" [colonnes]="colonnes" [lignes]="acces">
+    <ng-template siraCellule="etat" let-ligne>
+      @if (ligne.etat === 'actif') {
+        <sira-etiquette etat="succes">En cours</sira-etiquette>
+      } @else {
+        <sira-etiquette>Retiré</sira-etiquette>
+      }
+    </ng-template>
+  </sira-tableau>
+  <sira-pagination [page]="page()" [pages]="5" (changement)="page.set($event)" />
+</section>
+
+<section class="vi-section" aria-labelledby="vi-navigation">
+  <h2 id="vi-navigation">Navigation</h2>
+  <div class="vi-exemple">
+    <sira-fil
+      [elements]="[
+        { libelle: 'Accueil', chemin: '/' },
+        { libelle: 'Mes accès', chemin: '/' },
+        { libelle: 'Agence des concours' },
+      ]"
+    />
+  </div>
+  <div class="vi-exemple">
+    <sira-etapes
+      [etapes]="['Votre identité', 'Vos pièces', 'Vérification et envoi']"
+      [courante]="2"
+    />
+  </div>
+  <div class="vi-exemple">
+    <sira-onglets libelle="Vos accès" [onglets]="onglets">
+      <ng-template siraPanneau="actifs"
+        ><p>Deux services consultent vos informations.</p></ng-template
+      >
+      <ng-template siraPanneau="passes"><p>Aucun accès terminé.</p></ng-template>
+    </sira-onglets>
+  </div>
+</section>
+
+<section class="vi-section" aria-labelledby="vi-synthese">
+  <h2 id="vi-synthese">Liste de synthèse</h2>
+  <dl siraSynthese>
+    <div siraSyntheseLigne cle="Nom">OUÉDRAOGO</div>
+    <div siraSyntheseLigne cle="Prénoms">Aminata Rasmata</div>
+    <div siraSyntheseLigne cle="Centre d’examen">
+      Ouagadougou
+      <a synthese-action href="#vi-synthese"
+        >Modifier<span class="sira-masque"> le centre d’examen</span></a
+      >
+    </div>
+  </dl>
+</section>
+
+<section class="vi-section" aria-labelledby="vi-attente">
+  <h2 id="vi-attente">Attente et absence de contenu</h2>
+  <div class="sira-grille sira-grille--2">
+    <sira-squelette />
+    <sira-etat-vide titre="Aucun accès en cours" />
+  </div>
+</section>
+
+<section class="vi-section" aria-labelledby="vi-dialogue">
+  <h2 id="vi-dialogue">Fenêtre de dialogue</h2>
+  <button siraBouton variante="danger" type="button" (click)="dialogue.set(true)">
+    Retirer l’accès
+  </button>
+  <sira-dialogue titre="Retirer l’accès de l’Agence des concours ?" [(ouvert)]="dialogue">
+    <p>Ce qui a déjà été transmis reste chez ce service.</p>
+    <button
+      dialogue-actions
+      siraBouton
+      variante="danger"
+      type="button"
+      (click)="dialogue.set(false)"
+    >
+      Retirer l’accès
+    </button>
+    <button
+      dialogue-actions
+      siraBouton
+      variante="secondaire"
+      type="button"
+      (click)="dialogue.set(false)"
+    >
+      Annuler
+    </button>
+  </sira-dialogue>
+</section>
+
+<section class="vi-section" aria-labelledby="vi-code">
+  <h2 id="vi-code">Code à comparer et minuteur</h2>
+  <div class="sira-pile">
+    <sira-code code="492113" />
+    <sira-minuteur [echeance]="echeance" objet="Ce code" />
+  </div>
+</section>
+
+<section class="vi-section" aria-labelledby="vi-demande">
+  <h2 id="vi-demande">Demande d’accès</h2>
+  <p>« Autoriser » et « Refuser » ont le même poids.</p>
+  @if (decision(); as reponse) {
+    <sira-alerte type="succes">{{ reponse }}</sira-alerte>
+  }
+  <sira-demande-acces
+    [demande]="demande"
+    [niveauTitre]="3"
+    (autoriser)="decision.set('Vous avez autorisé la demande.')"
+    (refuser)="decision.set('Vous avez refusé la demande.')"
+  />
+</section>

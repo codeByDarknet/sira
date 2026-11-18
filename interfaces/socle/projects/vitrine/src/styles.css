@@ -1,0 +1,47 @@
+/* Styles propres à la vitrine : la mise en page du catalogue, rien d'autre. */
+.vi-section {
+  padding-block: var(--sira-esp-6);
+  border-top: 1px solid var(--sira-bordure);
+}
+.vi-section > h2 {
+  margin-top: 0;
+}
+.vi-exemple + .vi-exemple {
+  margin-top: var(--sira-esp-6);
+}
+.vi-nuancier {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
+  gap: var(--sira-esp-3);
+  padding: 0;
+  list-style: none;
+}
+.vi-nuance {
+  display: block;
+  height: 3rem;
+  border: 1px solid var(--sira-bordure);
+  border-radius: var(--sira-rayon);
+}
+.vi-nuance--principal {
+  background: var(--sira-action);
+}
+.vi-nuance--principal-fond {
+  background: var(--sira-theme-teinte);
+}
+.vi-nuance--accent {
+  background: var(--sira-accent);
+}
+.vi-nuance--texte {
+  background: var(--sira-texte);
+}
+.vi-nuance--succes {
+  background: var(--sira-succes);
+}
+.vi-nuance--erreur {
+  background: var(--sira-erreur);
+}
+.vi-rangee {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sira-esp-2);
+}
