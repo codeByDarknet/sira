@@ -1,0 +1,120 @@
+openapi: 3.1.0
+info:
+  title: Sira — Résilience
+  version: 0.1.0
+  summary: État des disjoncteurs et de la file durable, lu par l'administration.
+  description: |
+    La résilience est une bibliothèque assemblée dans la passerelle ; elle n'a **aucune route
+    propre**. Son état se lit par une seule route de la passerelle, `GET /v1/admin/etat`, que ce
+    fichier décrit (servie par `https://passerelle:8443`). Les autres routes d'administration sont
+    dans `passerelle/openapi.yaml`.
+
+    Un disjoncteur par registre : `FERME` (appels normaux), `OUVERT` (plus d'appel pendant
+    l'attente réglée, les éléments restent en file), `SEMI_OUVERT` (quelques appels d'essai). Seule
+    une panne passagère compte comme un échec ; un refus du registre (404, 422) n'ouvre rien.
+  license:
+    name: Licence du dépôt Sira
+servers:
+  - url: https://passerelle:8443
+    description: Passerelle (mTLS obligatoire)
+tags:
+  - name: Administration
+    description: 'Identité `urn:sira:socle:console` et jeton du royaume `sira-socle`. Rôles : `instructeur`, `autorite` ou `auditeur`.'
+paths:
+  /v1/admin/etat:
+    get:
+      tags: [Administration]
+      operationId: lireEtatDesRegistres
+      summary: Disjoncteur et file d'attente de chaque registre actif
+      security:
+        - certificatMembre: []
+          jetonSocle: []
+      responses:
+        '200':
+          description: État des registres actifs, triés par code, et de la file durable.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Etat'}
+              example:
+                registres:
+                  - code: casier
+                    nom: Casier judiciaire
+                    disjoncteur: OUVERT
+                    en_file: 3
+                    dernier_succes_le: '2026-11-16T08:12:40Z'
+                    dernier_echec_le: '2026-11-16T09:47:05Z'
+                  - code: etat-civil
+                    nom: État civil
+                    disjoncteur: FERME
+                    en_file: 0
+                    dernier_succes_le: '2026-11-16T09:46:58Z'
+                    dernier_echec_le: null
+                file:
+                  a_traiter: 3
+                  plus_ancien_le: '2026-11-16T09:40:11Z'
+        '401':
+          description: Jeton absent ou refusé (`urn:sira:erreur:non-authentifie`).
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/Probleme'}
+              example: {type: 'urn:sira:erreur:non-authentifie', title: Authentification requise, status: 401}
+        '403':
+          description: Certificat d'un autre membre, ou rôle absent (`urn:sira:erreur:acces-refuse`).
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/Probleme'}
+              example: {type: 'urn:sira:erreur:acces-refuse', title: Accès refusé, status: 403}
+components:
+  securitySchemes:
+    certificatMembre:
+      type: mutualTLS
+      description: Certificat client émis par l'autorité Sira ; l'identité exigée est `urn:sira:socle:console`.
+    jetonSocle:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Jeton du royaume `sira-socle`, lié au certificat de la console.
+  schemas:
+    Disjoncteur:
+      type: string
+      enum: [FERME, OUVERT, SEMI_OUVERT]
+    Etat:
+      type: object
+      required: [registres, file]
+      additionalProperties: false
+      properties:
+        registres:
+          type: array
+          items:
+            type: object
+            required: [code, nom, disjoncteur, en_file, dernier_succes_le, dernier_echec_le]
+            additionalProperties: false
+            properties:
+              code: {type: string}
+              nom: {type: string}
+              disjoncteur: {$ref: '#/components/schemas/Disjoncteur'}
+              en_file:
+                type: integer
+                minimum: 0
+                description: Éléments de ce registre qui attendent dans la file durable.
+              dernier_succes_le: {type: [string, 'null'], format: date-time}
+              dernier_echec_le: {type: [string, 'null'], format: date-time}
+        file:
+          type: object
+          required: [a_traiter, plus_ancien_le]
+          additionalProperties: false
+          properties:
+            a_traiter: {type: integer, minimum: 0}
+            plus_ancien_le: {type: [string, 'null'], format: date-time}
+    Probleme:
+      type: object
+      description: Problème RFC 9457 écrit par la chaîne de sécurité.
+      required: [type, title, status]
+      additionalProperties: false
+      properties:
+        type: {type: string, pattern: '^urn:sira:erreur:[a-z0-9-]+$'}
+        title: {type: string}
+        status: {type: integer, minimum: 400, maximum: 599}
+        detail: {type: [string, 'null']}
+        instance: {type: [string, 'null']}
+        code: {type: string}
