@@ -1,0 +1,591 @@
+/*
+ * Ajustements du 18/11 (retours de l'utilisateur) : plus sobre et plus compact.
+ * Barre du haut fine, menu latéral repliable, pas de grand cadre autour des pages, titres et
+ * boutons plus petits, champs à la taille de la page de connexion, focus discret, cases à cocher
+ * à coche blanche, astérisque rouge des champs obligatoires, exemple sur sa propre ligne.
+ * Cette feuille passe après les autres : elle les corrige sans les réécrire.
+ */
+
+:root {
+  --sira-titre-l: 1.6rem;
+}
+@media (min-width: 40rem) {
+  :root {
+    --sira-titre-l: 1.75rem;
+  }
+}
+
+/* ---------- Disposition : menu latéral repliable, page sans cadre ---------- */
+
+.sira-application--laterale {
+  gap: var(--sira-esp-3);
+  padding: var(--sira-esp-3);
+}
+@media (min-width: 64rem) {
+  .sira-application--laterale {
+    grid-template-columns: 15rem minmax(0, 1fr);
+    grid-template-rows: auto 1fr;
+    padding: var(--sira-esp-3);
+  }
+  .sira-application--laterale:has(> demo-bandeau, > sira-bandeau) {
+    grid-template-rows: auto auto 1fr;
+  }
+  .sira-application--laterale:has(.sira-entete--replie) {
+    grid-template-columns: 4.5rem minmax(0, 1fr);
+  }
+  .sira-application--laterale > sira-entete {
+    grid-row: span 2;
+  }
+  .sira-entete--laterale {
+    top: var(--sira-esp-3);
+    height: calc(100vh - 2 * var(--sira-esp-3));
+  }
+  .sira-entete--laterale .sira-entete__barre {
+    gap: var(--sira-esp-4);
+    padding: var(--sira-esp-4) var(--sira-esp-3);
+  }
+  .sira-entete--laterale .sira-entete__menu a {
+    min-height: 2.6rem;
+    padding: 0 var(--sira-esp-3);
+    font-size: 0.95rem;
+  }
+  .sira-entete--laterale .sira-entete__menu a[aria-current='page']::before {
+    left: calc(-1 * var(--sira-esp-3));
+  }
+  /* Replié : icônes seules, le nom de la page au survol */
+  .sira-entete--replie .sira-entete__textes,
+  .sira-entete--replie .sira-entete__rubrique,
+  .sira-entete--replie .sira-entete__menu a span {
+    display: none !important;
+  }
+  .sira-entete--replie .sira-entete__marque {
+    justify-content: center;
+    padding: 0;
+  }
+  .sira-entete--replie .sira-entete__signe--logo {
+    height: 1.9rem;
+  }
+  .sira-entete--replie .sira-entete__menu a {
+    justify-content: center;
+    padding: 0;
+  }
+}
+.sira-application--laterale > .sira-page,
+.sira-application--laterale > .sira-page.sira-conteneur {
+  padding: var(--sira-esp-3) var(--sira-esp-2) var(--sira-esp-8);
+  background: transparent;
+  border-radius: 0;
+}
+@media (min-width: 64rem) {
+  .sira-application--laterale > .sira-page {
+    padding: var(--sira-esp-3) var(--sira-esp-2) var(--sira-esp-8);
+  }
+}
+
+/* ---------- Barre du haut : fine, menu du compte en dessous ---------- */
+
+.sira-barre-haute {
+  position: relative;
+  z-index: 20;
+  min-height: 3.25rem;
+  padding: 0.35rem 0.5rem;
+  gap: var(--sira-esp-3);
+}
+.sira-barre-haute__menu.sira-action {
+  border-color: transparent;
+}
+.sira-barre-haute__gauche {
+  flex: 1;
+}
+.sira-barre-haute__droite {
+  position: relative;
+}
+.sira-barre-haute__compte {
+  padding: 0.2rem 0.4rem 0.2rem 0.8rem;
+  gap: var(--sira-esp-2);
+}
+.sira-barre-haute__avatar {
+  width: 2.1rem;
+  height: 2.1rem;
+  font-size: 0.8rem;
+}
+.sira-barre-haute__nom {
+  font-size: 0.92rem;
+}
+.sira-barre-haute__panneau {
+  position: absolute;
+  top: calc(100% + 0.4rem);
+  right: 0;
+  display: grid;
+  min-width: 13rem;
+  padding: 0.35rem;
+  background: var(--sira-fond);
+  border: 1px solid var(--sira-bordure);
+  border-radius: 10px;
+}
+.sira-barre-haute__choix {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  font: inherit;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--sira-texte);
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+  border-radius: 8px;
+}
+.sira-barre-haute__choix .sira-icone {
+  width: 1.05rem;
+  height: 1.05rem;
+  color: var(--sira-texte-secondaire);
+}
+.sira-barre-haute__choix:hover {
+  color: var(--sira-action);
+  text-decoration: none;
+  background: var(--sira-bleu-50);
+}
+.sira-barre-haute__choix:hover .sira-icone {
+  color: var(--sira-action);
+}
+.sira-barre-haute__choix--sortie:hover,
+.sira-barre-haute__choix--sortie:hover .sira-icone {
+  color: var(--sira-erreur);
+  background: var(--sira-erreur-fond);
+}
+
+/* ---------- Titres de page ---------- */
+
+.sira-titre-page {
+  align-items: center;
+  margin-bottom: var(--sira-esp-4);
+}
+.sira-titre-page h1 {
+  font-size: var(--sira-titre-l);
+}
+.sira-titre-page p {
+  margin-top: 0.15rem;
+  font-size: 0.92rem;
+}
+/* Nombre d'éléments sous le titre : « 7 membres » */
+.sira-titre-page .sira-compte {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--sira-texte-secondaire);
+}
+
+/* ---------- Boutons : plus petits ---------- */
+
+.sira-bouton.p-button {
+  min-height: 2.5rem;
+  padding: 0.5rem 1.1rem;
+  font-size: 0.92rem;
+  border-radius: 10px;
+}
+.sira-bouton.p-button .sira-icone {
+  width: 1rem;
+  height: 1rem;
+}
+.sira-fiche__actions,
+.sira-fenetre-formulaire__pied,
+.sira-groupe-boutons {
+  gap: var(--sira-esp-2);
+}
+/* Fenêtres : bouton secondaire (Annuler, Étape précédente) tout à gauche, principal tout à
+   droite, sur la même ligne. */
+.sira-fenetre-formulaire__pied,
+.sira-dialogue .sira-groupe-boutons {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  justify-content: flex-end;
+}
+.sira-fenetre-formulaire__pied > .sira-bouton--secondaire,
+.sira-dialogue .sira-groupe-boutons > .sira-bouton--secondaire {
+  order: -1;
+  margin-right: auto;
+}
+
+/* ---------- Champs : taille de la page de connexion, focus discret ---------- */
+
+.sira-saisie.p-inputtext,
+.sira-champ__flottant .sira-saisie.p-inputtext,
+.co-select.p-select {
+  min-height: 3rem;
+  font-size: 0.95rem;
+  border-width: 1px;
+}
+.sira-saisie.p-inputtext:enabled:focus,
+.p-inputtext:enabled:focus,
+.p-select.p-focus {
+  border-color: var(--sira-action);
+  border-width: 1px;
+  box-shadow: none;
+  outline: none;
+}
+.p-floatlabel-in .p-inputtext {
+  padding-top: 1.3rem;
+  padding-bottom: 0.35rem;
+}
+/* Zone de texte : le libellé reste en haut, pas au milieu */
+.sira-champ__flottant:has(textarea) label {
+  top: 0.9rem;
+  transform: none;
+}
+.sira-champ__flottant:has(textarea:focus) label,
+.sira-champ__flottant:has(textarea.p-filled) label {
+  top: 0.35rem;
+}
+.sira-champ__flottant textarea.sira-saisie.p-inputtext {
+  padding-top: 1.5rem;
+}
+.sira-champ--erreur {
+  padding-left: 0;
+  border-left: 0;
+}
+.sira-champ--erreur .sira-saisie.p-inputtext {
+  border-color: var(--sira-erreur);
+}
+.sira-champ__erreur {
+  margin: 0.3rem 0 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+.sira-champ__requis {
+  margin-left: 0.15rem;
+  font-weight: 800;
+  color: var(--sira-erreur);
+}
+.sira-champ__flottant label .sira-champ__requis {
+  color: var(--sira-erreur);
+}
+.sira-champ__exemple {
+  display: block;
+  color: var(--sira-texte-secondaire);
+  font-style: italic;
+}
+
+/* ---------- Cases à cocher et boutons radio : coche blanche ---------- */
+
+.sira-choix input[type='checkbox'],
+.sira-choix input[type='radio'],
+input.sira-case {
+  flex: none;
+  appearance: none;
+  width: 1.15rem;
+  height: 1.15rem;
+  margin: 0.15rem 0 0;
+  cursor: pointer;
+  background: var(--sira-fond) center / 0.8rem no-repeat;
+  border: 1.5px solid var(--sira-gris-400);
+  border-radius: 4px;
+}
+.sira-choix input[type='radio'] {
+  border-radius: 50%;
+}
+.sira-choix input[type='checkbox']:checked,
+input.sira-case:checked {
+  background-color: var(--sira-action);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E");
+  border-color: var(--sira-action);
+}
+.sira-choix input[type='radio']:checked {
+  background: var(--sira-action);
+  border-color: var(--sira-action);
+  box-shadow: inset 0 0 0 3px var(--sira-fond);
+}
+.sira-choix input:focus-visible {
+  outline: 2px solid var(--sira-bleu-200);
+  outline-offset: 2px;
+  box-shadow: none;
+}
+
+/* ---------- Tableaux : une seule ligne d'outils ---------- */
+
+sira-tableau .p-datatable-header {
+  padding: var(--sira-esp-3) var(--sira-esp-4);
+}
+.sira-tableau__entete {
+  display: block;
+}
+sira-tableau .sira-tableau__outils {
+  justify-content: flex-start;
+  width: 100%;
+  margin: 0;
+}
+.sira-tableau__espace {
+  flex: 1;
+}
+.sira-tableau thead th:first-child,
+.sira-tableau td:first-child {
+  padding-left: var(--sira-esp-4);
+}
+.sira-tableau th.sira-tableau__actions,
+.sira-tableau td.sira-tableau__actions {
+  padding-right: var(--sira-esp-4);
+}
+.sira-tableau__vide {
+  padding: var(--sira-esp-8) var(--sira-esp-4) !important;
+  text-align: center;
+  color: var(--sira-texte-secondaire);
+}
+sira-tableau .p-paginator {
+  justify-content: flex-end;
+  padding: var(--sira-esp-2) var(--sira-esp-4);
+}
+.sira-action {
+  width: 2rem;
+  height: 2rem;
+}
+.sira-action .sira-icone {
+  width: 0.95rem;
+  height: 0.95rem;
+}
+
+/* ---------- Fiches de détail ---------- */
+
+.sira-fiche__case {
+  padding: var(--sira-esp-3) var(--sira-esp-4);
+}
+.sira-fiche__grille {
+  gap: var(--sira-esp-3);
+}
+.sira-fiche__valeur {
+  font-size: 1rem;
+}
+
+/* ---------- Indicateurs : plus compacts ---------- */
+
+.sira-indicateur__cadre {
+  padding: var(--sira-esp-4);
+}
+.sira-indicateur__icone {
+  width: 2.6rem;
+  height: 2.6rem;
+}
+.sira-indicateur__valeur {
+  font-size: 1.75rem;
+}
+
+/* ---------- Page « Mon profil » ---------- */
+
+.sira-profil {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--sira-esp-4);
+}
+@media (min-width: 64rem) {
+  .sira-profil {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+    align-items: start;
+  }
+}
+.sira-profil__carte {
+  display: grid;
+  gap: var(--sira-esp-3);
+  padding: var(--sira-esp-6);
+  background: var(--sira-fond);
+  border: 1px solid var(--sira-bordure);
+  border-radius: var(--sira-rayon-carte);
+}
+.sira-profil__identite {
+  display: flex;
+  align-items: center;
+  gap: var(--sira-esp-4);
+}
+.sira-profil__avatar {
+  display: inline-grid;
+  place-items: center;
+  width: 3.5rem;
+  height: 3.5rem;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--sira-blanc);
+  background: var(--sira-action);
+  border-radius: 50%;
+}
+.sira-profil__nom {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--sira-texte-fort);
+}
+.sira-profil__titre {
+  margin: 0;
+  font-size: 1.05rem;
+}
+.sira-profil__ligne,
+.sira-profil__note {
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--sira-texte-secondaire);
+}
+.sira-profil__infos {
+  display: grid;
+  gap: var(--sira-esp-3);
+  margin: 0;
+}
+.sira-profil__infos dt {
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--sira-texte-secondaire);
+}
+.sira-profil__infos dd {
+  margin: 0.15rem 0 0;
+  font-weight: 700;
+  color: var(--sira-texte-fort);
+}
+.sira-profil__roles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sira-esp-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.sira-profil__roles li {
+  padding: 0.25rem 0.7rem;
+  font-size: 0.82rem;
+  color: var(--sira-bleu-700);
+  background: var(--sira-bleu-50);
+  border-radius: 999px;
+}
+.sira-profil__action {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--sira-esp-3);
+  padding-top: var(--sira-esp-3);
+  border-top: 1px solid var(--sira-bordure);
+}
+.sira-profil__action-titre {
+  margin: 0;
+  font-weight: 700;
+  color: var(--sira-texte-fort);
+}
+.sira-profil__icone {
+  display: inline-grid;
+  place-items: center;
+  width: 2.4rem;
+  height: 2.4rem;
+  color: var(--sira-action);
+  background: var(--sira-bleu-50);
+  border-radius: 10px;
+}
+.sira-profil__icone--sortie {
+  color: var(--sira-erreur);
+  background: var(--sira-erreur-fond);
+}
+
+/* Chargement des tableaux : lignes grises au premier chargement, lignes pâlies ensuite
+   (changement de page, recherche) le temps que le serveur réponde. */
+.sira-tableau__squelette td {
+  padding-block: 0.95rem;
+}
+.sira-tableau--recharge .p-datatable-tbody {
+  opacity: 0.45;
+  transition: opacity 0.15s;
+}
+
+/* Barres de défilement fines et discrètes, partout. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #cdd6e0 transparent;
+}
+*:hover {
+  scrollbar-color: #aebbc9 transparent;
+}
+
+/* Bouton pendant une opération : la roue prend la place de l'icône, la taille ne bouge pas. */
+@keyframes sira-tourne {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.sira-bouton--en-cours {
+  cursor: progress;
+  opacity: 0.85;
+}
+.sira-bouton--en-cours sira-icone:first-of-type {
+  position: relative;
+}
+.sira-bouton--en-cours sira-icone:first-of-type svg {
+  visibility: hidden;
+}
+.sira-bouton--en-cours sira-icone:first-of-type::after,
+.sira-bouton--en-cours:not(:has(sira-icone))::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 1em;
+  height: 1em;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: sira-tourne 0.7s linear infinite;
+}
+.sira-bouton--en-cours:not(:has(sira-icone)) {
+  position: relative;
+  color: transparent !important;
+}
+.sira-bouton--en-cours:not(:has(sira-icone))::after {
+  border-color: #fff;
+  border-right-color: transparent;
+}
+.sira-bouton--en-cours.sira-bouton--secondaire:not(:has(sira-icone))::after {
+  border-color: var(--sira-action);
+  border-right-color: transparent;
+}
+
+/* Listes à choix multiples : toute la largeur du champ, comme les autres listes. */
+.co-multiselect,
+.sira-champ p-multiselect,
+.sira-champ .p-multiselect {
+  display: flex;
+  width: 100%;
+}
+.sira-champ .p-multiselect {
+  min-height: 3.1rem;
+  font-size: 0.95rem;
+}
+.sira-champ .p-multiselect-label {
+  padding-top: 1.45rem;
+  padding-bottom: 0.45rem;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+/* Texte sélectionné : toujours lisible, sur fond clair comme sur fond foncé. */
+::selection {
+  color: #fff;
+  background: #1a96cc;
+}
+html,
+body {
+  overflow-x: clip;
+}
+
+/* Listes déroulantes natives : une flèche à droite, pour qu'on voie que c'est une liste. */
+select.sira-saisie,
+select.p-inputtext,
+.sira-champ select {
+  appearance: none;
+  padding-right: 2.75rem;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%2350606c' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  background-size: 1.1rem;
+}
+select.sira-saisie:focus,
+.sira-champ select:focus {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%2325aae2' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+}

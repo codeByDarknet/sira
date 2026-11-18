@@ -1,0 +1,341 @@
+{
+  "$schema": "./node_modules/@angular/cli/lib/config/schema.json",
+  "version": 1,
+  "cli": {
+    "packageManager": "npm",
+    "analytics": false
+  },
+  "newProjectRoot": "projects",
+  "projects": {
+    "espace-citoyen": {
+      "projectType": "application",
+      "root": "projects/espace-citoyen",
+      "sourceRoot": "projects/espace-citoyen/src",
+      "prefix": "ec",
+      "schematics": {
+        "@schematics/angular:component": {
+          "style": "none",
+          "changeDetection": "OnPush",
+          "skipTests": true
+        }
+      },
+      "architect": {
+        "build": {
+          "builder": "@angular/build:application",
+          "options": {
+            "browser": "projects/espace-citoyen/src/main.ts",
+            "tsConfig": "projects/espace-citoyen/tsconfig.app.json",
+            "allowedCommonJsDependencies": ["jsqr"],
+            "outputPath": "dist/espace-citoyen",
+            "assets": [
+              {
+                "glob": "**/*",
+                "input": "projects/espace-citoyen/public"
+              },
+              {
+                "glob": "icones.svg",
+                "input": "projects/ui/assets",
+                "output": "assets/sira"
+              },
+              {
+                "glob": "{marque/*.png,photos/*.jpg}",
+                "input": "projects/ui/assets",
+                "output": "assets/sira"
+              },
+              {
+                "glob": "favicon.svg",
+                "input": "projects/ui/assets",
+                "output": "/"
+              }
+            ],
+            "styles": [
+              "projects/ui/styles/tailwind.css",
+              "projects/ui/styles/index.css",
+              "projects/espace-citoyen/src/styles.css"
+            ]
+          },
+          "configurations": {
+            "production": {
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "750kB",
+                  "maximumError": "900kB"
+                },
+                {
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "4kB",
+                  "maximumError": "8kB"
+                }
+              ],
+              "outputHashing": "all",
+              "optimization": {
+                "scripts": true,
+                "styles": {
+                  "minify": true,
+                  "inlineCritical": false
+                },
+                "fonts": false
+              }
+            },
+            "development": {
+              "optimization": false,
+              "extractLicenses": false,
+              "sourceMap": true
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "serve": {
+          "builder": "@angular/build:dev-server",
+          "options": {
+            "port": 4201
+          },
+          "configurations": {
+            "production": {
+              "buildTarget": "espace-citoyen:build:production"
+            },
+            "development": {
+              "buildTarget": "espace-citoyen:build:development"
+            }
+          },
+          "defaultConfiguration": "development"
+        },
+        "test": {
+          "builder": "@angular/build:unit-test",
+          "options": {
+            "buildTarget": "espace-citoyen:build:development",
+            "tsConfig": "tsconfig.spec.json"
+          }
+        }
+      }
+    },
+    "console": {
+      "projectType": "application",
+      "root": "projects/console",
+      "sourceRoot": "projects/console/src",
+      "prefix": "co",
+      "schematics": {
+        "@schematics/angular:component": {
+          "style": "none",
+          "changeDetection": "OnPush",
+          "skipTests": true
+        }
+      },
+      "architect": {
+        "build": {
+          "builder": "@angular/build:application",
+          "options": {
+            "browser": "projects/console/src/main.ts",
+            "tsConfig": "projects/console/tsconfig.app.json",
+            "outputPath": "dist/console",
+            "assets": [
+              {
+                "glob": "**/*",
+                "input": "projects/console/public"
+              },
+              {
+                "glob": "icones.svg",
+                "input": "projects/ui/assets",
+                "output": "assets/sira"
+              },
+              {
+                "glob": "{marque/*.png,photos/*.jpg}",
+                "input": "projects/ui/assets",
+                "output": "assets/sira"
+              },
+              {
+                "glob": "favicon.svg",
+                "input": "projects/ui/assets",
+                "output": "/"
+              }
+            ],
+            "styles": [
+              "projects/ui/styles/tailwind.css",
+              "projects/ui/styles/index.css",
+              "projects/console/src/styles.css"
+            ]
+          },
+          "configurations": {
+            "production": {
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "750kB",
+                  "maximumError": "900kB"
+                },
+                {
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "4kB",
+                  "maximumError": "8kB"
+                }
+              ],
+              "outputHashing": "all",
+              "optimization": {
+                "scripts": true,
+                "styles": {
+                  "minify": true,
+                  "inlineCritical": false
+                },
+                "fonts": false
+              }
+            },
+            "development": {
+              "optimization": false,
+              "extractLicenses": false,
+              "sourceMap": true
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "serve": {
+          "builder": "@angular/build:dev-server",
+          "options": {
+            "port": 4202
+          },
+          "configurations": {
+            "production": {
+              "buildTarget": "console:build:production"
+            },
+            "development": {
+              "buildTarget": "console:build:development"
+            }
+          },
+          "defaultConfiguration": "development"
+        },
+        "test": {
+          "builder": "@angular/build:unit-test",
+          "options": {
+            "buildTarget": "console:build:development",
+            "tsConfig": "tsconfig.spec.json"
+          }
+        }
+      }
+    },
+    "vitrine": {
+      "projectType": "application",
+      "root": "projects/vitrine",
+      "sourceRoot": "projects/vitrine/src",
+      "prefix": "vi",
+      "schematics": {
+        "@schematics/angular:component": {
+          "style": "none",
+          "changeDetection": "OnPush",
+          "skipTests": true
+        }
+      },
+      "architect": {
+        "build": {
+          "builder": "@angular/build:application",
+          "options": {
+            "browser": "projects/vitrine/src/main.ts",
+            "tsConfig": "projects/vitrine/tsconfig.app.json",
+            "outputPath": "dist/vitrine",
+            "assets": [
+              {
+                "glob": "**/*",
+                "input": "projects/vitrine/public"
+              },
+              {
+                "glob": "icones.svg",
+                "input": "projects/ui/assets",
+                "output": "assets/sira"
+              },
+              {
+                "glob": "{marque/*.png,photos/*.jpg}",
+                "input": "projects/ui/assets",
+                "output": "assets/sira"
+              },
+              {
+                "glob": "favicon.svg",
+                "input": "projects/ui/assets",
+                "output": "/"
+              }
+            ],
+            "styles": [
+              "projects/ui/styles/tailwind.css",
+              "projects/ui/styles/index.css",
+              "projects/vitrine/src/styles.css"
+            ]
+          },
+          "configurations": {
+            "production": {
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "750kB",
+                  "maximumError": "900kB"
+                },
+                {
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "4kB",
+                  "maximumError": "8kB"
+                }
+              ],
+              "outputHashing": "all",
+              "optimization": {
+                "scripts": true,
+                "styles": {
+                  "minify": true,
+                  "inlineCritical": false
+                },
+                "fonts": false
+              }
+            },
+            "development": {
+              "optimization": false,
+              "extractLicenses": false,
+              "sourceMap": true
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "serve": {
+          "builder": "@angular/build:dev-server",
+          "options": {
+            "port": 4200
+          },
+          "configurations": {
+            "production": {
+              "buildTarget": "vitrine:build:production"
+            },
+            "development": {
+              "buildTarget": "vitrine:build:development"
+            }
+          },
+          "defaultConfiguration": "development"
+        }
+      }
+    },
+    "ui": {
+      "projectType": "library",
+      "root": "projects/ui",
+      "sourceRoot": "projects/ui/src",
+      "prefix": "sira",
+      "architect": {
+        "test": {
+          "builder": "@angular/build:unit-test",
+          "options": {
+            "buildTarget": "vitrine:build:development",
+            "tsConfig": "tsconfig.spec.json"
+          }
+        }
+      }
+    },
+    "coquille": {
+      "projectType": "library",
+      "root": "projects/coquille",
+      "sourceRoot": "projects/coquille/src",
+      "prefix": "sira",
+      "architect": {
+        "test": {
+          "builder": "@angular/build:unit-test",
+          "options": {
+            "buildTarget": "vitrine:build:development",
+            "tsConfig": "tsconfig.spec.json"
+          }
+        }
+      }
+    }
+  }
+}

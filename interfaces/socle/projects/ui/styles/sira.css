@@ -1,0 +1,5087 @@
+/* Fichier produit par « npm run css » à partir de polices.css, jetons.css, themes.css, base.css, composants.css, habillage.css, interface.css, ajustements.css, vitrine.css. Ne pas le modifier à la main. */
+
+/* ===== polices.css ===== */
+/* Public Sans variable (OFL 1.1), auto-hébergée : aucun appel à un serveur tiers. */
+@font-face {
+  font-family: 'Public Sans';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('../assets/fonts/public-sans-latin-wght-normal.woff2') format('woff2');
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+20AC,
+    U+2122, U+2191, U+2193, U+2212, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Public Sans';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('../assets/fonts/public-sans-latin-ext-wght-normal.woff2') format('woff2');
+  unicode-range:
+    U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+1E00-1E9F, U+1EF2-1EFF,
+    U+2020, U+20A0-20AB, U+20AD-20C0, U+2113;
+}
+/* Nunito variable (OFL 1.1), auto-hébergée : la police de toute l'interface (comme globalstage.bf). */
+@font-face {
+  font-family: 'Nunito';
+  font-style: normal;
+  font-weight: 200 1000;
+  font-display: swap;
+  src: url('../assets/fonts/nunito-latin-wght-normal.woff2') format('woff2');
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+20AC,
+    U+2122, U+2191, U+2193, U+2212, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Nunito';
+  font-style: normal;
+  font-weight: 200 1000;
+  font-display: swap;
+  src: url('../assets/fonts/nunito-latin-ext-wght-normal.woff2') format('woff2');
+  unicode-range:
+    U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+1E00-1E9F, U+1EF2-1EFF,
+    U+2020, U+20A0-20AB, U+20AD-20C0, U+2113;
+}
+
+/* ===== jetons.css ===== */
+/*
+ * Jetons de Sira, en trois niveaux.
+ * Les composants ne lisent que les jetons sémantiques (niveau 3).
+ * Un thème ne redéfinit que les jetons --sira-theme-* (niveau 2).
+ * Les mêmes bleus alimentent le préréglage PrimeNG (coquille/src/lib/apparence/theme.ts) :
+ * les composants PrimeNG et les écrans Sira parlent la même couleur.
+ */
+:root {
+  /*
+   * 1. Primitives : ne pas les utiliser dans les composants.
+   * Le bleu #25aae2 (même bleu que globalstage.bf) pour agir et pour les grands titres, le
+   * jaune moutarde du logo (#f5aa05) en accent (puces, soulignements, repères ; jamais du texte
+   * sur fond blanc), un bleu très sombre pour les autres titres,
+   * des gris légèrement bleutés pour le fond. Le rouge sert aux erreurs seulement.
+   */
+  --sira-blanc: #ffffff;
+  --sira-gris-25: #f8f9fc;
+  --sira-gris-50: #f2f4f8;
+  --sira-gris-100: #e9edf4;
+  --sira-gris-200: #dbe1ea;
+  --sira-gris-400: #8b95a7;
+  --sira-gris-500: #666b75;
+  --sira-gris-700: #475163;
+  --sira-gris-900: #111827;
+  --sira-bleu-50: #eaf7fd;
+  --sira-bleu-100: #cbeaf8;
+  --sira-bleu-200: #97d5f1;
+  --sira-bleu-500: #25aae2;
+  --sira-bleu-600: #1a96cc;
+  --sira-bleu-700: #147aa7;
+  --sira-bleu-800: #126182;
+  --sira-bleu-900: #0f4c66;
+  --sira-bleu-nuit: #062f3b;
+  --sira-or: #f5aa05;
+  --sira-or-clair: #ffc94d;
+
+  /* 2. Thème : seuls jetons qu'un thème a le droit de changer */
+  --sira-theme-primaire: var(--sira-bleu-500);
+  --sira-theme-primaire-survol: var(--sira-bleu-600);
+  --sira-theme-teinte: var(--sira-bleu-50);
+  --sira-theme-sur-primaire: var(--sira-blanc);
+  --sira-theme-profond: var(--sira-bleu-nuit);
+
+  /* 3. Sémantiques : ce que lisent les composants */
+  --sira-fond: var(--sira-blanc);
+  --sira-fond-page: var(--sira-gris-50);
+  --sira-fond-alt: var(--sira-gris-25);
+  --sira-texte: var(--sira-gris-900);
+  --sira-texte-fort: var(--sira-bleu-nuit);
+  --sira-texte-secondaire: var(--sira-gris-500);
+  --sira-bordure: var(--sira-gris-100);
+  --sira-bordure-champ: var(--sira-gris-200);
+  /* Champs façon globalstage : fond gris très clair, pas de trait visible, blanc au focus. */
+  --sira-fond-champ: #f7f7f7;
+  --sira-fond-champ-survol: #f0f1f3;
+  --sira-texte-champ: #333333;
+  --sira-texte-indice: #999999;
+  --sira-titre-page: var(--sira-bleu-500);
+  --sira-bordure-desactive: var(--sira-gris-200);
+  --sira-lien: var(--sira-bleu-600);
+  --sira-action: var(--sira-theme-primaire);
+  --sira-action-survol: var(--sira-theme-primaire-survol);
+  --sira-sur-action: var(--sira-theme-sur-primaire);
+  --sira-selection: var(--sira-theme-teinte);
+  --sira-accent: var(--sira-or);
+
+  --sira-succes: #157347;
+  --sira-succes-fond: #e7f6ee;
+  --sira-erreur: #c4302b;
+  --sira-erreur-survol: #a02520;
+  --sira-erreur-fond: #fdeeed;
+  --sira-alerte: #8a5300;
+  --sira-alerte-fond: #fff5e1;
+  --sira-info: var(--sira-bleu-700);
+  --sira-info-fond: var(--sira-bleu-50);
+
+  --sira-focus-interieur: var(--sira-bleu-200);
+  --sira-focus-exterieur: var(--sira-bleu-500);
+
+  /* Typographie */
+  --sira-police: 'Nunito', 'Public Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --sira-police-mono: ui-monospace, 'Cascadia Mono', 'DejaVu Sans Mono', monospace;
+  --sira-texte-xs: 0.8125rem;
+  --sira-texte-s: 0.9375rem;
+  --sira-texte-m: 1.1rem;
+  --sira-titre-s: 1.125rem;
+  --sira-titre-m: 1.375rem;
+  --sira-titre-l: 1.8rem;
+  --sira-interligne: 1.55;
+  --sira-interligne-titre: 1.2;
+  --sira-graisse: 400;
+  --sira-graisse-forte: 700;
+
+  /* Espacement (base 4 px) */
+  --sira-esp-1: 0.25rem;
+  --sira-esp-2: 0.5rem;
+  --sira-esp-3: 0.75rem;
+  --sira-esp-4: 1rem;
+  --sira-esp-6: 1.5rem;
+  --sira-esp-8: 2rem;
+  --sira-esp-12: 3rem;
+  --sira-esp-16: 4rem;
+
+  /* Formes : coins légèrement arrondis, partout */
+  --sira-rayon: 12px;
+  --sira-rayon-carte: 12px;
+  --sira-rayon-cadre: 14px;
+  --sira-rayon-pilule: 999px;
+  --sira-trait: 1px;
+  --sira-trait-champ: 1px;
+  --sira-trait-alerte: 4px;
+  /* Aucune ombre : les surfaces se séparent par un trait fin. */
+  --sira-ombre: none;
+  --sira-ombre-forte: none;
+  --sira-cible: 2.75rem; /* 44 px */
+  --sira-largeur-parcours: 48rem; /* 768 px */
+  --sira-largeur-tableau: 76rem; /* 1216 px */
+  --sira-largeur-page: var(--sira-largeur-parcours);
+}
+
+@media (min-width: 40rem) {
+  :root {
+    --sira-titre-l: 2.2rem;
+  }
+}
+
+/* ===== themes.css ===== */
+/*
+ * Thèmes : un attribut data-theme sur <html> (ou sur un bloc) change la couleur d'action.
+ * Tout Sira utilise le même bleu, #25aae2 (demande du 18/11) : services, console et registres.
+ * Les thèmes ne gardent que la densité des écrans de gestion.
+ */
+[data-theme='socle'],
+[data-theme='concours'],
+[data-theme='bourses'],
+[data-theme='entreprises'] {
+  --sira-theme-primaire: var(--sira-bleu-500);
+  --sira-theme-primaire-survol: var(--sira-bleu-600);
+  --sira-theme-teinte: var(--sira-bleu-50);
+}
+[data-theme='console'],
+[data-theme='etat-civil'],
+[data-theme='nationalite'],
+[data-theme='casier'],
+[data-theme='diplomes'] {
+  --sira-theme-primaire: var(--sira-bleu-500);
+  --sira-theme-primaire-survol: var(--sira-bleu-600);
+  --sira-theme-teinte: var(--sira-bleu-50);
+}
+[data-theme='console'] {
+  --sira-largeur-page: var(--sira-largeur-tableau);
+  /* Densité : un cran de moins pour les écrans de gestion */
+  --sira-esp-6: 1rem;
+  --sira-esp-8: 1.5rem;
+  --sira-cible: 2.5rem;
+}
+
+/* ===== base.css ===== */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  scroll-padding-top: var(--sira-esp-8);
+}
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  font-family: var(--sira-police);
+  font-size: var(--sira-texte-s);
+  font-weight: var(--sira-graisse);
+  line-height: var(--sira-interligne);
+  color: var(--sira-texte);
+  background: var(--sira-fond);
+  overflow-wrap: break-word;
+}
+h1,
+h2,
+h3,
+h4 {
+  margin: 0 0 var(--sira-esp-4);
+  font-weight: var(--sira-graisse-forte);
+  line-height: var(--sira-interligne-titre);
+  color: var(--sira-texte-fort);
+  text-wrap: balance;
+}
+h1 {
+  font-size: var(--sira-titre-l);
+  margin-bottom: var(--sira-esp-6);
+}
+h2 {
+  font-size: var(--sira-titre-m);
+}
+h3 {
+  font-size: var(--sira-titre-s);
+}
+h4 {
+  font-size: var(--sira-texte-s);
+}
+/* Le titre de page reçoit le focus à chaque changement d'écran : pas d'anneau pour lui. */
+h1[tabindex='-1']:focus {
+  outline: none;
+  box-shadow: none;
+}
+p,
+ul,
+ol {
+  margin: 0 0 var(--sira-esp-4);
+  max-width: 66ch;
+}
+ul,
+ol {
+  padding-left: var(--sira-esp-6);
+}
+li + li {
+  margin-top: var(--sira-esp-1);
+}
+a {
+  color: var(--sira-lien);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.18em;
+}
+a:hover {
+  color: var(--sira-action-survol);
+  text-decoration-thickness: 2px;
+}
+strong,
+b {
+  font-weight: var(--sira-graisse-forte);
+}
+hr {
+  margin: var(--sira-esp-8) 0;
+  border: 0;
+  border-top: var(--sira-trait) solid var(--sira-bordure);
+}
+img,
+svg {
+  max-width: 100%;
+}
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+/* Focus bicolore : l'un des deux anneaux contraste toujours avec le fond. */
+:focus-visible {
+  outline: 3px solid var(--sira-focus-interieur);
+  outline-offset: 0;
+  box-shadow: 0 0 0 6px var(--sira-focus-exterieur);
+}
+
+/* Utilitaires */
+.sira-masque {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.sira-chapeau {
+  font-size: var(--sira-texte-m);
+  line-height: 1.55;
+}
+.sira-secondaire {
+  color: var(--sira-texte-secondaire);
+}
+.sira-petit {
+  font-size: var(--sira-texte-xs);
+  line-height: 1.45;
+}
+.sira-chiffres {
+  font-variant-numeric: tabular-nums;
+}
+.sira-pile > * + * {
+  margin-top: var(--sira-esp-6);
+}
+.sira-pile--serree > * + * {
+  margin-top: var(--sira-esp-3);
+}
+.sira-marge-haut {
+  margin-top: var(--sira-esp-8);
+}
+.sira-sans-marge {
+  margin: 0;
+}
+.sira-grille {
+  display: grid;
+  gap: var(--sira-esp-4);
+}
+@media (min-width: 40rem) {
+  .sira-grille--2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (min-width: 60rem) {
+  .sira-grille--3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .sira-grille--4 {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ===== composants.css ===== */
+/*
+ * Composants de Sira en CSS pur. Chaque bloc correspond à un composant Angular
+ * de @sira/ui, mais reste utilisable seul (thème Keycloak, page HTML d'un tiers).
+ * Seuls les jetons sémantiques sont lus ici.
+ */
+
+/* Les balises de composants Angular sont des blocs. */
+sira-alerte,
+sira-bandeau,
+sira-carte,
+sira-champ,
+sira-code,
+sira-demande-acces,
+sira-dialogue,
+sira-entete,
+sira-etapes,
+sira-etat-vide,
+sira-fil,
+sira-groupe-formulaire,
+sira-minuteur,
+sira-onglets,
+sira-pagination,
+sira-pied,
+sira-resume-erreurs,
+sira-squelette,
+sira-tableau,
+router-outlet + * {
+  display: block;
+}
+
+/* ---------- Structure de page ---------- */
+
+.sira-application {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+.sira-conteneur {
+  width: 100%;
+  max-width: calc(var(--sira-largeur-page) + 2 * var(--sira-esp-4));
+  margin-inline: auto;
+  padding-inline: var(--sira-esp-4);
+}
+.sira-conteneur--large {
+  max-width: calc(var(--sira-largeur-tableau) + 2 * var(--sira-esp-4));
+}
+.sira-page {
+  flex: 1;
+  padding-block: var(--sira-esp-8) var(--sira-esp-16);
+}
+.sira-page:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+.sira-evitement {
+  position: absolute;
+  left: var(--sira-esp-2);
+  top: var(--sira-esp-2);
+  z-index: 10;
+  padding: var(--sira-esp-2) var(--sira-esp-4);
+  color: var(--sira-texte);
+  background: var(--sira-fond);
+  transform: translateY(-200%);
+}
+.sira-evitement:focus {
+  transform: none;
+}
+
+/* ---------- Icône ---------- */
+
+/* L'hôte du composant ne doit pas rétrécir dans un bouton ou une ligne flexible. */
+sira-icone {
+  display: inline-flex;
+  flex: none;
+}
+.sira-icone {
+  display: inline-block;
+  flex: none;
+  width: 1.25rem;
+  height: 1.25rem;
+  vertical-align: -0.25em;
+}
+.sira-icone--grande {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+/* ---------- Bandeau (pleine largeur) ---------- */
+
+.sira-bandeau {
+  padding-block: var(--sira-esp-2);
+  font-size: var(--sira-texte-xs);
+  line-height: 1.45;
+  color: var(--sira-texte);
+  background: var(--sira-info-fond);
+  border-bottom: var(--sira-trait) solid var(--sira-info);
+}
+.sira-bandeau--attention {
+  background: var(--sira-alerte-fond);
+  border-color: var(--sira-alerte);
+}
+.sira-bandeau__contenu {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sira-esp-2);
+}
+.sira-bandeau .sira-icone {
+  margin-top: 0.1em;
+  width: 1rem;
+  height: 1rem;
+}
+
+/* ---------- En-tête ---------- */
+
+.sira-entete {
+  background: var(--sira-fond);
+  border-bottom: var(--sira-trait) solid var(--sira-bordure);
+}
+.sira-entete__barre {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sira-esp-2) var(--sira-esp-6);
+  padding-block: var(--sira-esp-3);
+}
+.sira-entete__marque {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sira-esp-3);
+  min-height: var(--sira-cible);
+  color: var(--sira-texte-fort);
+  text-decoration: none;
+}
+.sira-entete__marque:hover {
+  color: var(--sira-texte-fort);
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+}
+.sira-entete__signe {
+  flex: none;
+  width: 2.25rem;
+  height: 2.25rem;
+  color: var(--sira-action);
+}
+.sira-entete__signe--icone {
+  padding: 0.4rem;
+  color: var(--sira-sur-action);
+  background: var(--sira-action);
+  border-radius: var(--sira-rayon);
+}
+.sira-entete__signe-accent {
+  color: var(--sira-accent);
+}
+.sira-entete__textes {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.25;
+}
+.sira-entete__nom {
+  font-size: var(--sira-titre-s);
+  font-weight: var(--sira-graisse-forte);
+}
+.sira-entete__service {
+  font-size: var(--sira-texte-xs);
+  color: var(--sira-texte-secondaire);
+}
+.sira-entete__outils {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sira-esp-2) var(--sira-esp-4);
+}
+.sira-entete__utilisateur {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sira-esp-2);
+  font-weight: var(--sira-graisse-forte);
+}
+.sira-entete__nav {
+  border-top: var(--sira-trait) solid var(--sira-bordure);
+}
+.sira-entete__menu {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 var(--sira-esp-6);
+  margin-block: 0;
+  padding-block: 0;
+  list-style: none;
+}
+.sira-entete__menu li {
+  margin: 0;
+}
+.sira-entete__menu a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--sira-cible);
+  color: var(--sira-texte);
+  text-decoration: none;
+  border-bottom: 3px solid transparent;
+}
+.sira-entete__menu a:hover {
+  border-bottom-color: var(--sira-bordure-champ);
+}
+.sira-entete__menu a[aria-current='page'] {
+  font-weight: var(--sira-graisse-forte);
+  color: var(--sira-action);
+  border-bottom-color: var(--sira-action);
+}
+
+/* Variante « plein » : bandeau à la couleur du thème, pour les plateformes de service. */
+.sira-entete--plein {
+  border-bottom: 0;
+}
+.sira-entete--plein .sira-entete__haut {
+  color: var(--sira-sur-action);
+  background: var(--sira-action);
+}
+.sira-entete--plein .sira-entete__marque,
+.sira-entete--plein .sira-entete__marque:hover,
+.sira-entete--plein .sira-entete__service {
+  color: inherit;
+}
+.sira-entete--plein .sira-entete__signe--icone {
+  color: var(--sira-action);
+  background: var(--sira-sur-action);
+}
+.sira-entete--plein .sira-entete__outils .sira-bouton:not(.p-button) {
+  color: var(--sira-sur-action);
+  border-color: var(--sira-sur-action);
+  background: transparent;
+}
+.sira-entete--plein .sira-entete__outils .sira-bouton:not(.p-button):hover {
+  color: var(--sira-action);
+  background: var(--sira-sur-action);
+}
+.sira-entete--plein .sira-entete__nav {
+  border-top: 0;
+  border-bottom: var(--sira-trait) solid var(--sira-bordure);
+}
+
+/* ---------- Pied de page ---------- */
+
+.sira-pied {
+  padding-block: var(--sira-esp-6);
+  font-size: var(--sira-texte-xs);
+  line-height: 1.45;
+  color: var(--sira-texte-secondaire);
+  background: var(--sira-fond-alt);
+  border-top: var(--sira-trait) solid var(--sira-bordure);
+}
+.sira-pied__liens {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 var(--sira-esp-6);
+  max-width: none;
+  margin: 0 0 var(--sira-esp-2);
+  padding: 0;
+  list-style: none;
+}
+.sira-pied__liens li {
+  margin: 0;
+}
+.sira-pied__liens a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--sira-cible);
+  color: var(--sira-texte);
+}
+.sira-pied p {
+  margin: 0;
+}
+
+/* ---------- Fil d'Ariane ---------- */
+
+.sira-fil {
+  margin-bottom: var(--sira-esp-6);
+  font-size: var(--sira-texte-xs);
+}
+.sira-fil__liste {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sira-esp-1) var(--sira-esp-2);
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.sira-fil__liste li {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sira-esp-2);
+  margin: 0;
+}
+.sira-fil__liste .sira-icone {
+  width: 1rem;
+  height: 1rem;
+  color: var(--sira-texte-secondaire);
+}
+.sira-fil__liste a {
+  /* Cible de 24 px au moins (critère 2.5.8) sans alourdir la ligne. */
+  display: inline-block;
+  padding-block: var(--sira-esp-1);
+}
+.sira-fil__liste [aria-current='page'] {
+  color: var(--sira-texte-secondaire);
+}
+
+/* ---------- Bouton ---------- */
+
+.sira-bouton:not(.p-button) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sira-esp-2);
+  min-height: var(--sira-cible);
+  padding: var(--sira-esp-2) var(--sira-esp-6);
+  font: inherit;
+  font-weight: var(--sira-graisse-forte);
+  line-height: 1.25;
+  text-align: center;
+  text-decoration: none;
+  color: var(--sira-sur-action);
+  background: var(--sira-action);
+  border: var(--sira-trait-champ) solid var(--sira-action);
+  border-radius: var(--sira-rayon);
+  cursor: pointer;
+}
+.sira-bouton:not(.p-button):hover {
+  color: var(--sira-sur-action);
+  background: var(--sira-action-survol);
+  border-color: var(--sira-action-survol);
+}
+.sira-bouton--secondaire:not(.p-button) {
+  color: var(--sira-action);
+  background: var(--sira-fond);
+}
+.sira-bouton--danger:not(.p-button) {
+  background: var(--sira-erreur);
+  border-color: var(--sira-erreur);
+}
+.sira-bouton--danger:not(.p-button):hover {
+  background: var(--sira-erreur-survol);
+  border-color: var(--sira-erreur-survol);
+}
+/* Bouton discret : aspect de lien, cible de bouton. */
+.sira-bouton--discret:not(.p-button) {
+  padding-inline: var(--sira-esp-3);
+  font-weight: var(--sira-graisse);
+  color: var(--sira-lien);
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+  background: transparent;
+  border-color: transparent;
+}
+.sira-bouton--discret:not(.p-button):hover {
+  color: var(--sira-action-survol);
+  text-decoration-thickness: 2px;
+  background: var(--sira-selection);
+  border-color: transparent;
+}
+.sira-bouton:not(.p-button)[aria-disabled='true'] {
+  cursor: progress;
+  opacity: 0.75;
+}
+.sira-groupe-boutons {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sira-esp-3) var(--sira-esp-4);
+  margin-top: var(--sira-esp-6);
+}
+@media (max-width: 39.99rem) {
+  .sira-groupe-boutons {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+/* Deux décisions de même poids : même largeur, même style. */
+@media (min-width: 40rem) {
+  .sira-groupe-boutons--egaux {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* ---------- Lien ---------- */
+
+.sira-lien {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sira-esp-1);
+}
+.sira-lien--bloc {
+  min-height: var(--sira-cible);
+}
+
+/* ---------- Formulaire ---------- */
+
+.sira-champ {
+  max-width: 30rem;
+  margin-bottom: var(--sira-esp-6);
+}
+.sira-champ__libelle {
+  display: block;
+  margin-bottom: var(--sira-esp-1);
+  font-weight: var(--sira-graisse-forte);
+}
+.sira-champ__aide {
+  display: block;
+  margin: 0 0 var(--sira-esp-2);
+  color: var(--sira-texte-secondaire);
+}
+.sira-champ__erreur {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sira-esp-2);
+  margin: 0 0 var(--sira-esp-2);
+  font-weight: var(--sira-graisse-forte);
+  color: var(--sira-erreur);
+}
+.sira-champ__erreur .sira-icone {
+  margin-top: 0.1em;
+}
+.sira-champ--erreur {
+  padding-left: var(--sira-esp-4);
+  border-left: var(--sira-trait-alerte) solid var(--sira-erreur);
+}
+.sira-saisie:not(.p-inputtext) {
+  display: block;
+  width: 100%;
+  min-height: var(--sira-cible);
+  padding: var(--sira-esp-2) var(--sira-esp-3);
+  color: var(--sira-texte);
+  background: var(--sira-fond);
+  border: var(--sira-trait-champ) solid var(--sira-bordure-champ);
+  border-radius: var(--sira-rayon);
+}
+textarea.sira-saisie:not(.p-inputtext) {
+  min-height: 7.5rem;
+  resize: vertical;
+}
+select.sira-saisie:not(.p-inputtext) {
+  padding-right: var(--sira-esp-8);
+}
+.sira-saisie:not(.p-inputtext)[aria-invalid='true'] {
+  border-color: var(--sira-erreur);
+}
+.sira-saisie--courte:not(.p-inputtext) {
+  max-width: 12rem;
+}
+/* Choix d'un fichier : le bouton du navigateur prend l'allure d'un bouton secondaire. */
+.sira-saisie:not(.p-inputtext)[type='file'] {
+  padding: var(--sira-esp-2);
+  cursor: pointer;
+}
+.sira-saisie:not(.p-inputtext)[type='file']::file-selector-button {
+  margin-right: var(--sira-esp-3);
+  padding: var(--sira-esp-1) var(--sira-esp-3);
+  font: inherit;
+  font-weight: var(--sira-graisse-forte);
+  color: var(--sira-action);
+  background: var(--sira-fond);
+  border: var(--sira-trait-champ) solid var(--sira-action);
+  border-radius: var(--sira-rayon);
+  cursor: pointer;
+}
+
+.sira-groupe {
+  min-width: 0;
+  margin: 0 0 var(--sira-esp-6);
+  padding: 0;
+  border: 0;
+}
+.sira-groupe--erreur {
+  padding-left: var(--sira-esp-4);
+  border-left: var(--sira-trait-alerte) solid var(--sira-erreur);
+}
+.sira-groupe__legende {
+  margin-bottom: var(--sira-esp-2);
+  padding: 0;
+  font-size: var(--sira-titre-s);
+  font-weight: var(--sira-graisse-forte);
+  line-height: var(--sira-interligne-titre);
+}
+.sira-groupe .sira-champ:last-child {
+  margin-bottom: 0;
+}
+
+.sira-choix {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sira-esp-3);
+  min-height: var(--sira-cible);
+  padding-block: var(--sira-esp-2);
+}
+.sira-choix input {
+  flex: none;
+  width: 1.5rem;
+  height: 1.5rem;
+  margin: 0.1rem 0 0;
+  accent-color: var(--sira-action);
+}
+/* Une saisie verrouillée reste lisible : sa valeur vient d'une source qui fait foi. */
+.sira-saisie:not(.p-inputtext):disabled {
+  color: var(--sira-texte);
+  background: var(--sira-fond-alt);
+  border-color: var(--sira-bordure);
+  opacity: 1;
+  -webkit-text-fill-color: var(--sira-texte);
+}
+.sira-choix input:checked + label {
+  font-weight: var(--sira-graisse-forte);
+}
+.sira-choix input:disabled,
+.sira-choix input:disabled + label {
+  opacity: 1;
+  color: var(--sira-texte);
+}
+
+.sira-resume-erreurs {
+  margin-bottom: var(--sira-esp-8);
+  padding: var(--sira-esp-4);
+  border: var(--sira-trait-alerte) solid var(--sira-erreur);
+  border-radius: var(--sira-rayon);
+}
+.sira-resume-erreurs__titre {
+  margin: 0 0 var(--sira-esp-2);
+  font-size: var(--sira-titre-s);
+}
+.sira-resume-erreurs ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.sira-resume-erreurs a {
+  font-weight: var(--sira-graisse-forte);
+  color: var(--sira-erreur);
+}
+
+/* ---------- Alerte ---------- */
+
+.sira-alerte {
+  display: flex;
+  gap: var(--sira-esp-3);
+  padding: var(--sira-esp-4);
+  background: var(--sira-info-fond);
+  border-left: var(--sira-trait-alerte) solid var(--sira-info);
+}
+.sira-alerte > .sira-icone {
+  margin-top: 0.1em;
+  color: var(--sira-info);
+}
+.sira-alerte--succes {
+  background: var(--sira-succes-fond);
+  border-color: var(--sira-succes);
+}
+.sira-alerte--succes > .sira-icone {
+  color: var(--sira-succes);
+}
+.sira-alerte--attention {
+  background: var(--sira-alerte-fond);
+  border-color: var(--sira-alerte);
+}
+.sira-alerte--attention > .sira-icone {
+  color: var(--sira-alerte);
+}
+.sira-alerte--erreur {
+  background: var(--sira-erreur-fond);
+  border-color: var(--sira-erreur);
+}
+.sira-alerte--erreur > .sira-icone {
+  color: var(--sira-erreur);
+}
+.sira-alerte__corps {
+  min-width: 0;
+}
+.sira-alerte__titre {
+  margin: 0 0 var(--sira-esp-1);
+  font-weight: var(--sira-graisse-forte);
+}
+.sira-alerte__corps > :last-child {
+  margin-bottom: 0;
+}
+
+/* ---------- Carte ---------- */
+
+.sira-carte {
+  padding: var(--sira-esp-6);
+  background: var(--sira-fond);
+  border: var(--sira-trait) solid var(--sira-bordure);
+  border-radius: var(--sira-rayon);
+}
+.sira-carte--teintee {
+  background: var(--sira-fond-alt);
+}
+.sira-carte__entete {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sira-esp-2) var(--sira-esp-4);
+  margin-bottom: var(--sira-esp-3);
+}
+.sira-carte__titre {
+  margin: 0;
+  font-size: var(--sira-titre-s);
+  font-weight: var(--sira-graisse-forte);
+  line-height: var(--sira-interligne-titre);
+}
+.sira-carte__corps > :last-child {
+  margin-bottom: 0;
+}
+.sira-carte__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sira-esp-2) var(--sira-esp-6);
+  margin-top: var(--sira-esp-4);
+}
+.sira-carte__actions:empty {
+  display: none;
+}
+
+/* ---------- Fichier ---------- */
+
+.sira-fichier {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sira-esp-3);
+  max-width: 36rem;
+  padding: var(--sira-esp-4);
+  background: var(--sira-fond);
+  border: var(--sira-trait) solid var(--sira-bordure);
+  border-radius: var(--sira-rayon);
+}
+.sira-fichier > .sira-icone {
+  flex: none;
+  width: 2rem;
+  height: 2rem;
+  color: var(--sira-action);
+}
+.sira-fichier__corps {
+  flex: 1;
+  min-width: 0;
+}
+.sira-fichier__nom {
+  margin: 0;
+  font-weight: var(--sira-graisse-forte);
+  overflow-wrap: anywhere;
+}
+.sira-fichier__details {
+  margin: 0;
+  font-size: var(--sira-texte-xs);
+  line-height: 1.45;
+  color: var(--sira-texte-secondaire);
+}
+.sira-fichier__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sira-esp-2) var(--sira-esp-6);
+  margin-top: var(--sira-esp-2);
+}
+.sira-fichier__actions:empty {
+  display: none;
+}
+/* Une fiche peut porter le champ qui dépose la pièce. */
+.sira-fichier .sira-champ {
+  max-width: none;
+  margin-bottom: 0;
+}
+
+/* ---------- Étiquette d'état ---------- */
+
+.sira-etiquette {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sira-esp-1);
+  padding: 0.125rem var(--sira-esp-3) 0.125rem var(--sira-esp-2);
+  font-size: var(--sira-texte-xs);
+  font-weight: var(--sira-graisse-forte);
+  line-height: 1.45;
+  white-space: nowrap;
+  color: var(--sira-texte);
+  background: var(--sira-fond-alt);
+  border: var(--sira-trait) solid var(--sira-bordure-champ);
+  border-radius: var(--sira-rayon-pilule);
+}
+.sira-etiquette .sira-icone {
+  width: 1rem;
+  height: 1rem;
+}
+.sira-etiquette--succes {
+  color: var(--sira-succes);
+  background: var(--sira-succes-fond);
+  border-color: var(--sira-succes);
+}
+.sira-etiquette--erreur {
+  color: var(--sira-erreur);
+  background: var(--sira-erreur-fond);
+  border-color: var(--sira-erreur);
+}
+.sira-etiquette--attention {
+  color: var(--sira-alerte);
+  background: var(--sira-alerte-fond);
+  border-color: var(--sira-alerte);
+}
+.sira-etiquette--info {
+  color: var(--sira-info);
+  background: var(--sira-info-fond);
+  border-color: var(--sira-info);
+}
+
+/* ---------- Tableau adaptable ---------- */
+
+.sira-tableau {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+.sira-tableau caption {
+  margin-bottom: var(--sira-esp-3);
+  font-weight: var(--sira-graisse-forte);
+  text-align: left;
+}
+.sira-tableau th,
+.sira-tableau td {
+  padding: var(--sira-esp-3) var(--sira-esp-4) var(--sira-esp-3) 0;
+  vertical-align: top;
+  border-bottom: var(--sira-trait) solid var(--sira-bordure);
+}
+.sira-tableau th:last-child,
+.sira-tableau td:last-child {
+  padding-right: 0;
+}
+.sira-tableau thead th {
+  font-size: var(--sira-texte-xs);
+  font-weight: var(--sira-graisse-forte);
+  color: var(--sira-texte-secondaire);
+  white-space: nowrap;
+  border-bottom: var(--sira-trait-champ) solid var(--sira-texte);
+}
+.sira-tableau td {
+  font-variant-numeric: tabular-nums;
+}
+.sira-tableau__numerique {
+  text-align: right;
+}
+/* Sous 640 px, chaque ligne devient une carte et chaque cellule une paire libellé / valeur. */
+@media (max-width: 39.99rem) {
+  .sira-tableau,
+  .sira-tableau tbody,
+  .sira-tableau tr,
+  .sira-tableau td {
+    display: block;
+  }
+  .sira-tableau caption {
+    display: block;
+  }
+  .sira-tableau thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+  .sira-tableau tr {
+    margin-bottom: var(--sira-esp-4);
+    padding: var(--sira-esp-2) var(--sira-esp-4);
+    border: var(--sira-trait) solid var(--sira-bordure);
+    border-radius: var(--sira-rayon);
+  }
+  .sira-tableau td,
+  .sira-tableau td:last-child {
+    display: grid;
+    grid-template-columns: minmax(6rem, 2fr) 3fr;
+    gap: var(--sira-esp-3);
+    padding: var(--sira-esp-2) 0;
+    text-align: left;
+  }
+  .sira-tableau td:last-child {
+    border-bottom: 0;
+  }
+  .sira-tableau td::before {
+    content: attr(data-libelle);
+    font-size: var(--sira-texte-xs);
+    line-height: 1.7;
+    color: var(--sira-texte-secondaire);
+  }
+}
+
+/* ---------- Pagination ---------- */
+
+.sira-pagination {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: var(--sira-esp-2);
+  margin-top: var(--sira-esp-6);
+}
+.sira-pagination__suivant {
+  justify-self: end;
+}
+.sira-pagination__position {
+  margin: 0;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.sira-pagination .sira-bouton:not(.p-button) {
+  width: auto;
+  padding-inline: var(--sira-esp-2);
+}
+
+/* ---------- Indicateur d'étapes ---------- */
+
+.sira-etapes {
+  margin-bottom: var(--sira-esp-8);
+}
+.sira-etapes__position {
+  margin: 0;
+  font-size: var(--sira-texte-xs);
+  color: var(--sira-texte-secondaire);
+}
+.sira-etapes__titre {
+  margin: 0 0 var(--sira-esp-2);
+  font-size: var(--sira-titre-s);
+  font-weight: var(--sira-graisse-forte);
+  line-height: var(--sira-interligne-titre);
+}
+.sira-etapes__barre {
+  display: flex;
+  gap: var(--sira-esp-1);
+  margin-bottom: var(--sira-esp-2);
+}
+.sira-etapes__segment {
+  flex: 1;
+  height: 0.375rem;
+  background: var(--sira-bordure);
+}
+.sira-etapes__segment--fait {
+  background: var(--sira-action);
+}
+.sira-etapes__suivante {
+  margin: 0;
+  font-size: var(--sira-texte-xs);
+  color: var(--sira-texte-secondaire);
+}
+
+/* ---------- Fenêtre de dialogue ---------- */
+
+.sira-dialogue {
+  width: calc(100% - 2 * var(--sira-esp-4));
+  max-width: 34rem;
+  max-height: calc(100vh - 2 * var(--sira-esp-4));
+  padding: var(--sira-esp-6);
+  color: var(--sira-texte);
+  background: var(--sira-fond);
+  border: var(--sira-trait) solid var(--sira-bordure-champ);
+  border-radius: var(--sira-rayon);
+  box-shadow: 0 0.25rem 1rem rgb(27 31 35 / 12%);
+}
+.sira-dialogue::backdrop {
+  background: rgb(27 31 35 / 50%);
+}
+.sira-dialogue__titre {
+  margin: 0 0 var(--sira-esp-4);
+  font-size: var(--sira-titre-m);
+}
+.sira-dialogue__titre:focus {
+  outline: none;
+  box-shadow: none;
+}
+.sira-dialogue__corps > :last-child {
+  margin-bottom: 0;
+}
+
+/* ---------- État vide ---------- */
+
+.sira-etat-vide {
+  padding: var(--sira-esp-8) var(--sira-esp-6);
+  background: var(--sira-fond-alt);
+  border: var(--sira-trait) dashed var(--sira-bordure-champ);
+  border-radius: var(--sira-rayon);
+}
+.sira-etat-vide > .sira-icone {
+  margin-bottom: var(--sira-esp-3);
+  color: var(--sira-texte-secondaire);
+}
+.sira-etat-vide__titre {
+  margin: 0 0 var(--sira-esp-2);
+  font-size: var(--sira-titre-s);
+  font-weight: var(--sira-graisse-forte);
+  line-height: var(--sira-interligne-titre);
+}
+.sira-etat-vide__corps > :last-child {
+  margin-bottom: 0;
+}
+
+/* ---------- Squelette de chargement (sans animation) ---------- */
+
+.sira-squelette__ligne {
+  height: 1rem;
+  margin-bottom: var(--sira-esp-3);
+  background: var(--sira-bordure);
+  border-radius: var(--sira-rayon);
+}
+.sira-squelette__ligne:nth-child(3n + 1) {
+  width: 62%;
+}
+.sira-squelette__ligne:nth-child(3n + 2) {
+  width: 88%;
+}
+.sira-squelette__ligne:nth-child(3n) {
+  width: 74%;
+}
+
+/* ---------- Onglets ---------- */
+
+.sira-onglets__liste {
+  display: flex;
+  gap: var(--sira-esp-1);
+  overflow-x: auto;
+  /* L'anneau de focus déborde du bouton : on lui laisse sa place dans la zone défilante. */
+  padding: 6px 6px 0;
+  margin: -6px -6px 0;
+  border-bottom: var(--sira-trait) solid var(--sira-bordure-champ);
+}
+.sira-onglets__onglet {
+  flex: none;
+  min-height: var(--sira-cible);
+  padding: var(--sira-esp-2) var(--sira-esp-4);
+  color: var(--sira-texte);
+  background: var(--sira-fond-alt);
+  border: var(--sira-trait) solid var(--sira-bordure);
+  border-bottom: 0;
+  border-radius: var(--sira-rayon) var(--sira-rayon) 0 0;
+  cursor: pointer;
+}
+.sira-onglets__onglet:hover {
+  text-decoration: underline;
+}
+.sira-onglets__onglet[aria-selected='true'] {
+  font-weight: var(--sira-graisse-forte);
+  color: var(--sira-action);
+  background: var(--sira-fond);
+  border-color: var(--sira-bordure-champ);
+  box-shadow: inset 0 3px 0 var(--sira-action);
+}
+.sira-onglets__onglet[aria-selected='true']:focus-visible {
+  box-shadow: 0 0 0 6px var(--sira-focus-exterieur);
+}
+.sira-onglets__panneau {
+  padding-top: var(--sira-esp-6);
+}
+.sira-onglets__panneau > :last-child {
+  margin-bottom: 0;
+}
+
+/* ---------- Liste de synthèse (clé / valeur) ---------- */
+
+.sira-synthese {
+  margin: 0 0 var(--sira-esp-6);
+  border-top: var(--sira-trait) solid var(--sira-bordure);
+}
+.sira-synthese__ligne {
+  display: grid;
+  gap: var(--sira-esp-1) var(--sira-esp-4);
+  padding-block: var(--sira-esp-3);
+  border-bottom: var(--sira-trait) solid var(--sira-bordure);
+}
+.sira-synthese__cle {
+  font-weight: var(--sira-graisse-forte);
+}
+.sira-synthese__valeur,
+.sira-synthese__action {
+  min-width: 0;
+  margin: 0;
+}
+.sira-synthese__action:empty {
+  display: none;
+}
+@media (min-width: 40rem) {
+  .sira-synthese__ligne {
+    grid-template-columns: minmax(0, 2fr) minmax(0, 3fr) auto;
+  }
+  .sira-synthese__action {
+    text-align: right;
+  }
+}
+
+/* ---------- Code à comparer ---------- */
+
+.sira-code {
+  padding: var(--sira-esp-4);
+  text-align: center;
+  background: var(--sira-selection);
+  border: var(--sira-trait) solid var(--sira-action);
+  border-radius: var(--sira-rayon);
+}
+.sira-code__libelle {
+  margin: 0 0 var(--sira-esp-1);
+  font-size: var(--sira-texte-xs);
+  color: var(--sira-texte-secondaire);
+}
+.sira-code__chiffres {
+  display: flex;
+  justify-content: center;
+  gap: 0.6em;
+  margin: 0;
+  font-family: var(--sira-police-mono);
+  font-size: 2.25rem;
+  font-weight: var(--sira-graisse-forte);
+  line-height: 1.2;
+  letter-spacing: 0.12em;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Minuteur d'expiration ---------- */
+
+.sira-minuteur {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sira-esp-2);
+}
+.sira-minuteur .sira-icone {
+  margin-top: 0.1em;
+  color: var(--sira-texte-secondaire);
+}
+.sira-minuteur--expire {
+  font-weight: var(--sira-graisse-forte);
+  color: var(--sira-erreur);
+}
+.sira-minuteur--expire .sira-icone {
+  color: inherit;
+}
+
+/* ---------- Demande d'accès ---------- */
+
+.sira-demande > * + * {
+  margin-top: var(--sira-esp-6);
+}
+.sira-demande__demandeur {
+  display: flex;
+  gap: var(--sira-esp-3);
+  padding: var(--sira-esp-4);
+  background: var(--sira-fond-alt);
+  border: var(--sira-trait) solid var(--sira-bordure);
+  border-radius: var(--sira-rayon);
+}
+.sira-demande__demandeur > .sira-icone {
+  margin-top: 0.15em;
+}
+.sira-demande__demandeur p {
+  margin: 0;
+}
+.sira-demande__nom {
+  font-size: var(--sira-titre-s);
+  font-weight: var(--sira-graisse-forte);
+  line-height: var(--sira-interligne-titre);
+}
+.sira-demande__enregistre {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sira-esp-1);
+  margin-top: var(--sira-esp-1);
+  font-size: var(--sira-texte-xs);
+  color: var(--sira-succes);
+}
+.sira-demande__titre {
+  margin-bottom: var(--sira-esp-2);
+  font-size: var(--sira-titre-s);
+  font-weight: var(--sira-graisse-forte);
+  line-height: var(--sira-interligne-titre);
+}
+.sira-demande__section > p:last-child {
+  margin-bottom: 0;
+}
+.sira-demande__informations {
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: var(--sira-trait) solid var(--sira-bordure);
+}
+.sira-demande__information {
+  margin: 0;
+  padding-block: var(--sira-esp-3);
+  border-bottom: var(--sira-trait) solid var(--sira-bordure);
+}
+.sira-demande__information p {
+  margin: 0;
+}
+.sira-demande__libelle {
+  font-weight: var(--sira-graisse-forte);
+}
+.sira-demande__forme {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sira-esp-2);
+}
+.sira-demande__forme .sira-icone {
+  margin-top: 0.1em;
+  color: var(--sira-action);
+}
+.sira-demande__source {
+  font-size: var(--sira-texte-xs);
+  line-height: 1.45;
+  color: var(--sira-texte-secondaire);
+}
+.sira-demande__verification > * + * {
+  margin-top: var(--sira-esp-3);
+}
+.sira-demande .sira-groupe-boutons {
+  margin-top: var(--sira-esp-8);
+}
+.sira-demande__refus {
+  margin-top: var(--sira-esp-4);
+  color: var(--sira-texte-secondaire);
+}
+
+/* ===== habillage.css ===== */
+/*
+ * Habillage de Sira : la forme des écrans, posée sur la structure de composants.css.
+ * Deux inspirations, un seul bleu :
+ *  - applications (espace citoyen, console, registres) : tableau de bord à barre latérale,
+ *    grandes cartes blanches arrondies sur fond gris bleuté, carte mise en avant en dégradé ;
+ *  - sites des démarches : page claire, titres très forts, boutons en pilule, bande bleue.
+ * Les composants PrimeNG (boutons, champs, messages, étiquettes, fenêtres) sont retouchés ici
+ * pour parler la même langue. Ce fichier passe après la couche « primeng ».
+ */
+
+/* ---------- Pleine largeur ---------- */
+
+/* Le contenu occupe toute la largeur disponible, avec une marge qui suit l'écran. */
+.sira-conteneur,
+.sira-conteneur--large {
+  max-width: none;
+  padding-inline: clamp(var(--sira-esp-4), 3vw, var(--sira-esp-12));
+}
+p,
+ul,
+ol,
+.sira-champ,
+.sira-groupe,
+.sira-fichier,
+.sira-carte,
+.sira-synthese {
+  max-width: none;
+}
+
+/* ---------- Fond et typographie ---------- */
+
+html {
+  background: var(--sira-fond-page);
+}
+body {
+  font-family: var(--sira-police);
+  color: var(--sira-texte);
+  background: var(--sira-fond-page);
+  -webkit-font-smoothing: antialiased;
+}
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--sira-police);
+  color: var(--sira-texte-fort);
+  letter-spacing: -0.02em;
+}
+/* Convention de globalstage.bf : grand titre bleu très gras, sous-titre gris de 1,1 rem. */
+h1 {
+  font-weight: 800;
+  font-size: var(--sira-titre-l);
+  line-height: var(--sira-interligne-titre);
+  letter-spacing: -0.01em;
+  color: var(--sira-titre-page);
+}
+h2 {
+  font-weight: 800;
+}
+h3,
+h4 {
+  font-weight: 700;
+}
+.sira-chapeau {
+  font-size: var(--sira-texte-m);
+  color: var(--sira-texte-secondaire);
+}
+.sira-secondaire {
+  color: var(--sira-texte-secondaire);
+}
+
+/* ---------- Bandeau de démonstration : discret, en haut ---------- */
+
+.sira-bandeau {
+  padding-block: 0.4rem;
+  font-size: var(--sira-texte-xs);
+  font-weight: 600;
+  color: var(--sira-bleu-900);
+  background: var(--sira-bleu-100);
+  border: 0;
+}
+.sira-bandeau--attention {
+  color: #6b4100;
+  background: #fff1d6;
+}
+.sira-bandeau__contenu {
+  justify-content: center;
+  align-items: center;
+}
+
+/* ---------- Disposition latérale (applications) ---------- */
+
+.sira-application--laterale {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--sira-esp-4);
+  min-height: 100vh;
+  padding: var(--sira-esp-3);
+  background: var(--sira-gris-100);
+}
+.sira-application--laterale > demo-bandeau,
+.sira-application--laterale > sira-bandeau {
+  grid-column: 1 / -1;
+  border-radius: var(--sira-rayon);
+  overflow: hidden;
+}
+.sira-application--laterale > .sira-page {
+  min-width: 0;
+  background: var(--sira-fond-alt);
+  border-radius: var(--sira-rayon-cadre);
+}
+.sira-application--laterale > .sira-page.sira-conteneur {
+  max-width: none;
+  margin: 0;
+}
+.sira-application--laterale > sira-pied {
+  grid-column: 1 / -1;
+}
+@media (min-width: 64rem) {
+  .sira-application--laterale {
+    grid-template-columns: 17rem minmax(0, 1fr);
+    grid-template-rows: auto 1fr auto;
+    padding: var(--sira-esp-4);
+  }
+  .sira-application--laterale > sira-entete {
+    grid-column: 1;
+    grid-row: span 2;
+  }
+  .sira-application--laterale > .sira-page {
+    grid-column: 2;
+    padding: var(--sira-esp-8) clamp(var(--sira-esp-6), 3vw, var(--sira-esp-12)) var(--sira-esp-16);
+  }
+  .sira-application--laterale > sira-pied {
+    grid-column: 2;
+  }
+}
+
+/* ---------- En-tête : barre latérale ---------- */
+
+.sira-entete--laterale {
+  height: 100%;
+  background: var(--sira-fond);
+  border: 0;
+  border-radius: var(--sira-rayon-cadre);
+}
+.sira-entete--laterale .sira-entete__barre {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sira-esp-3) var(--sira-esp-4);
+  padding: var(--sira-esp-4) var(--sira-esp-4);
+}
+.sira-entete--laterale .sira-entete__marque {
+  flex: 1 1 auto;
+  text-decoration: none;
+}
+.sira-entete--laterale .sira-entete__nav {
+  order: 3;
+  flex: 1 1 100%;
+  border: 0;
+}
+.sira-entete--laterale .sira-entete__rubrique {
+  display: none;
+}
+.sira-entete--laterale .sira-entete__menu {
+  display: flex;
+  gap: var(--sira-esp-1);
+  margin: 0;
+  padding: 0 0 var(--sira-esp-1);
+  overflow-x: auto;
+  list-style: none;
+}
+.sira-entete--laterale .sira-entete__menu a {
+  display: flex;
+  align-items: center;
+  gap: var(--sira-esp-3);
+  min-height: var(--sira-cible);
+  padding: 0 var(--sira-esp-4);
+  font-weight: 600;
+  white-space: nowrap;
+  color: var(--sira-texte-secondaire);
+  text-decoration: none;
+  border: 0;
+  border-radius: var(--sira-rayon);
+}
+.sira-entete--laterale .sira-entete__menu a:hover {
+  color: var(--sira-texte-fort);
+  background: var(--sira-gris-50);
+}
+.sira-entete--laterale .sira-entete__menu a[aria-current='page'] {
+  color: var(--sira-sur-action);
+  background: var(--sira-action);
+}
+.sira-entete--laterale .sira-entete__outils {
+  gap: var(--sira-esp-2);
+}
+.sira-entete--laterale .sira-entete__compte {
+  display: none;
+}
+.sira-entete__outils:not(:has(.sira-entete__compte, a, button)) {
+  display: none;
+}
+@media (min-width: 64rem) {
+  .sira-entete--laterale {
+    position: sticky;
+    top: var(--sira-esp-4);
+    height: calc(100vh - 2 * var(--sira-esp-4));
+  }
+  .sira-entete--laterale .sira-entete__barre {
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    height: 100%;
+    gap: var(--sira-esp-6);
+    padding: var(--sira-esp-6) var(--sira-esp-4);
+  }
+  .sira-entete--laterale .sira-entete__marque {
+    flex: none;
+    padding-inline: var(--sira-esp-2);
+  }
+  .sira-entete--laterale .sira-entete__nav {
+    order: 0;
+    flex: 1 1 auto;
+    overflow-y: auto;
+  }
+  .sira-entete--laterale .sira-entete__rubrique {
+    display: block;
+    margin: 0 0 var(--sira-esp-2);
+    padding-inline: var(--sira-esp-4);
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--sira-gris-400);
+  }
+  .sira-entete--laterale .sira-entete__menu {
+    flex-direction: column;
+    overflow: visible;
+  }
+  .sira-entete--laterale .sira-entete__menu a {
+    position: relative;
+    border-radius: var(--sira-rayon);
+  }
+  .sira-entete--laterale .sira-entete__menu a[aria-current='page'] {
+    color: var(--sira-action);
+    background: var(--sira-theme-teinte);
+  }
+  .sira-entete--laterale .sira-entete__menu a[aria-current='page']::before {
+    content: '';
+    position: absolute;
+    left: calc(-1 * var(--sira-esp-4));
+    top: 20%;
+    bottom: 20%;
+    width: 4px;
+    background: var(--sira-accent);
+    border-radius: 0 3px 3px 0;
+  }
+  .sira-entete--laterale .sira-entete__outils {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--sira-esp-3);
+    padding: var(--sira-esp-4);
+    color: var(--sira-sur-action);
+    background: var(--sira-action);
+    border-radius: var(--sira-rayon-carte);
+  }
+  .sira-entete--laterale .sira-entete__compte {
+    display: flex;
+    align-items: center;
+    gap: var(--sira-esp-3);
+  }
+  .sira-entete--laterale .sira-entete__avatar {
+    color: var(--sira-bleu-800);
+    background: var(--sira-blanc);
+  }
+  .sira-entete--laterale .sira-entete__personne {
+    color: var(--sira-blanc);
+  }
+  .sira-entete--laterale .sira-entete__role {
+    color: rgb(255 255 255 / 70%);
+  }
+  .sira-entete--laterale .sira-entete__deconnexion.p-button {
+    width: 100%;
+    color: var(--sira-bleu-800);
+    background: var(--sira-blanc);
+    border-color: var(--sira-blanc);
+  }
+  .sira-entete--laterale .sira-entete__deconnexion.p-button:hover {
+    color: var(--sira-bleu-900);
+    background: var(--sira-bleu-50);
+    border-color: var(--sira-bleu-50);
+  }
+}
+
+/* Marque et compte, communs aux deux dispositions */
+.sira-entete__signe {
+  width: 2.5rem;
+  height: 2.5rem;
+  color: var(--sira-action);
+}
+.sira-entete__signe--logo {
+  width: auto;
+  height: 2.5rem;
+}
+.sira-entete__signe--icone {
+  padding: 0.5rem;
+  color: var(--sira-sur-action);
+  background: var(--sira-action);
+  border-radius: var(--sira-rayon);
+}
+.sira-entete__nom {
+  font-size: 1.125rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--sira-texte-fort);
+}
+.sira-entete__compte {
+  display: flex;
+  align-items: center;
+  gap: var(--sira-esp-2);
+}
+.sira-entete__avatar {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 2.5rem;
+  height: 2.5rem;
+  font-size: 0.875rem;
+  font-weight: 800;
+  color: var(--sira-sur-action);
+  background: var(--sira-action);
+  border-radius: 50%;
+}
+.sira-entete__utilisateur {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  font-weight: 400;
+  line-height: 1.25;
+}
+.sira-entete__personne {
+  overflow: hidden;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--sira-texte-fort);
+}
+.sira-entete__role {
+  font-size: var(--sira-texte-xs);
+  color: var(--sira-texte-secondaire);
+}
+
+/* ---------- En-tête : barre horizontale (sites des démarches) ---------- */
+
+.sira-entete--barre {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: var(--sira-fond);
+  border-bottom: 1px solid var(--sira-bordure);
+}
+.sira-entete--barre .sira-entete__barre {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sira-esp-3) var(--sira-esp-6);
+  width: 100%;
+  padding: var(--sira-esp-3) clamp(var(--sira-esp-4), 3vw, var(--sira-esp-12));
+}
+.sira-entete--barre .sira-entete__marque,
+.sira-entete--barre .sira-entete__marque:hover {
+  text-decoration: none;
+}
+.sira-entete--barre .sira-entete__service {
+  color: var(--sira-texte-secondaire);
+}
+.sira-entete--barre .sira-entete__nav {
+  border: 0;
+}
+.sira-entete--barre .sira-entete__menu {
+  display: flex;
+  gap: var(--sira-esp-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.sira-entete--barre .sira-entete__menu a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.5rem;
+  padding: 0 var(--sira-esp-4);
+  font-weight: 600;
+  color: var(--sira-texte-secondaire);
+  text-decoration: none;
+  border: 0;
+  border-radius: var(--sira-rayon);
+}
+.sira-entete--barre .sira-entete__menu a:hover,
+.sira-entete--barre .sira-entete__menu a[aria-current='page'] {
+  color: var(--sira-texte-fort);
+  background: var(--sira-gris-50);
+}
+.sira-entete--barre .sira-entete__outils {
+  gap: var(--sira-esp-3);
+}
+.sira-entete--barre .sira-entete__deconnexion.p-button {
+  color: var(--sira-blanc);
+  background: var(--sira-texte-fort);
+  border-color: var(--sira-texte-fort);
+}
+.sira-entete--barre .sira-entete__deconnexion.p-button:hover {
+  background: var(--sira-bleu-800);
+  border-color: var(--sira-bleu-800);
+}
+@media (max-width: 47.99rem) {
+  .sira-entete--barre .sira-entete__compte .sira-entete__utilisateur {
+    display: none;
+  }
+}
+
+/* ---------- Pied ---------- */
+
+.sira-pied {
+  padding-block: var(--sira-esp-6);
+  background: transparent;
+  border: 0;
+}
+.sira-application--laterale .sira-pied {
+  padding-block: var(--sira-esp-2) 0;
+}
+.sira-application--laterale .sira-pied .sira-conteneur {
+  max-width: none;
+}
+
+/* ---------- Boutons (PrimeNG) : pilules ---------- */
+
+.sira-bouton.p-button {
+  gap: var(--sira-esp-2);
+  min-height: 3rem;
+  padding: 0.8rem 1.5rem;
+  font-family: var(--sira-police);
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.2;
+  text-decoration: none;
+  border-radius: var(--sira-rayon);
+  transition:
+    background-color 0.15s,
+    color 0.15s,
+    border-color 0.15s;
+}
+.sira-bouton.p-button-outlined {
+  background: var(--sira-fond);
+  border-width: 1.5px;
+}
+.sira-bouton.p-button-text {
+  padding-inline: var(--sira-esp-3);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+.sira-bouton.p-button[aria-disabled='true'] {
+  cursor: progress;
+  opacity: 0.7;
+}
+.sira-bouton.p-button .sira-icone {
+  width: 1.125rem;
+  height: 1.125rem;
+}
+
+/* ---------- Champs (PrimeNG) ---------- */
+
+/* Comme globalstage.bf : fond gris très clair, trait de 2 px invisible, blanc et bleu au focus. */
+.sira-saisie.p-inputtext {
+  width: 100%;
+  min-height: 3.5rem;
+  font-family: var(--sira-police);
+  font-size: 1rem;
+  color: var(--sira-texte-champ);
+  background: var(--sira-fond-champ);
+  border: 2px solid transparent;
+  border-radius: var(--sira-rayon);
+  box-shadow: none;
+  transition:
+    background-color 0.2s,
+    border-color 0.2s;
+}
+.sira-saisie.p-inputtext::placeholder {
+  color: var(--sira-texte-indice);
+}
+.sira-saisie.p-inputtext:enabled:hover {
+  background: var(--sira-fond-champ-survol);
+}
+.sira-saisie.p-inputtext:enabled:focus {
+  background: var(--sira-fond);
+  border-color: var(--sira-action);
+}
+textarea.sira-saisie.p-inputtext {
+  min-height: 7rem;
+}
+.sira-saisie.p-inputtext:disabled {
+  color: var(--sira-texte);
+  background: var(--sira-gris-50);
+  opacity: 1;
+}
+.sira-saisie.p-inputtext[aria-invalid='true'] {
+  border-color: var(--sira-erreur);
+}
+.sira-saisie--courte.p-inputtext {
+  max-width: 14rem;
+}
+.sira-saisie.p-inputtext[type='file'] {
+  padding: var(--sira-esp-2);
+  cursor: pointer;
+  background: var(--sira-fond-champ);
+  border: 2px dashed var(--sira-bordure-champ);
+}
+.sira-saisie.p-inputtext[type='file']::file-selector-button {
+  margin-right: var(--sira-esp-3);
+  padding: 0.45rem 1rem;
+  font: inherit;
+  font-weight: 700;
+  color: var(--sira-action);
+  cursor: pointer;
+  background: var(--sira-theme-teinte);
+  border: 0;
+  border-radius: var(--sira-rayon);
+}
+.sira-champ {
+  max-width: none;
+}
+.sira-champ__libelle,
+.sira-groupe__legende {
+  font-weight: 700;
+  color: var(--sira-texte-fort);
+}
+.sira-champ__aide {
+  font-size: var(--sira-texte-xs);
+}
+
+/* Groupe de champs : une carte légère */
+.sira-groupe {
+  max-width: none;
+  padding: var(--sira-esp-4) var(--sira-esp-6);
+  background: var(--sira-fond);
+  border: 1px solid var(--sira-bordure);
+  border-radius: var(--sira-rayon-carte);
+}
+
+/* Choix (radio, case) : pastilles */
+.sira-choix {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sira-esp-2);
+  margin: var(--sira-esp-1) var(--sira-esp-2) var(--sira-esp-1) 0;
+  padding: 0.35rem 0.9rem 0.35rem 0.6rem;
+  background: var(--sira-fond-alt);
+  border: 1px solid var(--sira-bordure);
+  border-radius: var(--sira-rayon);
+}
+.sira-choix input {
+  width: 1.15rem;
+  height: 1.15rem;
+  margin: 0;
+  accent-color: var(--sira-action);
+}
+.sira-choix:has(input:checked) {
+  color: var(--sira-action);
+  background: var(--sira-theme-teinte);
+  border-color: var(--sira-bleu-200);
+}
+.sira-choix:has(input:checked) label {
+  font-weight: 700;
+}
+
+/* ---------- Cartes ---------- */
+
+.sira-carte {
+  padding: var(--sira-esp-6);
+  background: var(--sira-fond);
+  border: 1px solid var(--sira-bordure);
+  border-radius: var(--sira-rayon-carte);
+  box-shadow: var(--sira-ombre);
+}
+.sira-carte__titre {
+  font-size: var(--sira-titre-s);
+  font-weight: 750;
+  letter-spacing: -0.01em;
+  color: var(--sira-texte-fort);
+}
+.sira-carte--teintee {
+  color: var(--sira-sur-action);
+  background: var(--sira-action);
+  border-color: transparent;
+  box-shadow: var(--sira-ombre-forte);
+}
+.sira-carte--teintee .sira-carte__titre,
+.sira-carte--teintee a:not(.p-button),
+.sira-carte--teintee .sira-secondaire {
+  color: var(--sira-blanc);
+}
+
+/* ---------- Alertes (PrimeNG Message) ---------- */
+
+sira-alerte {
+  margin-block: var(--sira-esp-4);
+}
+.sira-alerte {
+  padding: 0;
+  background: none;
+  border: 0;
+}
+.sira-alerte .p-message {
+  display: block;
+  width: 100%;
+  border-radius: var(--sira-rayon-carte);
+  outline-width: 1px;
+}
+.sira-alerte .p-message-content {
+  display: block;
+  padding: var(--sira-esp-4) var(--sira-esp-6);
+}
+.sira-alerte .p-message-text {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sira-esp-3);
+  font-weight: 400;
+  color: var(--sira-texte);
+}
+.sira-alerte__corps {
+  flex: 1;
+  min-width: 0;
+}
+.sira-alerte .sira-icone {
+  margin-top: 0.15rem;
+}
+.sira-alerte__titre {
+  margin: 0 0 var(--sira-esp-1);
+  font-weight: 750;
+  color: var(--sira-texte-fort);
+}
+.sira-alerte__corps > :last-child {
+  margin-bottom: 0;
+}
+
+/* ---------- Étiquettes (PrimeNG Tag) ---------- */
+
+.sira-etiquette {
+  display: inline-flex;
+  padding: 0;
+  background: none;
+  border: 0;
+}
+.sira-etiquette .p-tag {
+  gap: 0.3rem;
+  padding: 0.25rem 0.7rem;
+  font-size: var(--sira-texte-xs);
+  font-weight: 700;
+}
+.sira-etiquette .sira-icone {
+  width: 0.9rem;
+  height: 0.9rem;
+}
+
+/* ---------- Étapes ---------- */
+
+.sira-etapes {
+  margin-bottom: var(--sira-esp-8);
+}
+.sira-etapes__position {
+  margin: 0 0 var(--sira-esp-3);
+  font-size: var(--sira-texte-xs);
+  font-weight: 600;
+  color: var(--sira-texte-secondaire);
+}
+.sira-etapes__position strong {
+  color: var(--sira-texte-fort);
+}
+.sira-etapes__liste {
+  display: grid;
+  /* Autant de colonnes que la largeur le permet : une étape ne se coupe jamais en plein mot. */
+  grid-template-columns: repeat(auto-fit, minmax(12.5rem, 1fr));
+  gap: var(--sira-esp-2);
+  margin: 0;
+  padding: var(--sira-esp-2);
+  list-style: none;
+  background: var(--sira-fond);
+  border: 1px solid var(--sira-bordure);
+  border-radius: var(--sira-rayon-carte);
+  box-shadow: var(--sira-ombre);
+}
+.sira-etapes__etape {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--sira-esp-3);
+  margin: 0;
+  padding: var(--sira-esp-2) var(--sira-esp-3);
+  border-radius: var(--sira-rayon);
+}
+.sira-etapes__pastille {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 2.25rem;
+  height: 2.25rem;
+  font-weight: 800;
+  color: var(--sira-gris-500);
+  background: var(--sira-gris-50);
+  border: 1.5px solid var(--sira-gris-200);
+  border-radius: 50%;
+}
+.sira-etapes__pastille .sira-icone {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+.sira-etapes__textes {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.25;
+}
+.sira-etapes__titre {
+  font-weight: 750;
+  color: var(--sira-texte-secondaire);
+}
+.sira-etapes__detail {
+  font-size: var(--sira-texte-xs);
+  color: var(--sira-gris-400);
+}
+.sira-etapes__etape--faite .sira-etapes__pastille {
+  color: var(--sira-blanc);
+  background: var(--sira-succes);
+  border-color: var(--sira-succes);
+}
+.sira-etapes__etape--faite .sira-etapes__titre {
+  color: var(--sira-texte-fort);
+}
+.sira-etapes__etape--courante {
+  background: var(--sira-theme-teinte);
+}
+.sira-etapes__etape--courante .sira-etapes__pastille {
+  color: var(--sira-blanc);
+  background: var(--sira-action);
+  border-color: var(--sira-action);
+}
+.sira-etapes__etape--courante .sira-etapes__titre {
+  color: var(--sira-action);
+}
+.sira-etapes__etape--courante .sira-etapes__detail {
+  color: var(--sira-texte-secondaire);
+}
+.sira-etapes__titre,
+.sira-etapes__detail {
+  overflow-wrap: normal;
+  word-break: normal;
+  hyphens: none;
+}
+@media (max-width: 47.99rem) {
+  .sira-etapes__etape:not(.sira-etapes__etape--courante) .sira-etapes__detail {
+    display: none;
+  }
+}
+
+/* ---------- Pièces jointes ---------- */
+
+.sira-fichier {
+  align-items: center;
+  gap: var(--sira-esp-4);
+  padding: var(--sira-esp-4);
+  background: var(--sira-fond);
+  border: 1px solid var(--sira-bordure);
+  border-radius: var(--sira-rayon-carte);
+  box-shadow: var(--sira-ombre);
+}
+.sira-fichier > .sira-icone {
+  box-sizing: content-box;
+  width: 1.5rem;
+  height: 1.5rem;
+  padding: 0.75rem;
+  color: var(--sira-erreur);
+  background: var(--sira-erreur-fond);
+  border-radius: var(--sira-rayon);
+}
+.sira-fichier__nom {
+  font-weight: 700;
+  color: var(--sira-texte-fort);
+}
+.sira-fichier__details {
+  font-size: var(--sira-texte-xs);
+  color: var(--sira-texte-secondaire);
+}
+.sira-fichier__actions {
+  gap: var(--sira-esp-2);
+}
+
+/* ---------- Tableaux ---------- */
+
+sira-tableau {
+  overflow-x: auto;
+  background: var(--sira-fond);
+  border: 1px solid var(--sira-bordure);
+  border-radius: var(--sira-rayon-carte);
+  box-shadow: var(--sira-ombre);
+}
+.sira-tableau {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+.sira-tableau caption {
+  padding: var(--sira-esp-4) var(--sira-esp-6) 0;
+  font-weight: 750;
+  color: var(--sira-texte-fort);
+}
+.sira-tableau thead th {
+  padding: var(--sira-esp-3) var(--sira-esp-4);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--sira-gris-400);
+  background: transparent;
+  border-bottom: 1px solid var(--sira-bordure);
+}
+.sira-tableau td {
+  padding: var(--sira-esp-3) var(--sira-esp-4);
+  border-bottom: 1px solid var(--sira-gris-50);
+}
+.sira-tableau tbody tr:hover td {
+  background: var(--sira-fond-alt);
+}
+.sira-tableau tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+/* ---------- Onglets ---------- */
+
+.sira-onglets__liste {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: var(--sira-esp-1);
+  padding: var(--sira-esp-1);
+  background: var(--sira-gris-50);
+  border: 0;
+  border-radius: var(--sira-rayon);
+}
+.sira-onglets__onglet {
+  padding: 0.5rem 1.1rem;
+  font-weight: 600;
+  color: var(--sira-texte-secondaire);
+  background: transparent;
+  border: 0;
+  border-radius: var(--sira-rayon);
+}
+.sira-onglets__onglet:hover {
+  color: var(--sira-texte-fort);
+}
+.sira-onglets__onglet[aria-selected='true'] {
+  color: var(--sira-action);
+  background: var(--sira-fond);
+  border: 0;
+  box-shadow: var(--sira-ombre);
+}
+
+/* ---------- Synthèse (clé : valeur) ---------- */
+
+.sira-synthese {
+  padding: var(--sira-esp-2) var(--sira-esp-6);
+  background: var(--sira-fond);
+  border: 1px solid var(--sira-bordure);
+  border-radius: var(--sira-rayon-carte);
+  box-shadow: var(--sira-ombre);
+}
+.sira-synthese__ligne:last-child {
+  border-bottom: 0;
+}
+.sira-synthese__cle {
+  color: var(--sira-texte-secondaire);
+}
+
+/* ---------- États vides, squelette, code, minuteur ---------- */
+
+.sira-etat-vide {
+  padding: var(--sira-esp-8);
+  text-align: center;
+  background: var(--sira-fond);
+  border: 1px dashed var(--sira-gris-200);
+  border-radius: var(--sira-rayon-carte);
+}
+.sira-etat-vide > .sira-icone {
+  box-sizing: content-box;
+  padding: 0.9rem;
+  color: var(--sira-action);
+  background: var(--sira-theme-teinte);
+  border-radius: 50%;
+}
+.sira-squelette {
+  display: grid;
+  gap: var(--sira-esp-3);
+}
+.sira-squelette .p-skeleton {
+  max-width: 100%;
+}
+.sira-code__chiffres {
+  font-family: var(--sira-police);
+  font-weight: 800;
+  letter-spacing: 0.25em;
+  color: var(--sira-action);
+}
+
+/* ---------- Fenêtre de dialogue ---------- */
+
+.sira-dialogue {
+  /* La remise à zéro de Tailwind retire le centrage du navigateur : on le rétablit. */
+  margin: auto;
+  border: 0;
+  border-radius: var(--sira-rayon-cadre);
+  box-shadow: var(--sira-ombre-forte);
+}
+.sira-dialogue::backdrop {
+  background: rgb(10 47 69 / 45%);
+  backdrop-filter: blur(3px);
+}
+
+/* ---------- Demande d'accès (écran d'accord) ---------- */
+
+.sira-demande__demandeur {
+  padding: var(--sira-esp-6);
+  color: var(--sira-sur-action);
+  background: var(--sira-action);
+  border-radius: var(--sira-rayon-carte);
+}
+.sira-demande__demandeur p,
+.sira-demande__demandeur .sira-demande__nom,
+.sira-demande__demandeur .sira-demande__enregistre {
+  color: inherit;
+}
+.sira-demande__demandeur > .sira-icone {
+  box-sizing: content-box;
+  padding: 0.7rem;
+  color: var(--sira-action);
+  background: var(--sira-blanc);
+  border-radius: var(--sira-rayon);
+}
+.sira-demande__information {
+  padding: var(--sira-esp-4);
+  background: var(--sira-fond);
+  border: 1px solid var(--sira-bordure);
+  border-radius: var(--sira-rayon-carte);
+}
+.sira-demande__forme {
+  display: inline-flex;
+  padding: 0.2rem 0.7rem;
+  font-weight: 700;
+  color: var(--sira-action);
+  background: var(--sira-theme-teinte);
+  border-radius: var(--sira-rayon);
+}
+
+/* ---------- Statistiques (cartes chiffrées) ---------- */
+
+.sira-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: var(--sira-esp-4);
+  margin-block: var(--sira-esp-6);
+}
+.sira-stat {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sira-esp-2);
+  padding: var(--sira-esp-6);
+  color: var(--sira-texte);
+  text-decoration: none;
+  background: var(--sira-fond);
+  border: 1px solid var(--sira-bordure);
+  border-radius: var(--sira-rayon-carte);
+  box-shadow: var(--sira-ombre);
+}
+.sira-stat:hover {
+  color: var(--sira-texte);
+  border-color: var(--sira-bleu-200);
+}
+.sira-stat__libelle {
+  font-weight: 700;
+  color: var(--sira-texte-fort);
+}
+.sira-stat__valeur {
+  font-size: 2.75rem;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: var(--sira-texte-fort);
+}
+.sira-stat__note {
+  font-size: var(--sira-texte-xs);
+  color: var(--sira-texte-secondaire);
+}
+.sira-stat__fleche {
+  position: absolute;
+  top: var(--sira-esp-4);
+  right: var(--sira-esp-4);
+  display: inline-grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  color: var(--sira-texte-fort);
+  border: 1px solid var(--sira-gris-200);
+  border-radius: 50%;
+}
+.sira-stat--forte {
+  color: var(--sira-sur-action);
+  background: var(--sira-action);
+  border-color: transparent;
+}
+.sira-stat--forte .sira-stat__libelle,
+.sira-stat--forte .sira-stat__valeur,
+.sira-stat--forte .sira-stat__note {
+  color: var(--sira-blanc);
+}
+.sira-stat--forte .sira-stat__fleche {
+  color: var(--sira-bleu-800);
+  background: var(--sira-blanc);
+  border-color: var(--sira-blanc);
+}
+
+/* ---------- En-tête de page (titre et actions) ---------- */
+
+.sira-titre-page {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--sira-esp-4);
+  margin-bottom: var(--sira-esp-6);
+}
+.sira-titre-page h1 {
+  margin: 0;
+}
+.sira-titre-page p {
+  margin: var(--sira-esp-1) 0 0;
+  color: var(--sira-texte-secondaire);
+}
+
+/* ---------- Tableau : recherche, filtres, pagination ---------- */
+
+sira-tableau {
+  overflow: visible;
+}
+.sira-tableau__outils {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sira-esp-2) var(--sira-esp-3);
+  padding: var(--sira-esp-3) var(--sira-esp-4);
+  border-bottom: 1px solid var(--sira-bordure);
+}
+.sira-tableau__recherche {
+  display: flex;
+  flex: 1 1 16rem;
+  align-items: center;
+  gap: var(--sira-esp-2);
+  min-height: 3rem;
+  padding: 0 var(--sira-esp-4);
+  color: var(--sira-texte-indice);
+  background: var(--sira-fond-champ);
+  border: 2px solid transparent;
+  border-radius: var(--sira-rayon);
+}
+.sira-tableau__recherche:focus-within {
+  color: var(--sira-action);
+  background: var(--sira-fond);
+  border-color: var(--sira-action);
+}
+.sira-tableau__saisie {
+  flex: 1;
+  min-width: 0;
+  padding: 0.5rem 0;
+  font: inherit;
+  color: var(--sira-texte);
+  background: transparent;
+  border: 0;
+  outline: none;
+}
+.sira-tableau__filtre {
+  min-width: 11rem;
+}
+.sira-tableau__filtre .p-select {
+  width: 100%;
+  border-radius: var(--sira-rayon);
+}
+.sira-tableau__effacer {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sira-esp-1);
+  min-height: 2.5rem;
+  padding: 0 var(--sira-esp-3);
+  font: inherit;
+  font-weight: 600;
+  color: var(--sira-action);
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+  border-radius: var(--sira-rayon);
+}
+.sira-tableau__effacer:hover {
+  background: var(--sira-theme-teinte);
+}
+.sira-tableau__effacer .sira-icone {
+  width: 1rem;
+  height: 1rem;
+}
+.sira-tableau__compte {
+  margin: 0 0 0 auto;
+  font-size: var(--sira-texte-xs);
+  font-weight: 600;
+  color: var(--sira-texte-secondaire);
+}
+sira-tableau .p-datatable-header {
+  padding: var(--sira-esp-3) var(--sira-esp-4) 0;
+  background: transparent;
+  border: 0;
+}
+.sira-tableau__legende {
+  font-weight: 750;
+  color: var(--sira-texte-fort);
+}
+sira-tableau .p-datatable-table-container {
+  overflow-x: auto;
+}
+.sira-tableau__vide {
+  padding: var(--sira-esp-6) var(--sira-esp-4);
+  text-align: center;
+  color: var(--sira-texte-secondaire);
+}
+sira-tableau .p-paginator {
+  justify-content: flex-end;
+  padding: var(--sira-esp-2) var(--sira-esp-4);
+  background: transparent;
+  border-top: 1px solid var(--sira-bordure);
+  border-radius: 0;
+}
+sira-tableau .p-paginator-page,
+sira-tableau .p-paginator-first,
+sira-tableau .p-paginator-prev,
+sira-tableau .p-paginator-next,
+sira-tableau .p-paginator-last {
+  border-radius: var(--sira-rayon);
+}
+
+/* ---------- PrimeNG : pas d'ombre, coins légers ---------- */
+
+.p-select-overlay,
+.p-dialog,
+.p-popover {
+  border: 1px solid var(--sira-bordure);
+  border-radius: var(--sira-rayon-carte);
+  box-shadow: none;
+}
+.p-tag,
+.p-message {
+  border-radius: var(--sira-rayon);
+}
+
+/* ---------- Chargement plein cadre ---------- */
+
+.sira-chargement {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: var(--sira-esp-4);
+  min-height: 100vh;
+  background: var(--sira-fond-page);
+}
+.sira-chargement__signe {
+  width: 9rem;
+  height: auto;
+}
+.sira-chargement__accent {
+  color: var(--sira-accent);
+}
+.sira-chargement__barre {
+  position: relative;
+  width: 8rem;
+  height: 4px;
+  overflow: hidden;
+  background: var(--sira-bleu-100);
+  border-radius: 2px;
+}
+.sira-chargement__barre::after {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 40%;
+  background: var(--sira-action);
+  border-radius: 2px;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .sira-chargement__barre::after {
+    animation: sira-chargement 1.1s ease-in-out infinite;
+  }
+}
+@keyframes sira-chargement {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(250%);
+  }
+}
+.sira-application--laterale:has(> sira-chargement) {
+  display: block;
+  padding: 0;
+}
+
+/* ---------- Libellés flottants (PrimeNG FloatLabel) ---------- */
+
+.sira-champ__flottant {
+  display: block;
+  width: 100%;
+  margin-bottom: var(--sira-esp-1);
+}
+.sira-champ__flottant .sira-saisie.p-inputtext {
+  min-height: 3.6rem;
+}
+/* Libellé gris dans le champ, qui remonte en petit et en bleu (0,75 rem, gras) comme sur globalstage. */
+.sira-champ__flottant label {
+  font-size: 1rem;
+  font-weight: 400;
+  color: var(--sira-texte-indice);
+}
+.sira-champ__flottant:has(.sira-saisie:focus) label,
+.sira-champ__flottant:has(.p-filled) label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--sira-action);
+}
+.sira-champ--erreur .sira-champ__flottant label {
+  color: var(--sira-erreur);
+}
+
+/* Un bouton posé sur un lien garde ses couleurs : la règle générale des liens (base.css), hors
+   couche, passerait sinon devant celles de PrimeNG. */
+a.sira-bouton.p-button,
+a.sira-bouton.p-button:hover {
+  text-decoration: none;
+}
+.sira-bouton.p-button:not(.p-button-outlined, .p-button-text),
+.sira-bouton.p-button:not(.p-button-outlined, .p-button-text):hover {
+  color: var(--sira-sur-action);
+}
+.sira-bouton.p-button-outlined,
+.sira-bouton.p-button-outlined:hover,
+.sira-bouton.p-button-text,
+.sira-bouton.p-button-text:hover {
+  color: var(--sira-action);
+}
+
+/* ===== interface.css ===== */
+/*
+ * Interface des applications (refonte du 18/11) : barre du haut et fenêtre « Mon compte »,
+ * tableaux façon PrimeNG (titre, recherche, bouton à droite, tri, colonne Actions à icônes),
+ * champs de taille raisonnable, formulaires dans une fenêtre, indicateurs chiffrés à icône,
+ * étapes sur le Stepper de PrimeNG, fiches de détail qui expliquent chaque information.
+ * Ni dégradé ni ombre.
+ */
+
+/* ---------- Disposition : la barre du haut au-dessus de la page ---------- */
+
+@media (min-width: 64rem) {
+  .sira-application--laterale {
+    grid-template-rows: none;
+    align-content: start;
+  }
+  .sira-application--laterale > sira-entete {
+    grid-row: span 3;
+  }
+  .sira-application--laterale > sira-barre-haute {
+    grid-column: 2;
+  }
+}
+/* Le compte et la déconnexion sont dans la barre du haut, plus dans le menu latéral. */
+.sira-entete--laterale .sira-entete__outils {
+  display: none !important;
+}
+
+/* ---------- Barre du haut ---------- */
+
+.sira-barre-haute {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sira-esp-4);
+  min-height: 4rem;
+  padding: var(--sira-esp-2) var(--sira-esp-3) var(--sira-esp-2) var(--sira-esp-6);
+  background: var(--sira-fond);
+  border-radius: var(--sira-rayon-cadre);
+}
+.sira-barre-haute__gauche {
+  min-width: 0;
+  color: var(--sira-texte-secondaire);
+}
+.sira-barre-haute__compte {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sira-esp-3);
+  margin-left: auto;
+  padding: 0.35rem 0.6rem 0.35rem 1rem;
+  font: inherit;
+  color: var(--sira-texte);
+  cursor: pointer;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  transition:
+    background-color 0.15s,
+    border-color 0.15s;
+}
+.sira-barre-haute__compte:hover,
+.sira-barre-haute__compte[aria-expanded='true'] {
+  background: var(--sira-fond-champ);
+  border-color: var(--sira-bordure);
+}
+.sira-barre-haute__textes {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  line-height: 1.2;
+}
+.sira-barre-haute__nom {
+  font-weight: 700;
+  color: var(--sira-texte-fort);
+}
+.sira-barre-haute__service {
+  font-size: var(--sira-texte-xs);
+  color: var(--sira-texte-secondaire);
+}
+.sira-barre-haute__avatar,
+.sira-fenetre-compte__avatar {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 2.5rem;
+  height: 2.5rem;
+  font-size: 0.875rem;
+  font-weight: 800;
+  color: var(--sira-blanc);
+  background: var(--sira-action);
+  border-radius: 50%;
+}
+.sira-barre-haute__fleche {
+  width: 1rem;
+  height: 1rem;
+  color: var(--sira-texte-secondaire);
+}
+@media (max-width: 39.99rem) {
+  .sira-barre-haute__textes {
+    display: none;
+  }
+}
+
+/* ---------- Fenêtre « Mon compte » ---------- */
+
+.sira-fenetre-compte .p-tablist-tab-list {
+  background: transparent;
+}
+.sira-fenetre-compte .p-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sira-esp-2);
+  font-weight: 700;
+}
+.sira-fenetre-compte .p-tab .sira-icone {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+.sira-fenetre-compte .p-tabpanels {
+  padding: var(--sira-esp-6) 0 0;
+}
+.sira-fenetre-compte__identite {
+  display: flex;
+  align-items: center;
+  gap: var(--sira-esp-4);
+  margin-bottom: var(--sira-esp-4);
+}
+.sira-fenetre-compte__avatar {
+  width: 3.5rem;
+  height: 3.5rem;
+  font-size: 1.1rem;
+}
+.sira-fenetre-compte__nom {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--sira-texte-fort);
+}
+.sira-fenetre-compte__service,
+.sira-fenetre-compte__aide {
+  margin: 0;
+  font-size: var(--sira-texte-xs);
+  line-height: 1.5;
+  color: var(--sira-texte-secondaire);
+}
+.sira-fenetre-compte__rubrique {
+  margin: var(--sira-esp-4) 0 var(--sira-esp-2);
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--sira-gris-400);
+}
+.sira-fenetre-compte__roles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sira-esp-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.sira-fenetre-compte__roles li {
+  padding: 0.25rem 0.75rem;
+  font-size: var(--sira-texte-xs);
+  font-weight: 700;
+  color: var(--sira-bleu-700);
+  background: var(--sira-bleu-50);
+  border-radius: 999px;
+}
+.sira-fenetre-compte__ligne {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--sira-esp-3);
+  padding: var(--sira-esp-3) 0;
+  border-top: 1px solid var(--sira-bordure);
+}
+.sira-fenetre-compte__titre {
+  margin: 0;
+  font-weight: 700;
+  color: var(--sira-texte-fort);
+}
+.sira-fenetre-compte__icone {
+  display: inline-grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  color: var(--sira-action);
+  background: var(--sira-bleu-50);
+  border-radius: 10px;
+}
+.sira-fenetre-compte__icone .sira-icone {
+  width: 1.2rem;
+  height: 1.2rem;
+}
+.sira-fenetre-compte__icone--grande {
+  width: 3.5rem;
+  height: 3.5rem;
+  color: var(--sira-erreur);
+  background: var(--sira-erreur-fond);
+}
+.sira-fenetre-compte__depart {
+  display: grid;
+  justify-items: center;
+  gap: var(--sira-esp-2);
+  padding: var(--sira-esp-2) 0;
+  text-align: center;
+}
+.sira-fenetre-compte__boutons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--sira-esp-2);
+  margin-top: var(--sira-esp-4);
+}
+
+/* ---------- Tableaux : en-tête, outils, tri, colonne Actions ---------- */
+
+sira-tableau .p-datatable-header {
+  padding: var(--sira-esp-4) var(--sira-esp-6);
+  background: var(--sira-fond);
+  border: 0;
+  border-bottom: 1px solid var(--sira-bordure);
+}
+.sira-tableau__entete {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sira-esp-3) var(--sira-esp-4);
+}
+.sira-tableau__titres {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sira-esp-3);
+}
+.sira-tableau__titre {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--sira-texte-fort);
+}
+.sira-tableau__titres .sira-tableau__compte {
+  margin: 0;
+  padding: 0.1rem 0.6rem;
+  font-size: var(--sira-texte-xs);
+  font-weight: 700;
+  color: var(--sira-texte-secondaire);
+  background: var(--sira-fond-champ);
+  border-radius: 999px;
+}
+sira-tableau .sira-tableau__outils {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--sira-esp-2);
+  margin-left: auto;
+  padding: 0;
+  border: 0;
+}
+sira-tableau .sira-tableau__recherche {
+  display: block;
+  flex: 0 1 17rem;
+  min-width: 12rem;
+  min-height: 0;
+  padding: 0;
+  background: none;
+  border: 0;
+}
+sira-tableau .sira-tableau__recherche input.p-inputtext {
+  width: 100%;
+  min-height: 2.6rem;
+  padding-block: 0.5rem;
+  font-size: 0.95rem;
+}
+sira-tableau .sira-tableau__recherche input:focus-visible,
+sira-tableau .p-select:focus-visible {
+  outline: none;
+}
+sira-tableau .sira-tableau__recherche .p-inputicon {
+  display: inline-flex;
+  margin-top: -0.55rem;
+  color: var(--sira-texte-indice);
+}
+sira-tableau .sira-tableau__recherche .p-inputicon .sira-icone {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+sira-tableau .sira-tableau__filtre {
+  flex: 0 0 11rem;
+  min-width: 0;
+}
+sira-tableau .sira-tableau__filtre .p-select {
+  width: 100%;
+  min-height: 2.6rem;
+}
+sira-tableau .sira-tableau__filtre .p-select-label {
+  padding-block: 0.5rem;
+  font-size: 0.95rem;
+}
+sira-tableau .sira-tableau__outils .sira-bouton.p-button {
+  min-height: 2.6rem;
+  padding-block: 0.45rem;
+}
+.sira-tableau thead th {
+  padding: var(--sira-esp-3) var(--sira-esp-4);
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--sira-texte-secondaire);
+  background: var(--sira-fond-alt);
+  border-bottom: 1px solid var(--sira-bordure);
+}
+.sira-tableau thead th:first-child,
+.sira-tableau td:first-child {
+  padding-left: var(--sira-esp-6);
+}
+.sira-tableau__tri {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sira-esp-2);
+  white-space: nowrap;
+}
+.sira-tableau .p-sortable-column-icon {
+  width: 0.8rem;
+  height: 0.8rem;
+  color: var(--sira-gris-400);
+}
+.sira-tableau th[aria-sort='ascending'] .p-sortable-column-icon,
+.sira-tableau th[aria-sort='descending'] .p-sortable-column-icon {
+  color: var(--sira-action);
+}
+.sira-tableau td {
+  padding: var(--sira-esp-3) var(--sira-esp-4);
+  vertical-align: middle;
+}
+.sira-tableau th.sira-tableau__actions,
+.sira-tableau td.sira-tableau__actions {
+  width: 1%;
+  padding-right: var(--sira-esp-6);
+  text-align: right;
+  white-space: nowrap;
+}
+.sira-tableau__boutons {
+  display: inline-flex;
+  justify-content: flex-end;
+  gap: var(--sira-esp-1);
+}
+/* Texte principal d'une ligne (nom) : gras, sans lien */
+.sira-tableau__principal {
+  font-weight: 700;
+  color: var(--sira-texte-fort);
+}
+.sira-tableau__secondaire {
+  display: block;
+  font-size: 0.82rem;
+  color: var(--sira-texte-secondaire);
+}
+
+/* ---------- Bouton d'action à icône seule ---------- */
+
+.sira-action {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  color: var(--sira-texte-secondaire);
+  text-decoration: none;
+  cursor: pointer;
+  background: var(--sira-fond);
+  border: 1px solid var(--sira-bordure);
+  border-radius: 50%;
+  transition:
+    color 0.15s,
+    background-color 0.15s,
+    border-color 0.15s;
+}
+.sira-action .sira-icone {
+  width: 1.05rem;
+  height: 1.05rem;
+}
+.sira-action:hover {
+  color: var(--sira-action);
+  background: var(--sira-bleu-50);
+  border-color: var(--sira-bleu-100);
+}
+.sira-action--danger:hover {
+  color: var(--sira-erreur);
+  background: var(--sira-erreur-fond);
+  border-color: #f6c9c6;
+}
+.sira-action--succes:hover {
+  color: var(--sira-succes);
+  background: var(--sira-succes-fond);
+  border-color: #bfe5cf;
+}
+.sira-action:focus-visible {
+  outline: 3px solid var(--sira-bleu-200);
+  outline-offset: 1px;
+}
+
+/* ---------- Champs : taille raisonnable, alignés ---------- */
+
+.sira-saisie.p-inputtext,
+.sira-champ__flottant .sira-saisie.p-inputtext {
+  min-height: 3.1rem;
+  font-size: 0.97rem;
+}
+.sira-champ__flottant textarea.sira-saisie.p-inputtext {
+  min-height: 6.5rem;
+}
+.sira-champ__aide {
+  margin-top: 0.3rem;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: var(--sira-texte-secondaire);
+}
+.sira-groupe {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.sira-groupe__legende {
+  margin-bottom: var(--sira-esp-2);
+  padding: 0;
+  font-size: 0.9rem;
+}
+.sira-choix {
+  padding: 0.7rem 1rem;
+  background: var(--sira-fond-champ);
+  border: 2px solid transparent;
+}
+.sira-choix:has(input:checked) {
+  background: var(--sira-bleu-50);
+  border-color: var(--sira-action);
+}
+
+/* ---------- Formulaire dans une fenêtre (PrimeNG Dialog) ---------- */
+
+.sira-fenetre-formulaire .p-dialog-header {
+  padding: var(--sira-esp-6) var(--sira-esp-6) var(--sira-esp-2);
+}
+.sira-fenetre-formulaire .p-dialog-title {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: var(--sira-titre-page);
+}
+.sira-fenetre-formulaire .p-dialog-content {
+  padding: var(--sira-esp-2) var(--sira-esp-6) var(--sira-esp-6);
+}
+.sira-fenetre-formulaire__intro {
+  margin: 0 0 var(--sira-esp-4);
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--sira-texte-secondaire);
+}
+.sira-grille-formulaire {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--sira-esp-4);
+}
+@media (min-width: 40rem) {
+  .sira-grille-formulaire {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .sira-grille-formulaire > .sira-pleine-largeur {
+    grid-column: 1 / -1;
+  }
+}
+.sira-grille-formulaire sira-champ,
+.sira-grille-formulaire .sira-champ {
+  margin: 0;
+}
+.sira-grille-formulaire .sira-saisie--courte.p-inputtext {
+  max-width: none;
+}
+.sira-fenetre-formulaire__pied {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--sira-esp-2);
+  margin-top: var(--sira-esp-6);
+  padding-top: var(--sira-esp-4);
+  border-top: 1px solid var(--sira-bordure);
+}
+
+/* Liste de valeurs saisies une à une (adresses) */
+.sira-liste-saisie {
+  display: grid;
+  gap: var(--sira-esp-2);
+}
+.sira-liste-saisie__titre {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--sira-texte-fort);
+}
+.sira-liste-saisie__ligne {
+  display: flex;
+  align-items: center;
+  gap: var(--sira-esp-2);
+}
+.sira-liste-saisie__ligne .p-inputtext {
+  flex: 1;
+  min-height: 2.75rem;
+}
+.sira-liste-saisie__vide {
+  margin: 0;
+  padding: var(--sira-esp-3) var(--sira-esp-4);
+  font-size: 0.88rem;
+  color: var(--sira-texte-secondaire);
+  background: var(--sira-fond-champ);
+  border-radius: var(--sira-rayon);
+}
+
+/* ---------- Indicateurs chiffrés (tableaux de bord) ---------- */
+
+.sira-indicateurs {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  gap: var(--sira-esp-4);
+}
+.sira-indicateurs--2 {
+  grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr));
+}
+.sira-indicateur {
+  display: block;
+}
+.sira-indicateur__cadre {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sira-esp-4);
+  height: 100%;
+  padding: var(--sira-esp-6);
+  color: var(--sira-texte);
+  text-decoration: none;
+  background: var(--sira-fond);
+  border: 1px solid var(--sira-bordure);
+  border-radius: var(--sira-rayon-carte);
+  transition: border-color 0.15s;
+}
+a.sira-indicateur__cadre:hover {
+  color: var(--sira-texte);
+  text-decoration: none;
+  border-color: var(--sira-bleu-200);
+}
+.sira-indicateur__icone {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 12px;
+}
+.sira-indicateur__icone .sira-icone {
+  width: 1.4rem;
+  height: 1.4rem;
+}
+.sira-indicateur__textes {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+.sira-indicateur__libelle {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--sira-texte-secondaire);
+}
+.sira-indicateur__valeur {
+  font-size: 2.1rem;
+  font-weight: 800;
+  line-height: 1.1;
+  color: var(--sira-texte-fort);
+}
+.sira-indicateur__note {
+  font-size: 0.82rem;
+  line-height: 1.4;
+  color: var(--sira-texte-secondaire);
+}
+.sira-indicateur__fleche {
+  position: absolute;
+  top: var(--sira-esp-4);
+  right: var(--sira-esp-4);
+  width: 1.1rem;
+  height: 1.1rem;
+  color: var(--sira-gris-400);
+}
+.sira-indicateur--bleu .sira-indicateur__icone {
+  color: #1a96cc;
+  background: #e3f4fc;
+}
+.sira-indicateur--vert .sira-indicateur__icone {
+  color: #15803d;
+  background: #e3f6ea;
+}
+.sira-indicateur--orange .sira-indicateur__icone {
+  color: #c2410c;
+  background: #fff0e3;
+}
+.sira-indicateur--rouge .sira-indicateur__icone {
+  color: #c4302b;
+  background: #fdeceb;
+}
+.sira-indicateur--violet .sira-indicateur__icone {
+  color: #6d28d9;
+  background: #f0eafd;
+}
+.sira-indicateur--gris .sira-indicateur__icone {
+  color: var(--sira-gris-700);
+  background: var(--sira-gris-50);
+}
+
+/* ---------- Étapes d'un parcours (PrimeNG Stepper horizontal) ---------- */
+
+.sira-etapes {
+  margin-bottom: var(--sira-esp-8);
+  padding: var(--sira-esp-4) var(--sira-esp-6);
+  background: var(--sira-fond);
+  border: 1px solid var(--sira-bordure);
+  border-radius: var(--sira-rayon-carte);
+}
+.sira-etapes__stepper .p-steplist {
+  padding: 0;
+}
+.sira-etapes__stepper .p-step-header {
+  gap: var(--sira-esp-3);
+  cursor: default;
+  opacity: 1;
+}
+.sira-etapes__stepper .p-step-number {
+  width: 2.25rem;
+  height: 2.25rem;
+  font-weight: 800;
+  color: var(--sira-texte-secondaire);
+  background: var(--sira-fond);
+  border: 2px solid var(--sira-bordure-champ);
+  box-shadow: none;
+}
+.sira-etapes__stepper .p-step-title {
+  font-weight: 700;
+  color: var(--sira-texte-secondaire);
+}
+.sira-etapes__stepper .p-step-active .p-step-number {
+  color: var(--sira-blanc);
+  background: var(--sira-action);
+  border-color: var(--sira-action);
+}
+.sira-etapes__stepper .p-step-active .p-step-title {
+  color: var(--sira-texte-fort);
+}
+.sira-etapes__stepper .sira-etapes__etape--faite .p-step-number {
+  font-size: 0;
+  color: transparent;
+  background: var(--sira-succes)
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E")
+    center / 1rem no-repeat;
+  border-color: var(--sira-succes);
+}
+.sira-etapes__stepper .sira-etapes__etape--faite .p-step-title {
+  color: var(--sira-texte-fort);
+}
+.sira-etapes__stepper .sira-etapes__etape--faite .p-stepper-separator {
+  background: var(--sira-succes);
+}
+.sira-etapes .sira-etapes__position {
+  margin: var(--sira-esp-3) 0 0;
+  padding-top: var(--sira-esp-3);
+  font-size: 0.9rem;
+  border-top: 1px solid var(--sira-bordure);
+}
+@media (max-width: 47.99rem) {
+  .sira-etapes__stepper .p-step-title {
+    display: none;
+  }
+}
+
+/* ---------- Sections du tableau de bord ---------- */
+
+.co-section__entete {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sira-esp-2) var(--sira-esp-4);
+}
+.co-registre {
+  display: grid;
+  align-content: start;
+  gap: var(--sira-esp-3);
+  padding: var(--sira-esp-6);
+  background: var(--sira-fond);
+  border: 1px solid var(--sira-bordure);
+  border-radius: var(--sira-rayon-carte);
+}
+.co-registre__entete {
+  display: flex;
+  align-items: center;
+  gap: var(--sira-esp-3);
+}
+.co-registre__icone {
+  width: 2.5rem;
+  height: 2.5rem;
+  color: #1a96cc;
+  background: #e3f4fc;
+}
+.co-registre__nom {
+  flex: 1;
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+/* ---------- Fiche de détail : chaque information avec ce qu'elle veut dire ---------- */
+
+.sira-fiche {
+  display: grid;
+  gap: var(--sira-esp-6);
+}
+.sira-fiche__grille {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
+  gap: var(--sira-esp-4);
+}
+.sira-fiche__case {
+  display: grid;
+  align-content: start;
+  gap: 0.35rem;
+  padding: var(--sira-esp-4) var(--sira-esp-6);
+  background: var(--sira-fond);
+  border: 1px solid var(--sira-bordure);
+  border-radius: var(--sira-rayon-carte);
+}
+.sira-fiche__case--large {
+  grid-column: 1 / -1;
+}
+.sira-fiche__cle {
+  display: flex;
+  align-items: center;
+  gap: var(--sira-esp-2);
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--sira-texte-secondaire);
+}
+.sira-fiche__cle .sira-icone {
+  width: 1rem;
+  height: 1rem;
+  color: var(--sira-action);
+}
+.sira-fiche__valeur {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--sira-texte-fort);
+  overflow-wrap: anywhere;
+}
+.sira-fiche__explication {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--sira-texte-secondaire);
+}
+.sira-fiche__liste {
+  display: grid;
+  gap: 0.3rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.sira-fiche__liste li {
+  padding: 0.35rem 0.7rem;
+  font-family: var(--sira-police-mono);
+  font-size: 0.85rem;
+  background: var(--sira-fond-champ);
+  border-radius: 8px;
+}
+
+/* ---------- Console : rôles d'un membre ---------- */
+
+.co-choix-roles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  gap: var(--sira-esp-3);
+}
+.co-choix-roles .sira-choix {
+  align-items: flex-start;
+  height: 100%;
+  margin: 0;
+}
+.co-choix-roles .sira-choix input {
+  margin-top: 0.2rem;
+}
+.co-choix-roles__aide {
+  display: block;
+  margin-top: 0.2rem;
+  font-size: 0.82rem;
+  font-weight: 400;
+  line-height: 1.45;
+  color: var(--sira-texte-secondaire);
+}
+.co-roles {
+  display: grid;
+  gap: var(--sira-esp-2);
+  margin: 0.2rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+.co-roles li {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sira-esp-2);
+  padding: var(--sira-esp-3) var(--sira-esp-4);
+  font-size: 0.92rem;
+  line-height: 1.5;
+  color: var(--sira-texte-secondaire);
+  background: var(--sira-fond-champ);
+  border-radius: var(--sira-rayon);
+}
+.co-roles li .sira-icone {
+  flex: none;
+  width: 1.15rem;
+  height: 1.15rem;
+  margin-top: 0.15rem;
+  color: var(--sira-gris-400);
+}
+.co-roles li.co-roles--actif {
+  color: var(--sira-texte);
+  background: var(--sira-bleu-50);
+}
+.co-roles li.co-roles--actif .sira-icone {
+  color: var(--sira-succes);
+}
+.co-decision {
+  margin-top: var(--sira-esp-3);
+  padding-top: var(--sira-esp-4);
+  border-top: 1px solid var(--sira-bordure);
+}
+.co-decision h2 {
+  margin: 0 0 var(--sira-esp-3);
+  font-size: 1rem;
+}
+.sira-titre-page .sira-fiche__actions {
+  align-self: center;
+}
+
+/* ---------- Fenêtres PrimeNG : même titre partout ---------- */
+
+.p-dialog .p-dialog-title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--sira-titre-page);
+}
+
+/* En-tête de tableau : outils sur une ligne tant que la place le permet */
+@media (min-width: 64rem) {
+  .sira-tableau__entete {
+    flex-wrap: nowrap;
+  }
+  .sira-tableau__titres {
+    flex: none;
+  }
+  sira-tableau .sira-tableau__outils {
+    flex-wrap: nowrap;
+  }
+  sira-tableau .sira-tableau__recherche {
+    flex: 0 1 15rem;
+    min-width: 9rem;
+  }
+  sira-tableau .sira-tableau__filtre {
+    flex: 0 1 10rem;
+  }
+}
+sira-tableau .sira-tableau__outils .sira-bouton.p-button {
+  white-space: nowrap;
+}
+
+.co-select.p-select {
+  width: 100%;
+  min-height: 3.1rem;
+}
+.co-select .p-select-label {
+  padding-top: 1.45rem;
+  padding-bottom: 0.45rem;
+}
+.co-groupe-choix {
+  margin: var(--sira-esp-3) 0 var(--sira-esp-2);
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--sira-texte-secondaire);
+}
+
+/* Largeurs des fenêtres (classes plutôt que style en ligne : politique de contenu) */
+.p-dialog.sira-fenetre-compte {
+  width: min(34rem, calc(100vw - 2rem));
+}
+.p-dialog.sira-fenetre-formulaire {
+  width: min(44rem, calc(100vw - 2rem));
+}
+.p-dialog.sira-fenetre-formulaire--large {
+  width: min(60rem, calc(100vw - 2rem));
+}
+
+/* Disposition : la page prend la place libre, la barre du haut garde sa hauteur */
+@media (min-width: 64rem) {
+  .sira-application--laterale {
+    grid-template-rows: auto 1fr auto;
+  }
+  .sira-application--laterale:has(> demo-bandeau, > sira-bandeau) {
+    grid-template-rows: auto auto 1fr auto;
+  }
+}
+.sira-application--laterale > sira-barre-haute {
+  align-self: start;
+}
+
+/* Filtres PrimeNG posés dans l'en-tête d'un tableau */
+sira-tableau p-select.sira-tableau__filtre {
+  flex: 0 0 12.5rem;
+  min-height: 2.6rem;
+}
+sira-tableau p-select.sira-tableau__filtre .p-select-label {
+  padding-block: 0.5rem;
+  font-size: 0.95rem;
+}
+/* Les champs PrimeNG montrent déjà le focus par leur bordure bleue : pas d'anneau en plus. */
+.p-select :focus-visible,
+.p-select-label:focus-visible,
+.p-inputtext:focus-visible,
+.p-checkbox-input:focus-visible,
+.p-radiobutton-input:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
+/* Journal : bloc « Intégrité » en carte */
+.co-integrite {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sira-esp-3) var(--sira-esp-6);
+  margin-bottom: var(--sira-esp-6);
+  padding: var(--sira-esp-4) var(--sira-esp-6);
+  background: var(--sira-fond);
+  border: 1px solid var(--sira-bordure);
+  border-radius: var(--sira-rayon-carte);
+}
+.co-integrite > div[aria-live] {
+  flex-basis: 100%;
+  margin: 0;
+}
+.co-integrite > div[aria-live]:empty {
+  display: none;
+}
+.co-integrite h2 {
+  margin: 0 0 0.2rem;
+  font-size: 1.05rem;
+}
+.co-integrite p {
+  margin: 0;
+}
+
+/* ===== ajustements.css ===== */
+/*
+ * Ajustements du 18/11 (retours de l'utilisateur) : plus sobre et plus compact.
+ * Barre du haut fine, menu latéral repliable, pas de grand cadre autour des pages, titres et
+ * boutons plus petits, champs à la taille de la page de connexion, focus discret, cases à cocher
+ * à coche blanche, astérisque rouge des champs obligatoires, exemple sur sa propre ligne.
+ * Cette feuille passe après les autres : elle les corrige sans les réécrire.
+ */
+
+:root {
+  --sira-titre-l: 1.6rem;
+}
+@media (min-width: 40rem) {
+  :root {
+    --sira-titre-l: 1.75rem;
+  }
+}
+
+/* ---------- Disposition : menu latéral repliable, page sans cadre ---------- */
+
+.sira-application--laterale {
+  gap: var(--sira-esp-3);
+  padding: var(--sira-esp-3);
+}
+@media (min-width: 64rem) {
+  .sira-application--laterale {
+    grid-template-columns: 15rem minmax(0, 1fr);
+    grid-template-rows: auto 1fr;
+    padding: var(--sira-esp-3);
+  }
+  .sira-application--laterale:has(> demo-bandeau, > sira-bandeau) {
+    grid-template-rows: auto auto 1fr;
+  }
+  .sira-application--laterale:has(.sira-entete--replie) {
+    grid-template-columns: 4.5rem minmax(0, 1fr);
+  }
+  .sira-application--laterale > sira-entete {
+    grid-row: span 2;
+  }
+  .sira-entete--laterale {
+    top: var(--sira-esp-3);
+    height: calc(100vh - 2 * var(--sira-esp-3));
+  }
+  .sira-entete--laterale .sira-entete__barre {
+    gap: var(--sira-esp-4);
+    padding: var(--sira-esp-4) var(--sira-esp-3);
+  }
+  .sira-entete--laterale .sira-entete__menu a {
+    min-height: 2.6rem;
+    padding: 0 var(--sira-esp-3);
+    font-size: 0.95rem;
+  }
+  .sira-entete--laterale .sira-entete__menu a[aria-current='page']::before {
+    left: calc(-1 * var(--sira-esp-3));
+  }
+  /* Replié : icônes seules, le nom de la page au survol */
+  .sira-entete--replie .sira-entete__textes,
+  .sira-entete--replie .sira-entete__rubrique,
+  .sira-entete--replie .sira-entete__menu a span {
+    display: none !important;
+  }
+  .sira-entete--replie .sira-entete__marque {
+    justify-content: center;
+    padding: 0;
+  }
+  .sira-entete--replie .sira-entete__signe--logo {
+    height: 1.9rem;
+  }
+  .sira-entete--replie .sira-entete__menu a {
+    justify-content: center;
+    padding: 0;
+  }
+}
+.sira-application--laterale > .sira-page,
+.sira-application--laterale > .sira-page.sira-conteneur {
+  padding: var(--sira-esp-3) var(--sira-esp-2) var(--sira-esp-8);
+  background: transparent;
+  border-radius: 0;
+}
+@media (min-width: 64rem) {
+  .sira-application--laterale > .sira-page {
+    padding: var(--sira-esp-3) var(--sira-esp-2) var(--sira-esp-8);
+  }
+}
+
+/* ---------- Barre du haut : fine, menu du compte en dessous ---------- */
+
+.sira-barre-haute {
+  position: relative;
+  z-index: 20;
+  min-height: 3.25rem;
+  padding: 0.35rem 0.5rem;
+  gap: var(--sira-esp-3);
+}
+.sira-barre-haute__menu.sira-action {
+  border-color: transparent;
+}
+.sira-barre-haute__gauche {
+  flex: 1;
+}
+.sira-barre-haute__droite {
+  position: relative;
+}
+.sira-barre-haute__compte {
+  padding: 0.2rem 0.4rem 0.2rem 0.8rem;
+  gap: var(--sira-esp-2);
+}
+.sira-barre-haute__avatar {
+  width: 2.1rem;
+  height: 2.1rem;
+  font-size: 0.8rem;
+}
+.sira-barre-haute__nom {
+  font-size: 0.92rem;
+}
+.sira-barre-haute__panneau {
+  position: absolute;
+  top: calc(100% + 0.4rem);
+  right: 0;
+  display: grid;
+  min-width: 13rem;
+  padding: 0.35rem;
+  background: var(--sira-fond);
+  border: 1px solid var(--sira-bordure);
+  border-radius: 10px;
+}
+.sira-barre-haute__choix {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  font: inherit;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--sira-texte);
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+  border-radius: 8px;
+}
+.sira-barre-haute__choix .sira-icone {
+  width: 1.05rem;
+  height: 1.05rem;
+  color: var(--sira-texte-secondaire);
+}
+.sira-barre-haute__choix:hover {
+  color: var(--sira-action);
+  text-decoration: none;
+  background: var(--sira-bleu-50);
+}
+.sira-barre-haute__choix:hover .sira-icone {
+  color: var(--sira-action);
+}
+.sira-barre-haute__choix--sortie:hover,
+.sira-barre-haute__choix--sortie:hover .sira-icone {
+  color: var(--sira-erreur);
+  background: var(--sira-erreur-fond);
+}
+
+/* ---------- Titres de page ---------- */
+
+.sira-titre-page {
+  align-items: center;
+  margin-bottom: var(--sira-esp-4);
+}
+.sira-titre-page h1 {
+  font-size: var(--sira-titre-l);
+}
+.sira-titre-page p {
+  margin-top: 0.15rem;
+  font-size: 0.92rem;
+}
+/* Nombre d'éléments sous le titre : « 7 membres » */
+.sira-titre-page .sira-compte {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--sira-texte-secondaire);
+}
+
+/* ---------- Boutons : plus petits ---------- */
+
+.sira-bouton.p-button {
+  min-height: 2.5rem;
+  padding: 0.5rem 1.1rem;
+  font-size: 0.92rem;
+  border-radius: 10px;
+}
+.sira-bouton.p-button .sira-icone {
+  width: 1rem;
+  height: 1rem;
+}
+.sira-fiche__actions,
+.sira-fenetre-formulaire__pied,
+.sira-groupe-boutons {
+  gap: var(--sira-esp-2);
+}
+/* Fenêtres : bouton secondaire (Annuler, Étape précédente) tout à gauche, principal tout à
+   droite, sur la même ligne. */
+.sira-fenetre-formulaire__pied,
+.sira-dialogue .sira-groupe-boutons {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  justify-content: flex-end;
+}
+.sira-fenetre-formulaire__pied > .sira-bouton--secondaire,
+.sira-dialogue .sira-groupe-boutons > .sira-bouton--secondaire {
+  order: -1;
+  margin-right: auto;
+}
+
+/* ---------- Champs : taille de la page de connexion, focus discret ---------- */
+
+.sira-saisie.p-inputtext,
+.sira-champ__flottant .sira-saisie.p-inputtext,
+.co-select.p-select {
+  min-height: 3rem;
+  font-size: 0.95rem;
+  border-width: 1px;
+}
+.sira-saisie.p-inputtext:enabled:focus,
+.p-inputtext:enabled:focus,
+.p-select.p-focus {
+  border-color: var(--sira-action);
+  border-width: 1px;
+  box-shadow: none;
+  outline: none;
+}
+.p-floatlabel-in .p-inputtext {
+  padding-top: 1.3rem;
+  padding-bottom: 0.35rem;
+}
+/* Zone de texte : le libellé reste en haut, pas au milieu */
+.sira-champ__flottant:has(textarea) label {
+  top: 0.9rem;
+  transform: none;
+}
+.sira-champ__flottant:has(textarea:focus) label,
+.sira-champ__flottant:has(textarea.p-filled) label {
+  top: 0.35rem;
+}
+.sira-champ__flottant textarea.sira-saisie.p-inputtext {
+  padding-top: 1.5rem;
+}
+.sira-champ--erreur {
+  padding-left: 0;
+  border-left: 0;
+}
+.sira-champ--erreur .sira-saisie.p-inputtext {
+  border-color: var(--sira-erreur);
+}
+.sira-champ__erreur {
+  margin: 0.3rem 0 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+.sira-champ__requis {
+  margin-left: 0.15rem;
+  font-weight: 800;
+  color: var(--sira-erreur);
+}
+.sira-champ__flottant label .sira-champ__requis {
+  color: var(--sira-erreur);
+}
+.sira-champ__exemple {
+  display: block;
+  color: var(--sira-texte-secondaire);
+  font-style: italic;
+}
+
+/* ---------- Cases à cocher et boutons radio : coche blanche ---------- */
+
+.sira-choix input[type='checkbox'],
+.sira-choix input[type='radio'],
+input.sira-case {
+  flex: none;
+  appearance: none;
+  width: 1.15rem;
+  height: 1.15rem;
+  margin: 0.15rem 0 0;
+  cursor: pointer;
+  background: var(--sira-fond) center / 0.8rem no-repeat;
+  border: 1.5px solid var(--sira-gris-400);
+  border-radius: 4px;
+}
+.sira-choix input[type='radio'] {
+  border-radius: 50%;
+}
+.sira-choix input[type='checkbox']:checked,
+input.sira-case:checked {
+  background-color: var(--sira-action);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E");
+  border-color: var(--sira-action);
+}
+.sira-choix input[type='radio']:checked {
+  background: var(--sira-action);
+  border-color: var(--sira-action);
+  box-shadow: inset 0 0 0 3px var(--sira-fond);
+}
+.sira-choix input:focus-visible {
+  outline: 2px solid var(--sira-bleu-200);
+  outline-offset: 2px;
+  box-shadow: none;
+}
+
+/* ---------- Tableaux : une seule ligne d'outils ---------- */
+
+sira-tableau .p-datatable-header {
+  padding: var(--sira-esp-3) var(--sira-esp-4);
+}
+.sira-tableau__entete {
+  display: block;
+}
+sira-tableau .sira-tableau__outils {
+  justify-content: flex-start;
+  width: 100%;
+  margin: 0;
+}
+.sira-tableau__espace {
+  flex: 1;
+}
+.sira-tableau thead th:first-child,
+.sira-tableau td:first-child {
+  padding-left: var(--sira-esp-4);
+}
+.sira-tableau th.sira-tableau__actions,
+.sira-tableau td.sira-tableau__actions {
+  padding-right: var(--sira-esp-4);
+}
+.sira-tableau__vide {
+  padding: var(--sira-esp-8) var(--sira-esp-4) !important;
+  text-align: center;
+  color: var(--sira-texte-secondaire);
+}
+sira-tableau .p-paginator {
+  justify-content: flex-end;
+  padding: var(--sira-esp-2) var(--sira-esp-4);
+}
+.sira-action {
+  width: 2rem;
+  height: 2rem;
+}
+.sira-action .sira-icone {
+  width: 0.95rem;
+  height: 0.95rem;
+}
+
+/* ---------- Fiches de détail ---------- */
+
+.sira-fiche__case {
+  padding: var(--sira-esp-3) var(--sira-esp-4);
+}
+.sira-fiche__grille {
+  gap: var(--sira-esp-3);
+}
+.sira-fiche__valeur {
+  font-size: 1rem;
+}
+
+/* ---------- Indicateurs : plus compacts ---------- */
+
+.sira-indicateur__cadre {
+  padding: var(--sira-esp-4);
+}
+.sira-indicateur__icone {
+  width: 2.6rem;
+  height: 2.6rem;
+}
+.sira-indicateur__valeur {
+  font-size: 1.75rem;
+}
+
+/* ---------- Page « Mon profil » ---------- */
+
+.sira-profil {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--sira-esp-4);
+}
+@media (min-width: 64rem) {
+  .sira-profil {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+    align-items: start;
+  }
+}
+.sira-profil__carte {
+  display: grid;
+  gap: var(--sira-esp-3);
+  padding: var(--sira-esp-6);
+  background: var(--sira-fond);
+  border: 1px solid var(--sira-bordure);
+  border-radius: var(--sira-rayon-carte);
+}
+.sira-profil__identite {
+  display: flex;
+  align-items: center;
+  gap: var(--sira-esp-4);
+}
+.sira-profil__avatar {
+  display: inline-grid;
+  place-items: center;
+  width: 3.5rem;
+  height: 3.5rem;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--sira-blanc);
+  background: var(--sira-action);
+  border-radius: 50%;
+}
+.sira-profil__nom {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--sira-texte-fort);
+}
+.sira-profil__titre {
+  margin: 0;
+  font-size: 1.05rem;
+}
+.sira-profil__ligne,
+.sira-profil__note {
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--sira-texte-secondaire);
+}
+.sira-profil__infos {
+  display: grid;
+  gap: var(--sira-esp-3);
+  margin: 0;
+}
+.sira-profil__infos dt {
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--sira-texte-secondaire);
+}
+.sira-profil__infos dd {
+  margin: 0.15rem 0 0;
+  font-weight: 700;
+  color: var(--sira-texte-fort);
+}
+.sira-profil__roles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sira-esp-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.sira-profil__roles li {
+  padding: 0.25rem 0.7rem;
+  font-size: 0.82rem;
+  color: var(--sira-bleu-700);
+  background: var(--sira-bleu-50);
+  border-radius: 999px;
+}
+.sira-profil__action {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--sira-esp-3);
+  padding-top: var(--sira-esp-3);
+  border-top: 1px solid var(--sira-bordure);
+}
+.sira-profil__action-titre {
+  margin: 0;
+  font-weight: 700;
+  color: var(--sira-texte-fort);
+}
+.sira-profil__icone {
+  display: inline-grid;
+  place-items: center;
+  width: 2.4rem;
+  height: 2.4rem;
+  color: var(--sira-action);
+  background: var(--sira-bleu-50);
+  border-radius: 10px;
+}
+.sira-profil__icone--sortie {
+  color: var(--sira-erreur);
+  background: var(--sira-erreur-fond);
+}
+
+/* Chargement des tableaux : lignes grises au premier chargement, lignes pâlies ensuite
+   (changement de page, recherche) le temps que le serveur réponde. */
+.sira-tableau__squelette td {
+  padding-block: 0.95rem;
+}
+.sira-tableau--recharge .p-datatable-tbody {
+  opacity: 0.45;
+  transition: opacity 0.15s;
+}
+
+/* Barres de défilement fines et discrètes, partout. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #cdd6e0 transparent;
+}
+*:hover {
+  scrollbar-color: #aebbc9 transparent;
+}
+
+/* Bouton pendant une opération : la roue prend la place de l'icône, la taille ne bouge pas. */
+@keyframes sira-tourne {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.sira-bouton--en-cours {
+  cursor: progress;
+  opacity: 0.85;
+}
+.sira-bouton--en-cours sira-icone:first-of-type {
+  position: relative;
+}
+.sira-bouton--en-cours sira-icone:first-of-type svg {
+  visibility: hidden;
+}
+.sira-bouton--en-cours sira-icone:first-of-type::after,
+.sira-bouton--en-cours:not(:has(sira-icone))::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 1em;
+  height: 1em;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: sira-tourne 0.7s linear infinite;
+}
+.sira-bouton--en-cours:not(:has(sira-icone)) {
+  position: relative;
+  color: transparent !important;
+}
+.sira-bouton--en-cours:not(:has(sira-icone))::after {
+  border-color: #fff;
+  border-right-color: transparent;
+}
+.sira-bouton--en-cours.sira-bouton--secondaire:not(:has(sira-icone))::after {
+  border-color: var(--sira-action);
+  border-right-color: transparent;
+}
+
+/* Listes à choix multiples : toute la largeur du champ, comme les autres listes. */
+.co-multiselect,
+.sira-champ p-multiselect,
+.sira-champ .p-multiselect {
+  display: flex;
+  width: 100%;
+}
+.sira-champ .p-multiselect {
+  min-height: 3.1rem;
+  font-size: 0.95rem;
+}
+.sira-champ .p-multiselect-label {
+  padding-top: 1.45rem;
+  padding-bottom: 0.45rem;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+/* Texte sélectionné : toujours lisible, sur fond clair comme sur fond foncé. */
+::selection {
+  color: #fff;
+  background: #1a96cc;
+}
+html,
+body {
+  overflow-x: clip;
+}
+
+/* Listes déroulantes natives : une flèche à droite, pour qu'on voie que c'est une liste. */
+select.sira-saisie,
+select.p-inputtext,
+.sira-champ select {
+  appearance: none;
+  padding-right: 2.75rem;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%2350606c' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  background-size: 1.1rem;
+}
+select.sira-saisie:focus,
+.sira-champ select:focus {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%2325aae2' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+}
+
+/* ===== vitrine.css ===== */
+/* ---------- Pages d'accueil publiques (« vitrine ») ----------
+   Composition : barre foncée avec menu en pilule, bandeau d'accueil foncé (titre, actions,
+   chiffres, téléphone), rangée photo + services, section « à propos », chiffres soulignés,
+   cartes. Bleu Sira en action, moutarde du logo en accent. Aucun dégradé, aucune ombre. */
+
+:root {
+  --sv-nuit: #0c2433;
+  --sv-nuit-2: #14364a;
+  --sv-nuit-trait: #24506a;
+  --sv-texte-clair: #c9dbe6;
+  --sv-fond: #f6f8fa;
+  --sv-rayon: 18px;
+}
+
+.sira-application--vitrine {
+  display: block;
+  background: var(--sv-fond);
+}
+.sira-application--vitrine > main.sira-vitrine-page {
+  padding: 0;
+  max-width: none;
+}
+
+.sira-vitrine__largeur {
+  width: 100%;
+  max-width: 76rem;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+/* Barre */
+.sira-barre-vitrine {
+  display: block;
+  background: var(--sv-nuit);
+  color: #fff;
+}
+.sira-barre-vitrine__contenu {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  min-height: 5.5rem;
+}
+.sira-barre-vitrine__marque {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: #fff;
+  text-decoration: none;
+}
+.sira-barre-vitrine__marque img {
+  width: auto;
+  height: 2.6rem;
+}
+.sira-barre-vitrine__service {
+  padding-left: 0.75rem;
+  font-size: 0.85rem;
+  color: var(--sv-texte-clair);
+  border-left: 1px solid var(--sv-nuit-trait);
+}
+.sira-barre-vitrine__liens {
+  display: flex;
+  gap: 0.25rem;
+  margin: 0 auto;
+  padding: 0.35rem;
+  border: 1px solid var(--sv-nuit-trait);
+  border-radius: 999px;
+}
+.sira-barre-vitrine__lien {
+  padding: 0.55rem 1.1rem;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--sv-texte-clair);
+  text-decoration: none;
+  border-radius: 999px;
+}
+.sira-barre-vitrine__lien:hover,
+.sira-barre-vitrine__lien--actif {
+  color: #fff;
+  background: var(--sv-nuit-2);
+}
+.sira-barre-vitrine__action {
+  margin-left: auto;
+}
+
+/* Boutons en pilule de la vitrine */
+.sv-bouton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.8rem 1.4rem;
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #fff;
+  text-decoration: none;
+  cursor: pointer;
+  background: var(--sira-action);
+  border: 0;
+  border-radius: 999px;
+}
+.sv-bouton:hover {
+  background: var(--sira-action-survol);
+}
+.sv-bouton--clair {
+  color: var(--sv-nuit);
+  background: #fff;
+}
+.sv-bouton--clair:hover {
+  background: #e8f1f6;
+}
+.sv-bouton--sombre {
+  background: var(--sv-nuit);
+}
+.sv-bouton--sombre:hover {
+  background: var(--sv-nuit-2);
+}
+.sv-bouton .sira-icone {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+.sv-rond {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  color: var(--sv-nuit);
+  background: #fff;
+  border-radius: 50%;
+}
+.sv-lien-rond {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-weight: 700;
+  color: #fff;
+  text-decoration: none;
+}
+
+/* Étiquette au-dessus d'un titre */
+.sv-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0 0 1.25rem;
+  padding: 0.4rem 1rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--sira-action);
+  border: 1px solid currentColor;
+  border-radius: 999px;
+}
+.sv-badge--clair {
+  color: var(--sv-nuit);
+  background: #e6f5fc;
+  border-color: #cbeaf8;
+}
+
+/* Bandeau d'accueil */
+.sv-heros {
+  color: #fff;
+  background: var(--sv-nuit);
+}
+.sv-heros__grille {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+  gap: 3rem;
+  align-items: center;
+  padding-top: 3.5rem;
+  padding-bottom: 5rem;
+}
+.sv-heros__titre {
+  margin: 0;
+  font-size: clamp(2.3rem, 4.2vw, 3.6rem);
+  font-weight: 800;
+  line-height: 1.12;
+  color: #fff;
+}
+.sv-heros__titre em {
+  font-style: normal;
+  color: var(--sira-action);
+}
+.sv-heros__chapeau {
+  max-width: 34rem;
+  margin: 1.4rem 0 2rem;
+  font-size: 1.08rem;
+  line-height: 1.65;
+  color: var(--sv-texte-clair);
+}
+.sv-heros__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1.25rem;
+}
+.sv-heros__repere {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2rem;
+  margin-top: 2.75rem;
+  padding-top: 1.75rem;
+  border-top: 1px solid var(--sv-nuit-trait);
+}
+.sv-repere {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+}
+.sv-repere__valeur {
+  font-size: 2.2rem;
+  font-weight: 800;
+  line-height: 1;
+  color: #fff;
+}
+.sv-repere__libelle {
+  max-width: 10rem;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  color: var(--sv-texte-clair);
+}
+
+/* Téléphone dessiné, avec une pastille posée dessus */
+.sv-visuel {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  padding: 1rem 0 3rem;
+}
+.sv-telephone {
+  width: min(19rem, 100%);
+  padding: 0.7rem;
+  background: #071820;
+  border: 1px solid var(--sv-nuit-trait);
+  border-radius: 2.6rem;
+}
+.sv-telephone__ecran {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  min-height: 27rem;
+  padding: 1.6rem 1.2rem 1.3rem;
+  color: #1d2b36;
+  background: #fff;
+  border-radius: 2rem;
+}
+.sv-telephone__ilot {
+  width: 5.5rem;
+  height: 1.3rem;
+  margin: -0.8rem auto 0.4rem;
+  background: #071820;
+  border-radius: 999px;
+}
+.sv-telephone__app {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--sira-action);
+}
+.sv-telephone__titre {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 800;
+  line-height: 1.3;
+}
+.sv-telephone__service {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #5b6b78;
+}
+.sv-telephone__liste {
+  display: grid;
+  gap: 0.55rem;
+  margin: 0.3rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+.sv-telephone__liste li {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.65rem 0.75rem;
+  font-size: 0.86rem;
+  font-weight: 600;
+  background: #f2f6f9;
+  border-radius: 12px;
+}
+.sv-telephone__coche {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 1.4rem;
+  height: 1.4rem;
+  font-size: 0.75rem;
+  color: #fff;
+  background: var(--sira-action);
+  border-radius: 50%;
+}
+.sv-telephone__boutons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+  margin-top: auto;
+}
+.sv-telephone__boutons span {
+  padding: 0.65rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-align: center;
+  border-radius: 999px;
+}
+.sv-telephone__oui {
+  color: #fff;
+  background: var(--sira-action);
+}
+.sv-telephone__non {
+  color: #5b6b78;
+  background: #eef2f5;
+}
+.sv-pastille {
+  position: absolute;
+  right: 0;
+  bottom: -2.75rem;
+  min-width: 10rem;
+  padding: 1.1rem 1.3rem;
+  color: var(--sv-nuit);
+  background: var(--sira-or);
+  border-radius: var(--sv-rayon);
+}
+.sv-pastille__valeur {
+  display: block;
+  font-size: 2.1rem;
+  font-weight: 800;
+  line-height: 1;
+}
+.sv-pastille__libelle {
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+.sv-bulle {
+  position: absolute;
+  top: 6rem;
+  left: -1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  max-width: 12rem;
+  padding: 0.7rem 0.9rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  line-height: 1.4;
+  color: #fff;
+  background: var(--sv-nuit-2);
+  border: 1px solid var(--sv-nuit-trait);
+  border-radius: 14px;
+}
+.sv-bulle .sira-icone {
+  flex: none;
+  color: var(--sira-or);
+}
+
+/* Rangée : photo + bande foncée de services */
+.sv-rangee {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2.6fr);
+  gap: 1.25rem;
+  margin-top: -2.5rem;
+}
+.sv-photo-carte {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  min-height: 14rem;
+  padding: 1.4rem;
+  overflow: hidden;
+  color: #fff;
+  text-decoration: none;
+  background: var(--sv-nuit-2) center / cover no-repeat;
+  border-radius: var(--sv-rayon);
+}
+.sv-photo-carte::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgb(12 36 51 / 0.55);
+}
+.sv-photo-carte > * {
+  position: relative;
+}
+.sv-photo-carte__titre {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 800;
+}
+.sv-photo-carte__lien {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.4rem;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--sira-or);
+}
+.sv-services {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background: var(--sv-nuit);
+  border-radius: var(--sv-rayon);
+}
+.sv-service {
+  padding: 1.5rem 1.3rem;
+  color: #fff;
+  background: var(--sv-nuit-2);
+  border-radius: 14px;
+}
+.sv-service__icone,
+.sv-icone-ronde {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  color: var(--sv-nuit);
+  background: var(--sira-action);
+  border-radius: 50%;
+}
+.sv-service__icone .sira-icone,
+.sv-icone-ronde .sira-icone {
+  width: 1.35rem;
+  height: 1.35rem;
+}
+.sv-service__titre {
+  margin: 1.1rem 0 0.45rem;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #fff;
+}
+.sv-service__texte {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.55;
+  color: var(--sv-texte-clair);
+}
+
+/* Sections claires */
+.sv-section {
+  padding: 5.5rem 0 0;
+}
+.sv-section__titre {
+  margin: 0;
+  font-size: clamp(1.8rem, 3vw, 2.5rem);
+  font-weight: 800;
+  line-height: 1.2;
+  color: var(--sv-nuit);
+}
+.sv-section__texte {
+  margin: 1rem 0 0;
+  font-size: 1rem;
+  line-height: 1.65;
+  color: #50606c;
+}
+.sv-entete-section {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  gap: 2rem;
+  align-items: end;
+  margin-bottom: 2.25rem;
+}
+
+.sv-apropos {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 3rem;
+  align-items: start;
+}
+.sv-apropos__photo {
+  width: 100%;
+  height: 22rem;
+  object-fit: cover;
+  border-radius: var(--sv-rayon);
+}
+.sv-valeurs {
+  display: grid;
+  gap: 1.5rem;
+  margin: 2rem 0;
+}
+.sv-valeur {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 1rem;
+  align-items: start;
+}
+.sv-valeur__titre {
+  margin: 0 0 0.3rem;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--sv-nuit);
+}
+.sv-valeur__texte {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.6;
+  color: #50606c;
+}
+.sv-pilule-sombre {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.6rem 0.6rem 0.6rem 1.4rem;
+  color: #fff;
+  background: var(--sv-nuit);
+  border-radius: 999px;
+}
+.sv-pilule-sombre p {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0;
+  font-size: 0.92rem;
+}
+.sv-pilule-sombre .sira-icone {
+  color: var(--sira-or);
+}
+
+/* Chiffres soulignés */
+.sv-chiffres {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 2rem;
+}
+.sv-chiffre {
+  padding-top: 1.4rem;
+  border-top: 1px solid #dfe6ec;
+}
+.sv-chiffre::before {
+  content: '';
+  display: block;
+  width: 3.5rem;
+  height: 4px;
+  margin: calc(-1.4rem - 2.5px) 0 1.4rem;
+  background: var(--sira-action);
+  border-radius: 2px;
+}
+.sv-chiffre__valeur {
+  display: block;
+  font-size: 3rem;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--sv-nuit);
+}
+.sv-chiffre__valeur span {
+  color: var(--sira-or);
+}
+.sv-chiffre__libelle {
+  display: block;
+  margin-top: 0.7rem;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: #50606c;
+}
+
+/* Cartes à bandeau foncé */
+.sv-cartes {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.25rem;
+}
+.sv-carte {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  color: inherit;
+  text-decoration: none;
+  background: #fff;
+  border-radius: var(--sv-rayon);
+}
+.sv-carte__visuel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 11rem;
+  color: var(--sira-action);
+  background: #e6f5fc;
+}
+.sv-carte__visuel .sira-icone {
+  width: 3.5rem;
+  height: 3.5rem;
+}
+.sv-carte__visuel--or {
+  color: #9a6a00;
+  background: #fdf1d6;
+}
+.sv-carte__visuel--nuit {
+  color: #fff;
+  background: var(--sv-nuit-2);
+}
+.sv-carte__bas {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  margin: -1.6rem 1rem 1rem;
+  padding: 1rem 1.1rem;
+  color: #fff;
+  background: var(--sv-nuit);
+  border-radius: 14px;
+}
+.sv-carte__bas .sv-icone-ronde {
+  flex: none;
+  width: 2.5rem;
+  height: 2.5rem;
+}
+.sv-carte__nom {
+  display: block;
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 800;
+}
+.sv-carte__detail {
+  display: block;
+  margin: 0.15rem 0 0;
+  font-size: 0.82rem;
+  color: var(--sv-texte-clair);
+}
+.sv-carte__fleche {
+  margin-left: auto;
+  color: var(--sira-or);
+}
+a.sv-carte:hover .sv-carte__bas {
+  background: var(--sv-nuit-2);
+}
+
+/* Étapes numérotées */
+.sv-etapes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 1.25rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.sv-etape {
+  padding: 1.5rem;
+  background: #fff;
+  border-radius: var(--sv-rayon);
+}
+.sv-etape__numero {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.4rem;
+  height: 2.4rem;
+  font-weight: 800;
+  color: #fff;
+  background: var(--sv-nuit);
+  border-radius: 50%;
+}
+.sv-etape__titre {
+  display: block;
+  margin: 1rem 0 0.35rem;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--sv-nuit);
+}
+.sv-etape__detail {
+  font-size: 0.9rem;
+  line-height: 1.55;
+  color: #50606c;
+}
+
+/* Pied foncé */
+.sv-pied {
+  margin-top: 6rem;
+  padding: 3rem 0;
+  color: var(--sv-texte-clair);
+  background: var(--sv-nuit);
+}
+.sv-pied__contenu {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+}
+.sv-pied img {
+  width: auto;
+  height: 2.2rem;
+}
+.sv-pied p {
+  margin: 0;
+  font-size: 0.9rem;
+}
+.sv-pied nav {
+  display: flex;
+  gap: 1.5rem;
+}
+.sv-pied a {
+  font-size: 0.9rem;
+  color: #fff;
+  text-decoration: none;
+}
+.sv-pied a:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 60rem) {
+  .sira-barre-vitrine__liens {
+    display: none;
+  }
+  .sv-heros__grille,
+  .sv-apropos,
+  .sv-entete-section,
+  .sv-rangee {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .sv-services,
+  .sv-cartes {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .sv-chiffres {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .sv-rangee {
+    margin-top: 1.5rem;
+  }
+  .sv-bulle {
+    display: none;
+  }
+}
+
+/* Photo de l'équipe (fond des cartes photo). */
+.sv-photo-carte--equipe {
+  background-image: url('/assets/sira/photos/equipe.jpg');
+}
+
+/* Autres pages publiques (aide, droits) : contenu centré sous la barre. */
+.sira-vitrine-page > :not(router-outlet):not(.sv-pleine) {
+  display: block;
+  max-width: 76rem;
+  margin: 0 auto;
+  padding: 3rem 1.5rem 0;
+}
+.sv-pleine {
+  display: block;
+}
+
+.sv-photo-carte--reunion {
+  background-image: url('/assets/sira/photos/reunion.jpg');
+}
+.sv-carte__photo {
+  display: block;
+  width: 100%;
+  height: 12rem;
+  object-fit: cover;
+}
+
+/* Pas de défilement horizontal : les éléments posés en débord (bulle, pastille) restent dans la
+   page. */
+.sira-application--vitrine,
+.sira-vitrine-page {
+  overflow-x: clip;
+}

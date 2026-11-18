@@ -1,0 +1,8 @@
+{
+  "name": "@sira/ui",
+  "private": true,
+  "description": "Couche visuelle de Sira. Sans effet de bord : la construction ne garde que les composants utilisés par chaque écran.",
+  "sideEffects": [
+    "*.css"
+  ]
+}

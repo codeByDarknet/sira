@@ -1,0 +1,30 @@
+/*
+ * Tailwind CSS 4 pour les écrans Sira, avec le greffon tailwindcss-primeui : les utilitaires
+ * `bg-primary`, `text-surface-500`, `rounded-border`… lisent les jetons du thème PrimeNG.
+ *
+ * Ordre des couches : PrimeNG pose ses styles dans la couche « primeng » ; les utilitaires
+ * Tailwind passent après, et la feuille de @sira/ui (hors couche) passe en dernier.
+ *
+ * Les chemins @source valent dans les deux espaces de travail : depuis socle/projects/ui/styles
+ * comme depuis demo/bibliotheques/ui/styles, « ../../ » désigne les bibliothèques et
+ * « ../../../projects » les applications.
+ */
+@layer theme, base, primeng, components, utilities;
+
+@import 'tailwindcss';
+@plugin 'tailwindcss-primeui';
+
+@source '../../';
+@source '../../../projects';
+@source '../../../commun';
+
+@theme {
+  --font-sans: 'Nunito', 'Public Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --color-nuit: #062f3b;
+  --color-encre: #111827;
+  --color-page: #f2f4f8;
+  --color-sira: #25aae2;
+  --color-moutarde: #f5aa05;
+  --radius-carte: 12px;
+  --radius-cadre: 14px;
+}
