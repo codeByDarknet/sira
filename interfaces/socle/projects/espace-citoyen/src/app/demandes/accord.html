@@ -15,6 +15,13 @@
         {{ demande.value()?.service?.nom }} reçoit les informations. Revenez à l’écran du service.
       </p>
     </sira-alerte>
+    @if (reponseTardive()) {
+      <sira-alerte type="info">
+        <p class="sira-sans-marge">
+          La réponse a mis du temps à arriver, mais votre accord est bien enregistré.
+        </p>
+      </sira-alerte>
+    }
     <p class="sira-marge-haut">
       Vous pouvez retirer cet accès à tout moment :
       <a siraLien routerLink="/acces">Voir mes accès</a>

@@ -16,10 +16,13 @@ class EchangesPasserelle implements Echanges {
 
     private final Collecte collecte;
     private final Habilitations habilitations;
+    private final CollectesApresAccord apresAccord;
 
-    EchangesPasserelle(Collecte collecte, Habilitations habilitations) {
+    EchangesPasserelle(
+            Collecte collecte, Habilitations habilitations, CollectesApresAccord apresAccord) {
         this.collecte = collecte;
         this.habilitations = habilitations;
+        this.apresAccord = apresAccord;
     }
 
     @Override
@@ -34,7 +37,8 @@ class EchangesPasserelle implements Echanges {
 
     @Override
     public void essayerMaintenant(UUID demande) {
-        collecte.essayerMaintenant(demande);
+        // L'accord répond tout de suite : les registres sont interrogés à côté.
+        apresAccord.lancer(demande);
     }
 
     @Override
