@@ -12,6 +12,7 @@ import bf.sira.commun.pki.Bicle;
 import bf.sira.commun.pki.Certificats;
 import bf.sira.commun.test.FauxFournisseur;
 import bf.sira.commun.test.PkiDeTest;
+import bf.sira.passerelle.demandes.CollectesApresAccord;
 import com.nimbusds.jwt.JWTClaimsSet;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -112,6 +113,7 @@ public abstract class PasserelleDeTest {
 
     @LocalServerPort int port;
     @Autowired JdbcClient sql;
+    @Autowired CollectesApresAccord collectesApresAccord;
 
     /** Clés de la passerelle, clé de pseudonymisation et amorçage : ce que monte son conteneur. */
     private static Path preparer() {
@@ -356,8 +358,15 @@ public abstract class PasserelleDeTest {
         Map<String, Object> corps = new HashMap<>();
         corps.put("decision", decision);
         corps.put("code_verification", code);
-        return envoyer(
-                citoyen(identifiantUnique), "/v1/citoyen/demandes/" + demande + "/decision", corps);
+        ResponseEntity<String> reponse =
+                envoyer(
+                        citoyen(identifiantUnique),
+                        "/v1/citoyen/demandes/" + demande + "/decision",
+                        corps);
+        // L'accord répond sans attendre les registres : la suite des tests lit la demande une fois
+        // l'essai immédiat terminé, comme le service qui suit la collecte.
+        attendre(Duration.ofSeconds(15), "collecte après accord", collectesApresAccord::auRepos);
+        return reponse;
     }
 
     /** Une demande du concours, acceptée par la personne ; rend son identifiant. */

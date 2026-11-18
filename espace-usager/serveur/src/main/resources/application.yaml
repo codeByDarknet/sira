@@ -12,6 +12,10 @@ server:
 sira:
   mtls:
     mode: client
+  http:
+    # Le citoyen attend la passerelle : mieux vaut quelques secondes de plus qu'un « service
+    # indisponible » sur une décision qui, elle, a bien été enregistrée.
+    delai-lecture: 15s
   oidc:
     client-id: espace-citoyen
     # Contrat §4 : un seul émetteur, le royaume des citoyens. Seules les adresses se règlent.

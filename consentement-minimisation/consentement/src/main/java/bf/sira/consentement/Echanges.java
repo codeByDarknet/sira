@@ -19,7 +19,10 @@ public interface Echanges {
     /** Inscrit ce qu'il faut obtenir pour une demande acceptée, dans la transaction de l'accord. */
     void preparer(UUID demande);
 
-    /** Interroge aussitôt les registres, hors transaction, dans la limite du temps accordé. */
+    /**
+     * Lance aussitôt l'interrogation des registres, hors transaction, sans faire attendre le
+     * citoyen qui vient de décider : la collecte se poursuit à côté.
+     */
     void essayerMaintenant(UUID demande);
 
     /** Recalcule l'état d'une demande dont des éléments viennent d'être abandonnés. */
