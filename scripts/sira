@@ -1,0 +1,235 @@
+#!/usr/bin/env bash
+# Pilotage de la pile Sira sur un poste : un seul point d'entrée pour Docker Compose.
+set -euo pipefail
+
+RACINE="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+DEPLOIEMENT="$RACINE/deploiement"
+
+# Les listes de fichiers Compose ci-dessous sont séparées par « : ». Sous Windows, Compose attend
+# « ; » par défaut et cherche alors un fichier nommé « compose.yaml:compose.demo.yaml ».
+export COMPOSE_PATH_SEPARATOR=:
+
+usage() {
+  cat <<'AIDE'
+Usage : scripts/sira <commande>
+
+  demarrer                 construit puis démarre le socle seul, attend que tout soit sain
+  demo                     idem, avec la démonstration (comptes fictifs, codes lisibles)
+  arreter                  arrête la pile en conservant les données
+  etat                     état des conteneurs
+  journaux [service...]    suit les journaux (tous les services par défaut)
+  reinitialiser            arrête la pile et SUPPRIME données, certificats et secrets
+  comptes                  mot de passe commun des comptes de la démonstration
+  totp-reinitialiser <compte>
+                           efface l'application d'authentification d'un administrateur de la
+                           console (instructeur, autorite, auditeur) : un nouveau QR code
+                           s'affiche à sa prochaine connexion
+  verifier                 tests de refus sur la pile qui tourne (ce qui doit rester fermé l'est)
+  tester [option...]       tests de bout en bout (Playwright) contre la pile qui tourne : parcours
+                           de la démonstration, scénarios du socle seul sinon
+  bases                    crée les rôles et bases ajoutés depuis le premier démarrage
+  citoyens importer <fichier> [--correspondance <fichier.json>] [--essai]
+                           ajoute des citoyens fictifs (JSON ou CSV) aux registres simulés et
+                           leur compte à Keycloak ; idempotent (docs/composants/demo-registres.md)
+  etranger [arreter]       lance le registre d'une autre équipe et son connecteur (profil
+                           « etranger »), puis prouve son raccordement de bout en bout
+                           (docs/brancher-un-registre.md) ; « arreter » les retire
+  pki lister               certificats émis et leur échéance
+  pki emettre <code>       émet les certificats d'un membre déclaré dans deploiement/membres*.conf
+  pki emettre <code> <uri> <dns> [uid]
+                           émet les certificats d'un membre non déclaré (essai ponctuel)
+AIDE
+}
+
+# Socle seul, ou socle et démonstration. Les commandes autres que demarrer et demo suivent ce qui
+# tourne : la démonstration est chargée dès que l'un de ses conteneurs existe.
+SOCLE=compose.yaml
+DEMO=compose.yaml:compose.demo.yaml
+
+# PROFILS : services facultatifs (profil « etranger ») à inclure ; jamais au démarrage.
+compose() {
+  (cd "$DEPLOIEMENT" && COMPOSE_FILE="${FICHIERS:-$SOCLE}" COMPOSE_PROFILES="${PROFILS:-}" docker compose "$@")
+}
+
+choisir_fichiers() {
+  local services
+  services="$(compose ps --all --services 2> /dev/null || true)"
+  if grep -qx demo-db <<< "$services"; then
+    FICHIERS="$DEMO"
+  else
+    FICHIERS="$SOCLE"
+  fi
+  # Arrêter, suivre ou effacer la démonstration couvre aussi le registre d'une autre équipe.
+  [ "$FICHIERS" = "$SOCLE" ] || PROFILS=etranger
+}
+
+preparer_environnement() {
+  if [ ! -f "$DEPLOIEMENT/.env" ]; then
+    cp "$DEPLOIEMENT/.env.example" "$DEPLOIEMENT/.env"
+    echo "sira : deploiement/.env créé à partir de .env.example"
+  fi
+}
+
+pki() {
+  # Les conteneurs de l'autre mode ne sont pas des orphelins à signaler ici.
+  COMPOSE_IGNORE_ORPHANS=true compose --progress quiet run --rm --no-deps pki "$@"
+}
+
+demarrer() { # socle | demo
+  if [ "$1" = demo ]; then
+    FICHIERS="$DEMO"
+    [ -z "${2:-}" ] || { usage; exit 2; }
+    cat >&2 <<'ALERTE'
+sira : ATTENTION, pile de DÉMONSTRATION. Comptes fictifs à mot de passe connu, codes de connexion
+       lisibles sur le téléphone simulé. Jamais sur une machine joignable par d'autres.
+ALERTE
+  else
+    FICHIERS="$SOCLE"
+  fi
+  # Refus net si les volumes viennent de l'autre mode (voir pki/pki.sh).
+  compose --progress quiet build pki
+  pki mode
+  compose up --build --detach --wait --remove-orphans
+  port="$(sed -n 's/^SIRA_PORT=//p' "$DEPLOIEMENT/.env")"
+  adresse() { printf 'http://%s.sira.localhost:%s' "$1" "${port:-8600}"; }
+  cat <<FIN
+
+Sira est démarré.
+  Espace citoyen      $(adresse citoyen)
+  Console             $(adresse console)
+FIN
+  if [ "$1" = demo ]; then
+    cat <<FIN
+  Téléphone simulé    $(adresse telephone)
+  Démarches           $(adresse concours)   $(adresse bourses)
+                      $(adresse entreprises)
+  Registres           $(adresse etat-civil)   $(adresse nationalite)
+                      $(adresse casier)   $(adresse diplomes)
+  Comptes de démonstration : scripts/sira comptes
+FIN
+  fi
+}
+
+reinitialiser() {
+  if [ "${1:-}" != "--oui" ]; then
+    read -r -p "Supprimer toutes les données, certificats et secrets de Sira ? [o/N] " reponse
+    [ "$reponse" = "o" ] || { echo "sira : rien n'a été supprimé"; exit 1; }
+  fi
+  FICHIERS="$DEMO" PROFILS=etranger compose down --volumes --remove-orphans
+}
+
+comptes() {
+  pki comptes
+}
+
+# Efface l'application d'authentification d'un administrateur de la console (téléphone perdu,
+# changé, ou démonstration à refaire) : à sa prochaine connexion, Keycloak lui montre un nouveau
+# QR code, une seule fois. C'est ce que ferait l'équipe d'exploitation pour un vrai compte.
+totp_reinitialiser() {
+  local compte="${1:-}"
+  [ -n "$compte" ] || { echo "usage : scripts/sira totp-reinitialiser <instructeur|autorite|auditeur|compte>" >&2; exit 1; }
+  case "$compte" in *@*) ;; *) compte="$compte@sira.example" ;; esac
+  [[ "$compte" =~ ^[a-z0-9._@-]+$ ]] || { echo "sira : nom de compte refusé : $compte" >&2; exit 1; }
+  compose exec -T keycloak bash -s "$compte" <<'KCADM'
+set -euo pipefail
+kcadm() { /opt/keycloak/bin/kcadm.sh "$@" --config /tmp/sira-totp.kcadm; }
+kcadm config credentials --server http://127.0.0.1:8080 --realm master --user amorcage   --password "$(cat /run/sira/secrets/amorcage.motdepasse)" > /dev/null 2>&1
+id="$(kcadm get users -r sira-socle -q username="$1" -q exact=true --fields id --format csv --noquotes)"
+[ -n "$id" ] || { echo "sira : compte inconnu : $1" >&2; exit 1; }
+efface=0
+while IFS=, read -r credential type; do
+  [ "$type" = otp ] || continue
+  kcadm delete "users/$id/credentials/$credential" -r sira-socle
+  efface=$((efface + 1))
+done < <(kcadm get "users/$id/credentials" -r sira-socle --fields id,type --format csv --noquotes)
+echo "sira : $1 : $efface application(s) effacée(s) ; un nouveau QR code s'affichera à la prochaine connexion"
+KCADM
+}
+
+bases() {
+  for instance in socle-db demo-db; do
+    if compose ps --status running --services | grep -qx "$instance"; then
+      compose exec -T "$instance" /docker-entrypoint-initdb.d/10-roles.sh
+    fi
+  done
+}
+
+# Tests de bout en bout : dépendances installées au premier passage (Node 24 et npm requis).
+tester() {
+  local projets=(--project=socle) e2e="$RACINE/tests/e2e"
+  [ "$FICHIERS" != "$SOCLE" ] && projets=(--project=ossature --project=parcours)
+  # Un projet nommé par l'appelant remplace ceux par défaut.
+  [[ " $* " == *" --project="* ]] && projets=()
+  command -v npx > /dev/null || { echo "sira : Node.js (npx) est requis pour les tests" >&2; exit 1; }
+  if [ ! -d "$e2e/node_modules/@playwright/test" ]; then
+    (cd "$e2e" && npm ci --ignore-scripts --no-audit --no-fund)
+  fi
+  (cd "$e2e" && npx playwright install chromium && npx playwright test "${projets[@]}" "$@")
+}
+
+exiger_demo() {
+  [ "$FICHIERS" != "$SOCLE" ] || { echo "sira : la démonstration doit tourner (scripts/sira demo)" >&2; exit 1; }
+}
+
+# Citoyens fictifs ajoutés aux registres simulés et à Keycloak (scripts/citoyens.mjs).
+citoyens() {
+  [ "${1:-}" = importer ] && [ $# -ge 2 ] || { usage; exit 2; }
+  shift
+  exiger_demo
+  command -v node > /dev/null || { echo "sira : Node.js est requis pour l'import" >&2; exit 1; }
+  (cd "$DEPLOIEMENT" && COMPOSE_FILE="$FICHIERS" node "$RACINE/scripts/citoyens.mjs" "$@")
+}
+
+# Registre d'une autre équipe : certificats et secrets du membre, base du connecteur, conteneurs
+# du profil, puis la preuve (projet Playwright « etranger »).
+etranger() {
+  exiger_demo
+  if [ "${1:-}" = arreter ]; then
+    compose rm --stop --force registre-etranger connecteur-etranger
+    return
+  fi
+  pki initialiser | grep -F -e ": registre-etranger/" -e ": etranger/" || true
+  bases > /dev/null
+  compose up --build --detach --wait registre-etranger connecteur-etranger
+  tester --project=etranger "$@"
+}
+
+commande_pki() {
+  case "${1:-}" in
+    lister) pki lister ;;
+    emettre)
+      case $# in
+        2) pki initialiser | grep -F ": $2/" || echo "sira : rien à émettre pour « $2 » (déjà émis, ou absent de deploiement/membres*.conf)" ;;
+        4 | 5) pki "$@" ;;
+        *) usage; exit 2 ;;
+      esac
+      ;;
+    *) usage; exit 2 ;;
+  esac
+}
+
+[ $# -ge 1 ] || { usage; exit 2; }
+commande="$1"; shift
+preparer_environnement
+case "$commande" in
+  demarrer | demo) ;;
+  *) choisir_fichiers ;;
+esac
+case "$commande" in
+  demarrer) demarrer socle ;;
+  demo) demarrer demo "$@" ;;
+  arreter) compose down ;;
+  etat) compose ps --all --format 'table {{.Service}}\t{{.State}}\t{{.Status}}' ;;
+  journaux) compose logs --follow --tail 100 "$@" ;;
+  reinitialiser) reinitialiser "$@" ;;
+  comptes) comptes ;;
+  totp-reinitialiser) totp_reinitialiser "$@" ;;
+  bases) bases ;;
+  verifier) "$RACINE/scripts/verifier" ;;
+  tester) tester "$@" ;;
+  pki) commande_pki "$@" ;;
+  citoyens) citoyens "$@" ;;
+  etranger) etranger "$@" ;;
+  aide | -h | --help) usage ;;
+  *) usage; exit 2 ;;
+esac

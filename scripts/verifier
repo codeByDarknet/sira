@@ -1,0 +1,188 @@
+#!/usr/bin/env bash
+# Tests de refus du déploiement, sur la pile qui tourne (scripts/sira verifier) : ce qui doit
+# rester fermé l'est. Chaque ligne « ok » ou « ÉCHEC » nomme le constat de la revue de sécurité.
+set -uo pipefail
+
+RACINE="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+PORT="$(sed -n 's/^SIRA_PORT=//p' "$RACINE/deploiement/.env" 2> /dev/null)"
+PORT="${PORT:-8600}"
+PROXY_IMAGE="$(docker inspect sira-proxy-1 --format '{{.Config.Image}}')" || {
+  echo "verifier : la pile Sira ne tourne pas (scripts/sira demarrer)" >&2
+  exit 2
+}
+DEMO=false
+docker inspect sira-demo-db-1 > /dev/null 2>&1 && DEMO=true
+TMP="$(mktemp -d)"
+trap 'rm -rf "$TMP"' EXIT
+echecs=0
+
+verifier() { # libellé, puis commande qui doit réussir
+  local libelle="$1"
+  shift
+  if "$@" > "$TMP/sortie" 2>&1; then
+    echo "ok     $libelle"
+  else
+    echo "ÉCHEC  $libelle"
+    sed 's/^/         /' "$TMP/sortie" | head -5
+    echecs=$((echecs + 1))
+  fi
+}
+
+url() { printf 'http://%s.sira.localhost:%s%s' "$1" "$PORT" "$2"; }
+statut() { curl -s -o /dev/null -w '%{http_code}' --connect-to ::127.0.0.1: "$@"; }
+egal() { [ "$1" = "$2" ] || { echo "obtenu « $1 », attendu « $2 »"; return 1; }; }
+dans_sira() { docker run --rm --network "sira_$1" --entrypoint curl "$PROXY_IMAGE" -sk -o /dev/null -w '%{http_code}' --max-time 5 "$2"; }
+
+# --- Proxy d'entrée (M1, M2, constat 10) ---------------------------------------------------
+for chemin in /realms/master /realms/master/ /admin/ /realms/sira-citoyens/account/ \
+  /realms/sira-citoyens/clients-registrations/openid-connect /realms/sira-citoyens/protocol/openid-connect/token; do
+  verifier "identite$chemin : 404" egal "$(statut "$(url identite "$chemin")")" 404
+done
+verifier "identite : configuration OpenID publiée" \
+  egal "$(statut "$(url identite /realms/sira-citoyens/.well-known/openid-configuration)")" 200
+verifier "hôte inconnu : 404" egal "$(statut "$(url inconnu /)")" 404
+
+# --- En-têtes de l'API (F10) -----------------------------------------------------------------
+curl -s -D "$TMP/h" -o /dev/null --connect-to ::127.0.0.1: "$(url citoyen '/api/auth/connexion/sira?retour=/')"
+for entete in 'x-frame-options: DENY' 'x-content-type-options: nosniff' 'cache-control: no-store' 'content-security-policy:'; do
+  verifier "citoyen /api/ : $entete" grep -qi "^$entete" "$TMP/h"
+done
+
+# --- Journal du proxy sans chaîne de requête (F9) ----------------------------------------------
+temoin="temoin$RANDOM$RANDOM"
+statut "$(url citoyen "/?code=$temoin")" > /dev/null
+sleep 1
+verifier "journal du proxy sans chaîne de requête" \
+  bash -c "! docker logs --since 1m sira-proxy-1 2>&1 | grep -q $temoin"
+
+# --- Frein par session de connexion (M4) -------------------------------------------------------
+rafale() { # cookie : nombre de 429 sur 40 requêtes
+  local adresses=()
+  for _ in $(seq 40); do adresses+=(-o /dev/null "$(url identite /realms/sira-citoyens/login-actions/authenticate)"); done
+  curl -s -w '%{http_code}\n' --connect-to ::127.0.0.1: -H "Cookie: AUTH_SESSION_ID=$1" "${adresses[@]}" | grep -c 429
+}
+verifier "rafale d'une session : freinée (429)" test "$(rafale "verif-a-$RANDOM")" -gt 0
+verifier "autre session aussitôt après : non freinée" test "$(statut -H "Cookie: AUTH_SESSION_ID=verif-b-$RANDOM" \
+  "$(url identite /realms/sira-citoyens/login-actions/authenticate)")" != 429
+
+# --- Réseaux (E2, M1, constat 6) --------------------------------------------------------------
+verifier "réseau sira : Keycloak en HTTP injoignable" egal "$(dans_sira sira http://keycloak:8080/realms/sira-citoyens)" 000
+verifier "réseau sira : nom fournisseur-identite inconnu" egal "$(dans_sira sira http://fournisseur-identite:8080/)" 000
+verifier "réseau sira : relais TLS, console d'administration 404" egal "$(dans_sira sira https://keycloak:8443/admin/)" 404
+verifier "réseau sira : relais TLS, royaume master 404" egal "$(dans_sira sira https://keycloak:8443/realms/master/protocol/openid-connect/certs)" 404
+verifier "réseau identite : port de gestion 9000 fermé" egal "$(dans_sira identite http://fournisseur-identite:9000/health)" 000
+verifier "réseau donnees : connexion « postgres » refusée" bash -c \
+  "docker run --rm --network sira_donnees -e PGPASSWORD=x --entrypoint psql $(docker inspect sira-socle-db-1 --format '{{.Config.Image}}') \
+   -h socle-db -U postgres -c 'select 1' 2>&1 | grep -q 'pg_hba.conf rejects'"
+
+# --- Limites des conteneurs (F2, F11) ------------------------------------------------------------
+for conteneur in $(docker ps --filter label=com.docker.compose.project=sira --format '{{.Names}}'); do
+  verifier "$conteneur : processus, mémoire et journaux bornés" bash -c \
+    "docker inspect $conteneur --format '{{.HostConfig.PidsLimit}} {{.HostConfig.Memory}} {{index .HostConfig.LogConfig.Config \"max-size\"}}' \
+     | grep -Eq '^[1-9][0-9]* [1-9][0-9]* [0-9]+m$'"
+done
+
+# --- Séparation socle / démonstration (E1) --------------------------------------------------------
+autre=demo
+# Les fichiers Compose sont séparés par « : », y compris sous Windows où Compose attend « ; ».
+export COMPOSE_PATH_SEPARATOR=:
+fichiers=compose.yaml
+if $DEMO; then autre=socle; fichiers=compose.yaml:compose.demo.yaml; fi
+verifier "volumes de l'autre mode ($autre) : refusés" bash -c \
+  "cd '$RACINE/deploiement' && ! COMPOSE_FILE=$fichiers COMPOSE_IGNORE_ORPHANS=true docker compose --progress quiet \
+   run --rm --no-deps -e SIRA_MODE=$autre pki mode"
+verifier "Keycloak hors démonstration : comptes fictifs refusés" bash -c \
+  "docker run --rm -e SIRA_MODE=socle -v '$RACINE/identite/demo/sira-citoyens-users-0.json:/opt/keycloak/royaumes/sira-citoyens-users-0.json:ro' \
+   sira/identite:local start 2>&1 | grep -q 'refusé hors démonstration'"
+
+if ! $DEMO; then
+  verifier "socle seul : pas de téléphone simulé" egal "$(statut "$(url telephone /messagerie/search)")" 404
+  verifier "socle seul : pas de messagerie" bash -c "! docker inspect sira-mailpit-1 > /dev/null 2>&1"
+  [ "$echecs" -eq 0 ] && echo "verifier : tout est fermé" || echo "verifier : $echecs échec(s)"
+  exit $((echecs > 0))
+fi
+
+# --- Téléphone simulé, démonstration seulement (constat 10) ----------------------------------
+verifier "téléphone : écriture refusée (403)" \
+  egal "$(statut -X POST "$(url telephone /messagerie/search)")" 403
+verifier "téléphone : API de la messagerie fermée (404)" \
+  egal "$(statut "$(url telephone /messagerie/api/v1/messages)")" 404
+verifier "téléphone : pas de WebSocket" bash -c "! curl -s -m 3 -o /dev/null -w '%{http_code}' --connect-to ::127.0.0.1: \
+  -H 'Connection: Upgrade' -H 'Upgrade: websocket' -H 'Sec-WebSocket-Version: 13' -H 'Sec-WebSocket-Key: c2lyYXNpcmFzaXJhc2lyYQ==' \
+  '$(url telephone /messagerie/api/events)' | grep -q 101"
+
+# --- Connexion du citoyen (constat 7, M4) -----------------------------------------------------
+# Un navigateur minimal : les cookies de Keycloak sont « Secure », que curl n'envoie pas en HTTP.
+declare -A COOKIES
+naviguer() { # méthode adresse [données] : corps dans $TMP/b, adresse du formulaire dans FORMULAIRE
+  local entete="" nom
+  for nom in "${!COOKIES[@]}"; do entete+="$nom=${COOKIES[$nom]}; "; done
+  curl -s -D "$TMP/h" -o "$TMP/b" --connect-to ::127.0.0.1: -H "Cookie: $entete" -X "$1" \
+    ${3:+--data-urlencode "$3"} "$2"
+  while IFS='=' read -r nom valeur; do
+    [ -n "$nom" ] && COOKIES[$nom]="${valeur%%;*}"
+  done < <(sed -n 's/^[Ss]et-[Cc]ookie: *//p' "$TMP/h" | tr -d '\r')
+  FORMULAIRE="$(grep -o 'action="[^"]*login-actions[^"]*"' "$TMP/b" | head -1 | sed 's/^action="//; s/"$//; s/&amp;/\&/g')"
+}
+ouvrir_connexion() {
+  COOKIES=()
+  local depart
+  depart="$(curl -s -o /dev/null -w '%{redirect_url}' --connect-to ::127.0.0.1: "$(url citoyen '/api/auth/connexion/sira?retour=/')")"
+  naviguer GET "$depart"
+}
+etape() { sed -n 's/.*[?&]\(execution=[^&]*\).*/\1/p' <<< "$1"; }
+anonymiser() { # page sans ce qui change d'une session à l'autre
+  sed -E 's/(session_code|tab_id|client_data|execution)=[^&"]*//g; s/9900[0-9]{8}|9999[0-9]{8}/IDENTIFIANT/g' "$TMP/b"
+}
+dernier_message() { # identifiant : dernier message relayé par le téléphone simulé
+  curl -s --connect-to ::127.0.0.1: -G --data-urlencode "query=to:\"$1@telephone.sira.example\"" \
+    --data-urlencode limit=1 "$(url telephone /messagerie/search)"
+}
+demander_code() { # identifiant : le saisit, puis place le code du nouveau message dans CODE
+  local avant message
+  CODE=""
+  avant="$(dernier_message "$1" | grep -o '"ID":"[^"]*"')"
+  naviguer POST "$FORMULAIRE" "username=$1"
+  for _ in $(seq 20); do
+    message="$(dernier_message "$1")"
+    if ! grep -qF "$avant" <<< "$message" || [ -z "$avant" ]; then
+      CODE="$(sed -n 's/.*"Snippet":"[^"0-9]*\([0-9]\{6\}\).*/\1/p' <<< "$message")"
+      return
+    fi
+    sleep 0.5
+  done
+}
+
+# Deux codes envoyés par passage : l'identifiant de démonstration en reçoit au plus dix par heure.
+connu=990029915477
+inconnu=999900000001
+
+# Cinq essais en tout : le bon code, ensuite, est refusé. Les essais sont espacés d'une seconde,
+# sans quoi Keycloak verrouille le compte une minute (essais en rafale).
+ouvrir_connexion
+demander_code "$connu"
+bon="$CODE"
+etape_connu="$(etape "$FORMULAIRE")"
+anonymiser > "$TMP/connu"
+for _ in 1 2 3 4 5; do
+  naviguer POST "$FORMULAIRE" "code=000000"
+  sleep 1.2
+done
+naviguer POST "$FORMULAIRE" "code=$bon"
+verifier "sixième essai, même juste : refusé" bash -c "grep -q 'Trop d' '$TMP/b' && ! grep -qi '^location:' '$TMP/h'"
+
+# Un identifiant sans compte reçoit la même page, à la même adresse de formulaire.
+ouvrir_connexion
+naviguer POST "$FORMULAIRE" "username=$inconnu"
+verifier "identifiant inconnu : même adresse de formulaire" egal "$(etape "$FORMULAIRE")" "$etape_connu"
+anonymiser > "$TMP/inconnu"
+verifier "identifiant inconnu : même page" diff "$TMP/connu" "$TMP/inconnu"
+
+# Une connexion réussie remet à zéro le compteur de Keycloak contre la force brute.
+ouvrir_connexion
+demander_code "$connu"
+naviguer POST "$FORMULAIRE" "code=$CODE"
+verifier "bon code au premier essai : accepté" grep -qi '^location: .*citoyen' "$TMP/h"
+
+[ "$echecs" -eq 0 ] && echo "verifier : tout est fermé" || echo "verifier : $echecs échec(s)"
+exit $((echecs > 0))

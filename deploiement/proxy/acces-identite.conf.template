@@ -1,0 +1,82 @@
+# Porte des serveurs d'application vers Keycloak, sous le nom « keycloak » (8443).
+# TLS mutuel : un certificat présenté doit venir de l'autorité Sira, sinon la requête est
+# refusée. Le certificat vérifié est transmis à Keycloak dans l'en-tête
+# « ssl-client-cert » (tls_client_auth, jetons liés au certificat). Seuls les points d'entrée
+# de serveur à serveur sont relayés : ni écrans, ni console, ni royaume « master », ni
+# enregistrement de clients. Seule exception : la gestion des comptes du royaume des agents
+# (« demo-agents »), pour les écrans Utilisateurs des registres et des services, avec un
+# certificat Sira obligatoire (docs/composants/agents.md).
+
+log_format sira '$remote_addr [$time_local] "$request_method $uri $server_protocol" '
+                '$status $body_bytes_sent $request_time';
+
+server_tokens off;
+resolver 127.0.0.11 valid=10s ipv6=off;
+
+server {
+  listen 8443 ssl;
+  server_name keycloak;
+  access_log /dev/stdout sira;
+
+  ssl_protocols TLSv1.3;
+  ssl_certificate /run/sira/pki/tls.crt;
+  ssl_certificate_key /run/sira/pki/tls.key;
+  ssl_client_certificate /run/sira/pki/ca.crt;
+  ssl_verify_client optional; # les clés publiques (certs) se lisent aussi sans certificat
+  ssl_verify_depth 1;
+
+  set $keycloak fournisseur-identite:8080;
+
+  location ~ ^/realms/master(/|$) {
+    return 404;
+  }
+
+  location ~ ^/realms/[a-z0-9-]+/(protocol/openid-connect/(token|token/introspect|certs|userinfo|revoke)|\.well-known/openid-configuration)$ {
+    proxy_pass http://$keycloak;
+    proxy_http_version 1.1;
+    proxy_set_header Host $http_host;
+    proxy_set_header X-Forwarded-Host $http_host;
+    proxy_set_header X-Forwarded-Proto https;
+    proxy_set_header X-Forwarded-Port 8443;
+    proxy_set_header X-Forwarded-For $remote_addr;
+    proxy_set_header Forwarded "";
+    proxy_set_header ssl-client-cert $ssl_client_escaped_cert;
+    proxy_connect_timeout 5s;
+    proxy_read_timeout 30s;
+    client_max_body_size 64k;
+  }
+
+  # Comptes des agents : lister, créer, lire, modifier, supprimer, mot de passe provisoire.
+  # Rien d'autre de l'API d'administration (ni rôles, ni clients, ni réglages du royaume).
+  location ~ "^/admin/realms/demo-agents/users(/count|/[0-9a-f-]{36}(/reset-password)?)?$" {
+    if ($ssl_client_verify != SUCCESS) {
+      return 403;
+    }
+    proxy_pass http://$keycloak;
+    proxy_http_version 1.1;
+    proxy_set_header Host $http_host;
+    proxy_set_header X-Forwarded-Host $http_host;
+    proxy_set_header X-Forwarded-Proto https;
+    proxy_set_header X-Forwarded-Port 8443;
+    proxy_set_header X-Forwarded-For $remote_addr;
+    proxy_set_header Forwarded "";
+    proxy_set_header ssl-client-cert $ssl_client_escaped_cert;
+    proxy_connect_timeout 5s;
+    proxy_read_timeout 30s;
+    client_max_body_size 64k;
+  }
+
+  location / {
+    return 404;
+  }
+}
+
+# Sonde de santé, sur la boucle locale.
+server {
+  listen 127.0.0.1:8081;
+  access_log off;
+
+  location = /_sante {
+    return 204;
+  }
+}

@@ -1,0 +1,616 @@
+# Sira - la démonstration : tout ce qui est simulé. S'ajoute à compose.yaml, ne le remplace pas.
+# Chaque administration fictive a son réseau privé « adm-<code> » ; le registre ou le serveur
+# du service y vit avec sa base, et n'est joignable par personne d'autre.
+# Lancement : scripts/sira demo. Jamais en production : comptes fictifs, codes lisibles.
+
+x-journaux: &journaux
+  driver: json-file
+  options: { max-size: 10m, max-file: "3" }
+
+x-durci: &durci
+  restart: unless-stopped
+  read_only: true
+  cap_drop: [ALL]
+  security_opt: ["no-new-privileges:true"]
+  pids_limit: 256
+  logging: *journaux
+
+x-java: &java
+  <<: *durci
+  user: "10001:10001"
+  mem_limit: 448m
+  tmpfs: [/tmp]
+  environment: &java-env
+    JAVA_TOOL_OPTIONS: >-
+      -XX:MaxRAMPercentage=70 -XX:+UseSerialGC -XX:TieredStopAtLevel=1
+      -XX:ReservedCodeCacheSize=64m -Xss512k -XX:+ExitOnOutOfMemoryError -Djava.io.tmpdir=/tmp
+    SPRING_CONFIG_IMPORT: configtree:/run/sira/secrets/
+    SPRING_DATASOURCE_PASSWORD: $${base.motdepasse}
+    SERVER_SERVLET_SESSION_COOKIE_SECURE: ${SIRA_HTTPS:-false}
+  healthcheck:
+    test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8081/actuator/health/readiness"]
+    interval: 5s
+    timeout: 3s
+    retries: 24
+    start_period: 240s
+
+# Courriel des identifiants envoyé aux agents créés depuis l'écran d'un registre ou d'un service.
+# Le compte et le mot de passe SMTP viennent de deploiement/.env (jamais du dépôt).
+x-courriel: &courriel
+  SPRING_MAIL_HOST: ${SIRA_COURRIEL_HOTE:-smtp.gmail.com}
+  SPRING_MAIL_PORT: ${SIRA_COURRIEL_PORT:-587}
+  SPRING_MAIL_USERNAME: ${SIRA_COURRIEL_UTILISATEUR:-}
+  SPRING_MAIL_PASSWORD: ${SIRA_COURRIEL_MOT_DE_PASSE:-}
+  SIRA_AGENTS_EXPEDITEUR: ${SIRA_COURRIEL_EXPEDITEUR:-SIRA<ne-pas-repondre@sira.localhost>}
+
+x-web: &web
+  <<: *durci
+  mem_limit: 64m
+  tmpfs: [/tmp]
+  healthcheck:
+    test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/sante"]
+    interval: 5s
+    timeout: 3s
+    retries: 12
+
+# Une même image sert les quatre connecteurs, les quatre registres, les deux services.
+x-build-connecteur: &build-connecteur
+  context: ..
+  dockerfile: deploiement/docker/java.Dockerfile
+  args: { MODULE: consentement-minimisation/connecteur }
+x-build-registre: &build-registre
+  context: ..
+  dockerfile: deploiement/docker/java.Dockerfile
+  args: { MODULE: registres/serveur }
+x-build-service: &build-service
+  context: ..
+  dockerfile: deploiement/docker/java.Dockerfile
+  args: { MODULE: guichet-agent/serveur }
+x-build-web-registre: &build-web-registre
+  context: ..
+  dockerfile: deploiement/docker/web.Dockerfile
+  args: { ESPACE: interfaces/demo, APPLICATION: registre-admin }
+x-build-web-portail: &build-web-portail
+  context: ..
+  dockerfile: deploiement/docker/web.Dockerfile
+  args: { ESPACE: interfaces/demo, APPLICATION: portail-service }
+
+services:
+  pki:
+    environment:
+      SIRA_MODE: demo
+    volumes:
+      - ./membres.demo.conf:/etc/sira/membres.demo.conf:ro
+      - ./secrets.demo.conf:/etc/sira/secrets.demo.conf:ro
+
+  keycloak:
+    environment:
+      SIRA_MODE: demo
+      # Lien « Ouvrir le téléphone » sur la page du code : le code arrive sur le téléphone simulé.
+      SIRA_TELEPHONE_URL: http://telephone.sira.localhost:${SIRA_PORT:-8600}
+      # Les codes de connexion partent vers la messagerie de démonstration, lue par le téléphone.
+      SIRA_MESSAGERIE_HOTE: mailpit
+      SIRA_MESSAGERIE_PORT: "1025"
+      SIRA_MESSAGERIE_STARTTLS: "false"
+      SIRA_MESSAGERIE_SSL: "false"
+      SIRA_MESSAGERIE_AUTH: "false"
+      SIRA_MESSAGERIE_EXPEDITEUR: ne-pas-repondre@sira.example
+      # Royaume des agents : le lien « afficher un nouveau QR code » part par le vrai SMTP.
+      SIRA_COURRIEL_HOTE: ${SIRA_COURRIEL_HOTE:-smtp.gmail.com}
+      SIRA_COURRIEL_PORT: ${SIRA_COURRIEL_PORT:-587}
+      SIRA_COURRIEL_UTILISATEUR: ${SIRA_COURRIEL_UTILISATEUR:-}
+      SIRA_COURRIEL_MOT_DE_PASSE: ${SIRA_COURRIEL_MOT_DE_PASSE:-}
+      SIRA_COURRIEL_ADRESSE: ${SIRA_COURRIEL_UTILISATEUR:-ne-pas-repondre@sira.localhost}
+    volumes:
+      # Annuaire des agents et comptes fictifs, importés avec les royaumes du socle.
+      - ../identite/demo/demo-agents-realm.json:/opt/keycloak/royaumes/demo-agents-realm.json:ro
+      - ../identite/demo/sira-citoyens-users-0.json:/opt/keycloak/royaumes/sira-citoyens-users-0.json:ro
+      - ../identite/demo/sira-socle-users-0.json:/opt/keycloak/royaumes/sira-socle-users-0.json:ro
+    # Réseau de sortie à part : sur « courriel », le nom « keycloak » doit rester celui du
+    # relais acces-identite (mTLS), jamais Keycloak lui-même.
+    networks: [messagerie, courriel-identite]
+    depends_on:
+      mailpit: { condition: service_healthy }
+
+  # Les registres simulés joignent l'annuaire des agents par acces-identite, chacun sur son réseau
+  # « idp-<code> » : ni Keycloak ni les autres registres n'y sont.
+  acces-identite:
+    networks:
+      idp-etat-civil: { aliases: [keycloak] }
+      idp-nationalite: { aliases: [keycloak] }
+      idp-casier: { aliases: [keycloak] }
+      idp-diplomes: { aliases: [keycloak] }
+
+  proxy:
+    volumes:
+      - ./proxy/demo.conf.template:/etc/nginx/templates/sira.demo.conf.template:ro
+    networks: [messagerie]
+
+  # Téléphone simulé : reçoit les codes de connexion. Rien n'est conservé à l'arrêt.
+  # Version 1.27.11, la dernière présente sur les postes de l'équipe ; à monter (1.33.x) quand le
+  # réseau le permet, l'API de recherche lue par le téléphone n'a pas changé.
+  mailpit:
+    <<: *durci
+    image: axllent/mailpit:v1.27.11@sha256:e22dce5b36f93c77082e204a3942fb6b283b7896e057458400a4c88344c3df68
+    user: "65534:65534"
+    mem_limit: 64m
+    environment:
+      MP_MAX_MESSAGES: "500"
+    tmpfs: [/tmp]
+    networks: [messagerie]
+    healthcheck:
+      test: ["CMD", "/mailpit", "readyz"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  demo-db:
+    <<: *durci
+    image: postgres:17.11-alpine@sha256:266d3c257594e195b309ae9d1805e54c788f1d7b375f56bf6c367aac6c917e7b
+    user: "70:70"
+    mem_limit: 256m
+    pids_limit: 512 # un processus par connexion
+    command:
+      - postgres
+      - -c
+      - hba_file=/etc/sira/pg_hba.conf
+      - -c
+      - ssl=on
+      - -c
+      - ssl_cert_file=/run/sira/pki/tls.crt
+      - -c
+      - ssl_key_file=/run/sira/pki/tls.key
+      - -c
+      - ssl_min_protocol_version=TLSv1.3
+    environment:
+      POSTGRES_PASSWORD_FILE: /run/sira/secrets/superutilisateur
+    tmpfs:
+      - /tmp
+      - /var/run/postgresql:uid=70,gid=70
+    volumes:
+      - demo-db:/var/lib/postgresql/data
+      - ./bases/pg_hba.conf:/etc/sira/pg_hba.conf:ro
+      - ./bases/roles.sh:/docker-entrypoint-initdb.d/10-roles.sh:ro
+      - { type: volume, source: pki, target: /run/sira/pki, read_only: true, volume: { subpath: membres/demo-db } }
+      - { type: volume, source: secrets, target: /run/sira/secrets, read_only: true, volume: { subpath: demo-db } }
+    networks: [adm-concours, adm-bourses, adm-entreprises, adm-etat-civil, adm-nationalite, adm-casier, adm-diplomes]
+    healthcheck:
+      test: ["CMD", "pg_isready", "--host=127.0.0.1", "--username=postgres", "--quiet"]
+      interval: 3s
+      timeout: 3s
+      retries: 40
+    depends_on:
+      pki: { condition: service_completed_successfully }
+
+  # La passerelle de la démonstration s'amorce avec les administrations fictives, et n'admet
+  # l'essai d'une question que sur les personnes fictives des registres simulés (toutes).
+  passerelle:
+    environment:
+      SIRA_AMORCAGE_REPERTOIRE: /etc/sira/amorcage/complet.yaml
+      SIRA_PASSERELLE_ESSAI_PERSONNESFICTIVES: >-
+        990010452876,990011380594,990012907431,990013665208,990014239765,990015718342,990016094127,990017734062,990018523690,990019846013,990020371459,990021659834,990022418067,990023970581,990024135796,990025782940,990026340815,990027894603,990028061372,990029915477,990030257948,990031603275,990048217350,990051176839,990063390218,990085502641
+    volumes:
+      - ../passerelle/amorcage-demo:/etc/sira/amorcage:ro
+
+  # --- État civil : connecteur (membre de Sira), registre simulé et son back-office.
+  connecteur-etat-civil:
+    <<: *java
+    build: *build-connecteur
+    image: sira/connecteur:local
+    environment:
+      <<: *java-env
+      SIRA_CONNECTEUR_REGISTRE_CODE: etat-civil
+      # Lecture décrite par le fichier de raccordement (contrat commun, registres/openapi.yaml).
+      SIRA_CONNECTEUR_REGISTRE_RACCORDEMENT: /etc/sira/raccordement.yaml
+      SIRA_CONNECTEUR_REGISTRE_HOTESPERMIS: registre-etat-civil
+      SIRA_CONNECTEUR_REGISTRE_HTTPADMIS: "true"
+      SPRING_DATASOURCE_URL: jdbc:postgresql://socle-db:5432/connecteur_etat_civil?sslmode=verify-full&sslrootcert=/run/sira/pki/ca.crt
+      SPRING_DATASOURCE_USERNAME: connecteur_etat_civil
+    volumes:
+      - ../registres/connecteurs/etat-civil.yaml:/etc/sira/politique.yaml:ro
+      - ../registres/raccordements/etat-civil.yaml:/etc/sira/raccordement.yaml:ro
+      - { type: volume, source: pki, target: /run/sira/pki, read_only: true, volume: { subpath: membres/registre-etat-civil } }
+      - { type: volume, source: secrets, target: /run/sira/secrets, read_only: true, volume: { subpath: registre-etat-civil } }
+    networks: [sira, donnees, adm-etat-civil]
+    depends_on:
+      pki: { condition: service_completed_successfully }
+      socle-db: { condition: service_healthy }
+
+  registre-etat-civil:
+    <<: *java
+    build: *build-registre
+    image: sira/registre:local
+    environment:
+      <<: [*java-env, *courriel]
+      SPRING_DATASOURCE_URL: jdbc:postgresql://demo-db:5432/registre_etat_civil?sslmode=verify-full&sslrootcert=/run/sira/pki/ca.crt
+      SPRING_DATASOURCE_USERNAME: registre_etat_civil
+      SIRA_OIDC_EMETTEUR: http://identite.sira.localhost:${SIRA_PORT:-8600}/realms/demo-agents
+      SIRA_OIDC_URL_INTERNE: https://keycloak:8443/realms/demo-agents
+      SIRA_OIDC_URL_PUBLIQUE: http://etat-civil.sira.localhost:${SIRA_PORT:-8600}
+    volumes:
+      - ../registres/donnees/etat-civil:/donnees:ro
+      - { type: volume, source: pki, target: /run/sira/pki, read_only: true, volume: { subpath: membres/demo-etat-civil } }
+      - { type: volume, source: secrets, target: /run/sira/secrets, read_only: true, volume: { subpath: demo-etat-civil } }
+    networks: [adm-etat-civil, idp-etat-civil, courriel]
+    depends_on:
+      pki: { condition: service_completed_successfully }
+      demo-db: { condition: service_healthy }
+
+  web-etat-civil:
+    <<: *web
+    build: *build-web-registre
+    image: sira/web-registre:local
+    environment:
+      API_AMONT: http://registre-etat-civil:8080
+      CONFIG_NOM: État civil
+      CONFIG_ORGANISME: Direction de l’état civil 
+      CONFIG_THEME: etat-civil
+      TAILLE_MAX_CORPS: 6m
+    networks: [entree, adm-etat-civil]
+
+  # --- Nationalité : connecteur (membre de Sira), registre simulé et son back-office.
+  connecteur-nationalite:
+    <<: *java
+    build: *build-connecteur
+    image: sira/connecteur:local
+    environment:
+      <<: *java-env
+      SIRA_CONNECTEUR_REGISTRE_CODE: nationalite
+      # Lecture décrite par le fichier de raccordement (contrat commun, registres/openapi.yaml).
+      SIRA_CONNECTEUR_REGISTRE_RACCORDEMENT: /etc/sira/raccordement.yaml
+      SIRA_CONNECTEUR_REGISTRE_HOTESPERMIS: registre-nationalite
+      SIRA_CONNECTEUR_REGISTRE_HTTPADMIS: "true"
+      SPRING_DATASOURCE_URL: jdbc:postgresql://socle-db:5432/connecteur_nationalite?sslmode=verify-full&sslrootcert=/run/sira/pki/ca.crt
+      SPRING_DATASOURCE_USERNAME: connecteur_nationalite
+    volumes:
+      - ../registres/connecteurs/nationalite.yaml:/etc/sira/politique.yaml:ro
+      - ../registres/raccordements/nationalite.yaml:/etc/sira/raccordement.yaml:ro
+      - { type: volume, source: pki, target: /run/sira/pki, read_only: true, volume: { subpath: membres/registre-nationalite } }
+      - { type: volume, source: secrets, target: /run/sira/secrets, read_only: true, volume: { subpath: registre-nationalite } }
+    networks: [sira, donnees, adm-nationalite]
+    depends_on:
+      pki: { condition: service_completed_successfully }
+      socle-db: { condition: service_healthy }
+
+  registre-nationalite:
+    <<: *java
+    build: *build-registre
+    image: sira/registre:local
+    environment:
+      <<: [*java-env, *courriel]
+      SPRING_DATASOURCE_URL: jdbc:postgresql://demo-db:5432/registre_nationalite?sslmode=verify-full&sslrootcert=/run/sira/pki/ca.crt
+      SPRING_DATASOURCE_USERNAME: registre_nationalite
+      SIRA_OIDC_EMETTEUR: http://identite.sira.localhost:${SIRA_PORT:-8600}/realms/demo-agents
+      SIRA_OIDC_URL_INTERNE: https://keycloak:8443/realms/demo-agents
+      SIRA_OIDC_URL_PUBLIQUE: http://nationalite.sira.localhost:${SIRA_PORT:-8600}
+    volumes:
+      - ../registres/donnees/nationalite:/donnees:ro
+      - { type: volume, source: pki, target: /run/sira/pki, read_only: true, volume: { subpath: membres/demo-nationalite } }
+      - { type: volume, source: secrets, target: /run/sira/secrets, read_only: true, volume: { subpath: demo-nationalite } }
+    networks: [adm-nationalite, idp-nationalite, courriel]
+    depends_on:
+      pki: { condition: service_completed_successfully }
+      demo-db: { condition: service_healthy }
+
+  web-nationalite:
+    <<: *web
+    build: *build-web-registre
+    image: sira/web-registre:local
+    environment:
+      API_AMONT: http://registre-nationalite:8080
+      CONFIG_NOM: Nationalité
+      CONFIG_ORGANISME: Service de la nationalité 
+      CONFIG_THEME: nationalite
+      TAILLE_MAX_CORPS: 6m
+    networks: [entree, adm-nationalite]
+
+  # --- Casier judiciaire : connecteur (membre de Sira), registre simulé et son back-office.
+  connecteur-casier:
+    <<: *java
+    build: *build-connecteur
+    image: sira/connecteur:local
+    environment:
+      <<: *java-env
+      SIRA_CONNECTEUR_REGISTRE_CODE: casier
+      # Lecture décrite par le fichier de raccordement (contrat commun, registres/openapi.yaml).
+      SIRA_CONNECTEUR_REGISTRE_RACCORDEMENT: /etc/sira/raccordement.yaml
+      SIRA_CONNECTEUR_REGISTRE_HOTESPERMIS: registre-casier
+      SIRA_CONNECTEUR_REGISTRE_HTTPADMIS: "true"
+      SPRING_DATASOURCE_URL: jdbc:postgresql://socle-db:5432/connecteur_casier?sslmode=verify-full&sslrootcert=/run/sira/pki/ca.crt
+      SPRING_DATASOURCE_USERNAME: connecteur_casier
+    volumes:
+      - ../registres/connecteurs/casier.yaml:/etc/sira/politique.yaml:ro
+      - ../registres/raccordements/casier.yaml:/etc/sira/raccordement.yaml:ro
+      - { type: volume, source: pki, target: /run/sira/pki, read_only: true, volume: { subpath: membres/registre-casier } }
+      - { type: volume, source: secrets, target: /run/sira/secrets, read_only: true, volume: { subpath: registre-casier } }
+    networks: [sira, donnees, adm-casier]
+    depends_on:
+      pki: { condition: service_completed_successfully }
+      socle-db: { condition: service_healthy }
+
+  registre-casier:
+    <<: *java
+    build: *build-registre
+    image: sira/registre:local
+    environment:
+      <<: [*java-env, *courriel]
+      SPRING_DATASOURCE_URL: jdbc:postgresql://demo-db:5432/registre_casier?sslmode=verify-full&sslrootcert=/run/sira/pki/ca.crt
+      SPRING_DATASOURCE_USERNAME: registre_casier
+      SIRA_OIDC_EMETTEUR: http://identite.sira.localhost:${SIRA_PORT:-8600}/realms/demo-agents
+      SIRA_OIDC_URL_INTERNE: https://keycloak:8443/realms/demo-agents
+      SIRA_OIDC_URL_PUBLIQUE: http://casier.sira.localhost:${SIRA_PORT:-8600}
+    volumes:
+      - ../registres/donnees/casier:/donnees:ro
+      - { type: volume, source: pki, target: /run/sira/pki, read_only: true, volume: { subpath: membres/demo-casier } }
+      - { type: volume, source: secrets, target: /run/sira/secrets, read_only: true, volume: { subpath: demo-casier } }
+    networks: [adm-casier, idp-casier, courriel]
+    depends_on:
+      pki: { condition: service_completed_successfully }
+      demo-db: { condition: service_healthy }
+
+  web-casier:
+    <<: *web
+    build: *build-web-registre
+    image: sira/web-registre:local
+    environment:
+      API_AMONT: http://registre-casier:8080
+      CONFIG_NOM: Casier judiciaire
+      CONFIG_ORGANISME: Service du casier judiciaire 
+      CONFIG_THEME: casier
+      TAILLE_MAX_CORPS: 6m
+    networks: [entree, adm-casier]
+
+  # --- Diplômes : connecteur (membre de Sira), registre simulé et son back-office.
+  connecteur-diplomes:
+    <<: *java
+    build: *build-connecteur
+    image: sira/connecteur:local
+    environment:
+      <<: *java-env
+      SIRA_CONNECTEUR_REGISTRE_CODE: diplomes
+      SIRA_CONNECTEUR_REGISTRE_URL: http://registre-diplomes:8080
+      # Démonstration : registre joint en http simple sur le réseau privé de l'administration.
+      SIRA_CONNECTEUR_REGISTRE_HTTPADMIS: "true"
+      SPRING_DATASOURCE_URL: jdbc:postgresql://socle-db:5432/connecteur_diplomes?sslmode=verify-full&sslrootcert=/run/sira/pki/ca.crt
+      SPRING_DATASOURCE_USERNAME: connecteur_diplomes
+    volumes:
+      - ../registres/connecteurs/diplomes.yaml:/etc/sira/politique.yaml:ro
+      - { type: volume, source: pki, target: /run/sira/pki, read_only: true, volume: { subpath: membres/registre-diplomes } }
+      - { type: volume, source: secrets, target: /run/sira/secrets, read_only: true, volume: { subpath: registre-diplomes } }
+    networks: [sira, donnees, adm-diplomes]
+    depends_on:
+      pki: { condition: service_completed_successfully }
+      socle-db: { condition: service_healthy }
+
+  registre-diplomes:
+    <<: *java
+    build: *build-registre
+    image: sira/registre:local
+    environment:
+      <<: [*java-env, *courriel]
+      SPRING_DATASOURCE_URL: jdbc:postgresql://demo-db:5432/registre_diplomes?sslmode=verify-full&sslrootcert=/run/sira/pki/ca.crt
+      SPRING_DATASOURCE_USERNAME: registre_diplomes
+      SIRA_OIDC_EMETTEUR: http://identite.sira.localhost:${SIRA_PORT:-8600}/realms/demo-agents
+      SIRA_OIDC_URL_INTERNE: https://keycloak:8443/realms/demo-agents
+      SIRA_OIDC_URL_PUBLIQUE: http://diplomes.sira.localhost:${SIRA_PORT:-8600}
+    volumes:
+      - ../registres/donnees/diplomes:/donnees:ro
+      - { type: volume, source: pki, target: /run/sira/pki, read_only: true, volume: { subpath: membres/demo-diplomes } }
+      - { type: volume, source: secrets, target: /run/sira/secrets, read_only: true, volume: { subpath: demo-diplomes } }
+    networks: [adm-diplomes, idp-diplomes, courriel]
+    depends_on:
+      pki: { condition: service_completed_successfully }
+      demo-db: { condition: service_healthy }
+
+  web-diplomes:
+    <<: *web
+    build: *build-web-registre
+    image: sira/web-registre:local
+    environment:
+      API_AMONT: http://registre-diplomes:8080
+      CONFIG_NOM: Diplômes
+      CONFIG_ORGANISME: Office des examens et des diplômes 
+      CONFIG_THEME: diplomes
+      TAILLE_MAX_CORPS: 6m
+    networks: [entree, adm-diplomes]
+
+  # --- Plateforme « Concours directs 2026 » : un service usager de Sira et son portail.
+  service-concours:
+    <<: *java
+    build: *build-service
+    image: sira/service:local
+    environment:
+      <<: [*java-env, *courriel]
+      SPRING_PROFILES_ACTIVE: concours
+      SPRING_DATASOURCE_URL: jdbc:postgresql://demo-db:5432/service_concours?sslmode=verify-full&sslrootcert=/run/sira/pki/ca.crt
+      SPRING_DATASOURCE_USERNAME: service_concours
+      SIRA_OIDC_EMETTEUR: http://identite.sira.localhost:${SIRA_PORT:-8600}/realms/demo-agents
+      SIRA_OIDC_URL_INTERNE: https://keycloak:8443/realms/demo-agents
+      SIRA_OIDC_URL_PUBLIQUE: http://concours.sira.localhost:${SIRA_PORT:-8600}
+    volumes:
+      - { type: volume, source: pki, target: /run/sira/pki, read_only: true, volume: { subpath: membres/service-concours } }
+      - { type: volume, source: secrets, target: /run/sira/secrets, read_only: true, volume: { subpath: service-concours } }
+    networks: [sira, adm-concours, courriel]
+    depends_on:
+      pki: { condition: service_completed_successfully }
+      demo-db: { condition: service_healthy }
+
+  web-concours:
+    <<: *web
+    build: *build-web-portail
+    image: sira/web-portail:local
+    environment:
+      API_AMONT: http://service-concours:8080
+      CONFIG_NOM: "Concours directs 2026"
+      CONFIG_ORGANISME: "Ministère de la Fonction publique"
+      CONFIG_THEME: concours
+      TAILLE_MAX_CORPS: 2m
+    networks: [entree, adm-concours]
+
+  # --- Plateforme « Bourses d'études » : un service usager de Sira et son portail.
+  service-bourses:
+    <<: *java
+    build: *build-service
+    image: sira/service:local
+    environment:
+      <<: [*java-env, *courriel]
+      SPRING_PROFILES_ACTIVE: bourses
+      SPRING_DATASOURCE_URL: jdbc:postgresql://demo-db:5432/service_bourses?sslmode=verify-full&sslrootcert=/run/sira/pki/ca.crt
+      SPRING_DATASOURCE_USERNAME: service_bourses
+      SIRA_OIDC_EMETTEUR: http://identite.sira.localhost:${SIRA_PORT:-8600}/realms/demo-agents
+      SIRA_OIDC_URL_INTERNE: https://keycloak:8443/realms/demo-agents
+      SIRA_OIDC_URL_PUBLIQUE: http://bourses.sira.localhost:${SIRA_PORT:-8600}
+    volumes:
+      - { type: volume, source: pki, target: /run/sira/pki, read_only: true, volume: { subpath: membres/service-bourses } }
+      - { type: volume, source: secrets, target: /run/sira/secrets, read_only: true, volume: { subpath: service-bourses } }
+    networks: [sira, adm-bourses, courriel]
+    depends_on:
+      pki: { condition: service_completed_successfully }
+      demo-db: { condition: service_healthy }
+
+  web-bourses:
+    <<: *web
+    build: *build-web-portail
+    image: sira/web-portail:local
+    environment:
+      API_AMONT: http://service-bourses:8080
+      CONFIG_NOM: "Bourses d'études"
+      CONFIG_ORGANISME: "Centre national de l'information, de l'orientation scolaire et des bourses"
+      CONFIG_THEME: bourses
+      TAILLE_MAX_CORPS: 2m
+    networks: [entree, adm-bourses]
+
+  # --- Plateforme « Créer son entreprise » : un service usager de Sira et son portail.
+  service-entreprises:
+    <<: *java
+    build: *build-service
+    image: sira/service:local
+    environment:
+      <<: [*java-env, *courriel]
+      SPRING_PROFILES_ACTIVE: entreprises
+      SPRING_DATASOURCE_URL: jdbc:postgresql://demo-db:5432/service_entreprises?sslmode=verify-full&sslrootcert=/run/sira/pki/ca.crt
+      SPRING_DATASOURCE_USERNAME: service_entreprises
+      SIRA_OIDC_EMETTEUR: http://identite.sira.localhost:${SIRA_PORT:-8600}/realms/demo-agents
+      SIRA_OIDC_URL_INTERNE: https://keycloak:8443/realms/demo-agents
+      SIRA_OIDC_URL_PUBLIQUE: http://entreprises.sira.localhost:${SIRA_PORT:-8600}
+    volumes:
+      - { type: volume, source: pki, target: /run/sira/pki, read_only: true, volume: { subpath: membres/service-entreprises } }
+      - { type: volume, source: secrets, target: /run/sira/secrets, read_only: true, volume: { subpath: service-entreprises } }
+    networks: [sira, adm-entreprises, courriel]
+    depends_on:
+      pki: { condition: service_completed_successfully }
+      demo-db: { condition: service_healthy }
+
+  web-entreprises:
+    <<: *web
+    build: *build-web-portail
+    image: sira/web-portail:local
+    environment:
+      API_AMONT: http://service-entreprises:8080
+      CONFIG_NOM: "Créer son entreprise"
+      CONFIG_ORGANISME: "Centre de formalités des entreprises "
+      CONFIG_THEME: entreprises
+      TAILLE_MAX_CORPS: 2m
+    networks: [entree, adm-entreprises]
+
+  # Téléphone simulé : écran seul. Le proxy, sur « messagerie », relaie la recherche.
+  web-telephone:
+    <<: *web
+    build:
+      context: ..
+      dockerfile: deploiement/docker/web.Dockerfile
+      args: { ESPACE: interfaces/demo, APPLICATION: telephone }
+    image: sira/web-telephone:local
+    networks: [entree]
+
+  # --- Profil « etranger » : le registre d'une autre équipe et le connecteur posé devant lui.
+  # Absent de la démonstration ordinaire ; « scripts/sira etranger » le lance et le prouve
+  # (docs/brancher-un-registre.md). Le registre n'est pas une image de Sira : Node seul, autres
+  # noms de champs, autre forme d'URL, clé d'API sur HTTP simple.
+  registre-etranger:
+    <<: *durci
+    profiles: [etranger]
+    image: node:24-alpine@sha256:44fce696f38ba8c987c4db89954051000bbd05ffd8d8659ba15ed4a8602e937f
+    pull_policy: missing
+    user: "1000:1000"
+    mem_limit: 64m
+    command: ["node", "/srv/serveur.mjs"]
+    environment:
+      CLE_API_FICHIER: /run/secrets/cle-api
+      DONNEES: /srv/citizens.json
+    volumes:
+      - ../registres/etranger/serveur.mjs:/srv/serveur.mjs:ro
+      - ../registres/etranger/citizens.json:/srv/citizens.json:ro
+      - { type: volume, source: secrets, target: /run/secrets, read_only: true, volume: { subpath: etranger } }
+    networks: [adm-etranger]
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/healthz"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+    depends_on:
+      pki: { condition: service_completed_successfully }
+
+  connecteur-etranger:
+    <<: *java
+    profiles: [etranger]
+    build: *build-connecteur
+    image: sira/connecteur:local
+    environment:
+      <<: *java-env
+      SIRA_CONNECTEUR_REGISTRE_CODE: etranger
+      SIRA_CONNECTEUR_REGISTRE_RACCORDEMENT: /etc/sira/raccordement.yaml
+      # Seul hôte joignable ; HTTP admis parce que le registre de l'autre équipe n'offre que lui
+      # et qu'il vit sur un réseau privé, comme en démonstration.
+      SIRA_CONNECTEUR_REGISTRE_HOTESPERMIS: registre-etranger
+      SIRA_CONNECTEUR_REGISTRE_HTTPADMIS: "true"
+      SPRING_DATASOURCE_URL: jdbc:postgresql://socle-db:5432/connecteur_etranger?sslmode=verify-full&sslrootcert=/run/sira/pki/ca.crt
+      SPRING_DATASOURCE_USERNAME: connecteur_etranger
+    volumes:
+      - ../registres/etranger/politique.yaml:/etc/sira/politique.yaml:ro
+      - ../registres/etranger/raccordement.yaml:/etc/sira/raccordement.yaml:ro
+      - { type: volume, source: pki, target: /run/sira/pki, read_only: true, volume: { subpath: membres/registre-etranger } }
+      - { type: volume, source: secrets, target: /run/sira/secrets, read_only: true, volume: { subpath: registre-etranger } }
+    networks: [sira, donnees, adm-etranger]
+    depends_on:
+      pki: { condition: service_completed_successfully }
+      socle-db: { condition: service_healthy }
+      registre-etranger: { condition: service_healthy }
+
+networks:
+  adm-concours:
+    internal: true
+  adm-bourses:
+    internal: true
+  adm-entreprises:
+    internal: true
+  adm-etat-civil:
+    internal: true
+  adm-nationalite:
+    internal: true
+  adm-casier:
+    internal: true
+  adm-diplomes:
+    internal: true
+  adm-etranger:
+    internal: true
+  # Un registre simulé et acces-identite (annuaire des agents).
+  idp-etat-civil:
+    internal: true
+  idp-nationalite:
+    internal: true
+  idp-casier:
+    internal: true
+  idp-diplomes:
+    internal: true
+  # Mailpit, Keycloak (envoi) et le proxy (recherche seule, pour le téléphone).
+  messagerie:
+    internal: true
+  # Sortie vers le serveur SMTP pour les seuls serveurs des registres et des services (courriel
+  # des identifiants des agents). Pas d'entrée : aucun port publié.
+  courriel: {}
+  # Sortie SMTP de Keycloak seul (lien « afficher un nouveau QR code » des agents).
+  courriel-identite: {}
+
+volumes:
+  demo-db: {}
