@@ -37,8 +37,6 @@ flowchart LR
 
 Chaque administration garde son registre chez elle. Elle y place un connecteur Sira, qui applique sa propre politique : tout ce que la politique ne liste pas est refusé, même si la passerelle le demande. Sira ne remet jamais l'identifiant unique de la personne à un service, seulement un pseudonyme propre à ce service. Un service peut transmettre l'identifiant que l'usager a saisi lui-même chez lui, pour le désigner : Sira vérifie alors que c'est bien cette personne qui donne l'accord. Le service de démonstration ne le conserve pas.
 
-## En bref, pour le jury
-
 | Ce que demande le sujet                                         | Où le voir dans Sira                                                        |
 | --------------------------------------------------------------- | --------------------------------------------------------------------------- |
 | Les cinq couches, chacune avec son contrat OpenAPI et ses tests | Tableau ci-dessous                                                          |
@@ -133,17 +131,17 @@ La simulation :
 - `passerelle/amorcage-demo/`, `identite/demo/` et `interfaces/demo/` : le référentiel, les comptes et les écrans de démonstration.
 - `deploiement/compose.demo.yaml` et les fichiers `*.demo.conf` : leur déploiement.
 
-Enfin, [`scripts/sira`](scripts/sira) est le point d'entrée de toutes les commandes, et [`tests/e2e/`](tests/e2e/README.md) contient les tests de bout en bout. La documentation détaillée est dans [`docs/`](docs/README.md) ; pour suivre une demande dans le code, commencez par [comprendre.md](docs/comprendre.md).
+Enfin, [`scripts/sira`](scripts/sira) est le point d'entrée de toutes les commandes, et [`tests/e2e/`](tests/e2e/README.md) contient les tests de bout en bout.
 
 ## Raccorder un registre
 
-Une administration ne modifie pas son registre pour rejoindre Sira. Elle installe un connecteur, lui décrit en YAML comment lire une fiche dans son registre et ce qu'elle accepte d'en exposer, puis le membre, le registre, les questions et l'habilitation se déclarent depuis la console ; l'habilitation n'est active qu'une fois approuvée par une autre personne que celle qui l'a préparée. La marche à suivre est dans [brancher-un-registre.md](docs/brancher-un-registre.md). La commande `scripts/sira etranger` la rejoue de bout en bout sur la pile de démonstration, avec un registre volontairement différent (autre langage, autres noms de champs, clé d'API).
+Une administration ne modifie pas son registre pour rejoindre Sira. Elle installe un connecteur, lui décrit en YAML comment lire une fiche dans son registre et ce qu'elle accepte d'en exposer, puis le membre, le registre, les questions et l'habilitation se déclarent depuis la console ; l'habilitation n'est active qu'une fois approuvée par une autre personne que celle qui l'a préparée. La commande `scripts/sira etranger` la rejoue de bout en bout sur la pile de démonstration, avec un registre volontairement différent (autre langage, autres noms de champs, clé d'API).
 
 ## Sécurité
 
 Tous les échanges entre machines passent en TLS mutuel, et l'identité d'un membre est celle de son certificat. Une requête de la passerelle vers un connecteur est signée et ne vaut que soixante secondes, une seule fois. Les comptes des citoyens, des administrateurs et des agents vivent dans des royaumes Keycloak séparés, et le navigateur ne reçoit jamais de jeton. Aucun secret n'est versionné : tout est généré au premier démarrage.
 
-Le modèle de menace, chaque mesure avec le test qui la vérifie, et ce qu'il manquerait pour une mise en production sont dans [docs/securite.md](docs/securite.md). Pour signaler une faille, voir [SECURITY.md](SECURITY.md).
+Pour signaler une faille, voir [SECURITY.md](SECURITY.md).
 
 ## Tests
 
@@ -165,4 +163,4 @@ Sira est publié sous la [Licence publique de l'Union européenne, version 1.2](
 
 ## Auteurs
 
-Sira est développé par l'équipe codeforchange de l'IBAM, à Ouagadougou : Landry Ezéïkiel OUARMA, Abdoul Razack OUEDRAOGO et Laodou Othniela KY. Le rapport technique et les documents de présentation du projet sont regroupés dans [docs/concours/](docs/concours/rapport-technique.md).
+Sira est développé par l'équipe codeforchange de l'IBAM, à Ouagadougou : Landry Ezéïkiel OUARMA, Abdoul Razack OUEDRAOGO et Laodou Othniela KY.
