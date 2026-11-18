@@ -1,0 +1,60 @@
+<h1>Démarches</h1>
+<p class="sira-chapeau">Écran d’exemple à recopier : liste, détail et formulaire.</p>
+
+@if (confirmation) {
+  <sira-alerte type="succes">{{ confirmation }}</sira-alerte>
+}
+
+<form class="sira-pile" (submit)="chercher($event, saisie.value)">
+  <sira-champ libelle="Chercher une démarche" aide="Par nom ou par organisme">
+    <input #saisie siraSaisie type="search" name="recherche" autocomplete="off" />
+  </sira-champ>
+  <div class="sira-groupe-boutons">
+    <button siraBouton variante="secondaire" type="submit">
+      <sira-icone nom="search" />
+      Chercher
+    </button>
+    <a siraBouton routerLink="nouvelle">
+      <sira-icone nom="plus" />
+      Ajouter une démarche
+    </a>
+  </div>
+</form>
+
+<div class="sira-marge-haut" aria-live="polite">
+  @if (probleme(); as message) {
+    <sira-alerte type="erreur" titre="La liste n’a pas pu être chargée">
+      <p>{{ message }}</p>
+      <button siraBouton variante="secondaire" type="button" (click)="resultat.reload()">
+        Réessayer
+      </button>
+    </sira-alerte>
+  } @else if (resultat.value(); as liste) {
+    @if (liste.total === 0) {
+      <sira-etat-vide titre="Aucune démarche trouvée. Essayez un autre mot." icone="search" />
+    } @else {
+      <sira-tableau
+        [legende]="liste.total + ' démarches'"
+        [colonnes]="colonnes"
+        [lignes]="liste.elements"
+      >
+        <ng-template siraCellule="nom" let-ligne>
+          <a [routerLink]="ligne.id">{{ ligne.nom }}</a>
+        </ng-template>
+        <ng-template siraCellule="etat" let-ligne>
+          @if (ligne.etat === 'ACTIVE') {
+            <sira-etiquette etat="succes">Active</sira-etiquette>
+          } @else {
+            <sira-etiquette etat="attention">Suspendue</sira-etiquette>
+          }
+        </ng-template>
+        <ng-template siraCellule="cree_le" let-ligne>{{
+          ligne.cree_le | siraDate: 'jour'
+        }}</ng-template>
+      </sira-tableau>
+      <sira-pagination [page]="liste.page" [pages]="pages()" (changement)="page.set($event)" />
+    }
+  } @else {
+    <sira-squelette [lignes]="5" libelle="Chargement des démarches" />
+  }
+</div>

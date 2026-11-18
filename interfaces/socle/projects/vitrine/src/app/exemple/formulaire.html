@@ -1,0 +1,53 @@
+<sira-fil
+  [elements]="[{ libelle: 'Démarches', chemin: '/exemple' }, { libelle: 'Ajouter une démarche' }]"
+/>
+<h1>Ajouter une démarche</h1>
+
+<sira-resume-erreurs [erreurs]="resume()" />
+@if (echec(); as message) {
+  <sira-alerte type="erreur" titre="La démarche n’a pas été enregistrée">{{ message }}</sira-alerte>
+}
+
+<form class="sira-pile" novalidate [formGroup]="formulaire" (ngSubmit)="enregistrer()">
+  <sira-champ
+    libelle="Nom de la démarche"
+    aide="Exemple : Inscription au concours"
+    identifiant="nom"
+    [erreur]="erreurs().nom"
+  >
+    <input siraSaisie formControlName="nom" autocomplete="off" />
+  </sira-champ>
+
+  <sira-champ libelle="Organisme" identifiant="organisme" [erreur]="erreurs().organisme">
+    <input siraSaisie formControlName="organisme" autocomplete="organization" />
+  </sira-champ>
+
+  <sira-champ
+    libelle="Pourquoi ces informations ?"
+    aide="Une phrase, montrée au citoyen avant son accord"
+    identifiant="finalite"
+    [erreur]="erreurs().finalite"
+  >
+    <textarea siraSaisie formControlName="finalite" rows="3"></textarea>
+  </sira-champ>
+
+  <sira-groupe-formulaire legende="Durée de l’accès" [erreur]="erreurs().duree_jours">
+    <label class="sira-choix">
+      <input id="duree_jours" type="radio" formControlName="duree_jours" value="0" />
+      Une seule consultation
+    </label>
+    <label class="sira-choix">
+      <input type="radio" formControlName="duree_jours" value="30" />
+      30 jours
+    </label>
+    <label class="sira-choix">
+      <input type="radio" formControlName="duree_jours" value="90" />
+      90 jours
+    </label>
+  </sira-groupe-formulaire>
+
+  <div class="sira-groupe-boutons">
+    <button siraBouton type="submit" [enCours]="envoi()">Enregistrer</button>
+    <a siraBouton variante="secondaire" routerLink="/exemple">Annuler</a>
+  </div>
+</form>
