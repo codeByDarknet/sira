@@ -1,0 +1,44 @@
+spring:
+  application:
+    name: registre
+  config:
+    # La description du registre (champs, documents) vit avec ses données, hors du binaire.
+    import: optional:file:${sira.registre.dossier}/registre.yaml
+  threads:
+    virtual:
+      # Le mode de panne « MUET » retient chaque appel : un fil virtuel ne coûte presque rien.
+      enabled: true
+  datasource:
+    hikari:
+      maximum-pool-size: 5
+  # Pièces déposées par les agents : 5 Mo par fichier.
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 6MB
+  # Envoi des identifiants aux nouveaux agents. Hôte, compte et mot de passe viennent de
+  # l'environnement (SPRING_MAIL_*), jamais du dépôt.
+  mail:
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.starttls.enable: true
+      mail.smtp.starttls.required: true
+      mail.smtp.connectiontimeout: 10000
+      mail.smtp.timeout: 15000
+      mail.smtp.writetimeout: 15000
+
+sira:
+  http:
+    taille-corps-max: 6MB
+  mtls:
+    # HTTP sur 8080 (réseau privé de l'administration) ; mTLS sortant vers l'annuaire des agents.
+    mode: client
+  oidc:
+    client-id: demo-${sira.registre.code}
+    scopes: openid,profile
+  registre:
+    dossier: /donnees
+  agents:
+    administration: ${sira.registre.code}
+    nom: ${sira.registre.nom}
+    url-application: ${sira.oidc.url-publique}

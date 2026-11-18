@@ -1,0 +1,265 @@
+{
+  "avertissement": "Données fictives de démonstration. Toute ressemblance avec une personne réelle est fortuite.",
+  "personnes": [
+    {
+      "identifiant_unique": "990048217350",
+      "nom": "KABORÉ",
+      "prenoms": "Wendkuni Aïcha",
+      "date_naissance": "2003-03-14",
+      "nationalite": "BF",
+      "mode_acquisition": "FILIATION",
+      "numero_certificat": "CN-2021-KDG-00357",
+      "date_certificat": "2021-06-21"
+    },
+    {
+      "identifiant_unique": "990017734062",
+      "nom": "SANOU",
+      "prenoms": "Bakary Désiré",
+      "date_naissance": "2005-11-02",
+      "nationalite": "BF",
+      "mode_acquisition": "FILIATION",
+      "numero_certificat": "CN-2023-BBD-00249",
+      "date_certificat": "2023-02-23"
+    },
+    {
+      "identifiant_unique": "990063390218",
+      "nom": "ZONGO",
+      "prenoms": "Pingdwendé Rasmata",
+      "date_naissance": "1986-07-27",
+      "nationalite": "BF",
+      "mode_acquisition": "FILIATION",
+      "numero_certificat": "CN-2004-REO-00134",
+      "date_certificat": "2004-11-14"
+    },
+    {
+      "identifiant_unique": "990029915477",
+      "nom": "SOMÉ",
+      "prenoms": "Dieudonné Yirbar",
+      "date_naissance": "1998-01-09",
+      "nationalite": "BF",
+      "mode_acquisition": "FILIATION",
+      "numero_certificat": "CN-2016-DBG-00061",
+      "date_certificat": "2016-10-22"
+    },
+    {
+      "identifiant_unique": "990085502641",
+      "nom": "COULIBALY",
+      "prenoms": "Mariam Sita",
+      "date_naissance": "2001-05-19",
+      "nationalite": "BF",
+      "mode_acquisition": "FILIATION",
+      "numero_certificat": "CN-2019-BBD-00448",
+      "date_certificat": "2019-01-04"
+    },
+    {
+      "identifiant_unique": "990051176839",
+      "nom": "DICKO",
+      "prenoms": "Hamidou Boureima",
+      "date_naissance": "1999-09-30",
+      "nationalite": "BF",
+      "mode_acquisition": "FILIATION",
+      "numero_certificat": "CN-2017-DOR-00203",
+      "date_certificat": "2017-08-02"
+    },
+    {
+      "identifiant_unique": "990010452876",
+      "nom": "OUÉDRAOGO",
+      "prenoms": "Abdoul Karim",
+      "date_naissance": "1995-06-12",
+      "nationalite": "BF",
+      "mode_acquisition": "FILIATION",
+      "numero_certificat": "CN-2013-OHG-00082",
+      "date_certificat": "2013-11-17"
+    },
+    {
+      "identifiant_unique": "990011380594",
+      "nom": "SAWADOGO",
+      "prenoms": "Zalissa",
+      "date_naissance": "2000-12-03",
+      "nationalite": "BF",
+      "mode_acquisition": "FILIATION",
+      "numero_certificat": "CN-2018-KYA-00728",
+      "date_certificat": "2018-05-14"
+    },
+    {
+      "identifiant_unique": "990012907431",
+      "nom": "TRAORÉ",
+      "prenoms": "Issouf",
+      "date_naissance": "1992-02-25",
+      "nationalite": "BF",
+      "mode_acquisition": "FILIATION",
+      "numero_certificat": "CN-2010-BFR-00113",
+      "date_certificat": "2010-02-20"
+    },
+    {
+      "identifiant_unique": "990013665208",
+      "nom": "COMPAORÉ",
+      "prenoms": "Nadège Wendyam",
+      "date_naissance": "2004-08-17",
+      "nationalite": "BF",
+      "mode_acquisition": "FILIATION",
+      "numero_certificat": "CN-2022-ZNR-00291",
+      "date_certificat": "2022-12-09"
+    },
+    {
+      "identifiant_unique": "990014239765",
+      "nom": "ILBOUDO",
+      "prenoms": "Rodrigue",
+      "date_naissance": "2009-08-21",
+      "nationalite": "BF",
+      "mode_acquisition": "FILIATION",
+      "numero_certificat": null,
+      "date_certificat": null
+    },
+    {
+      "identifiant_unique": "990015718342",
+      "nom": "NIKIÉMA",
+      "prenoms": "Flore Bénéwendé",
+      "date_naissance": "1997-04-05",
+      "nationalite": "BF",
+      "mode_acquisition": "FILIATION",
+      "numero_certificat": "CN-2015-OUA-00350",
+      "date_certificat": "2015-11-17"
+    },
+    {
+      "identifiant_unique": "990016094127",
+      "nom": "BARRY",
+      "prenoms": "Aminata",
+      "date_naissance": "2002-10-29",
+      "nationalite": "BF",
+      "mode_acquisition": "FILIATION",
+      "numero_certificat": "CN-2020-DOR-00452",
+      "date_certificat": "2020-05-08"
+    },
+    {
+      "identifiant_unique": "990018523690",
+      "nom": "DIALLO",
+      "prenoms": "Ousmane",
+      "date_naissance": "1988-01-14",
+      "nationalite": "BF",
+      "mode_acquisition": "FILIATION",
+      "numero_certificat": "CN-2006-FDG-00099",
+      "date_certificat": "2006-12-06"
+    },
+    {
+      "identifiant_unique": "990019846013",
+      "nom": "YAMÉOGO",
+      "prenoms": "Estelle Marie",
+      "date_naissance": "2006-03-08",
+      "nationalite": "BF",
+      "mode_acquisition": "FILIATION",
+      "numero_certificat": "CN-2024-KDG-00970",
+      "date_certificat": "2024-07-13"
+    },
+    {
+      "identifiant_unique": "990020371459",
+      "nom": "TIENDRÉBÉOGO",
+      "prenoms": "Wilfried",
+      "date_naissance": "1999-07-22",
+      "nationalite": "BF",
+      "mode_acquisition": "FILIATION",
+      "numero_certificat": "CN-2017-MNG-00224",
+      "date_certificat": "2017-05-23"
+    },
+    {
+      "identifiant_unique": "990021659834",
+      "nom": "KONATÉ",
+      "prenoms": "Djénéba",
+      "date_naissance": "2001-11-11",
+      "nationalite": "BF",
+      "mode_acquisition": "FILIATION",
+      "numero_certificat": "CN-2019-BBD-00916",
+      "date_certificat": "2019-05-14"
+    },
+    {
+      "identifiant_unique": "990022418067",
+      "nom": "HIEN",
+      "prenoms": "Sansan Olivier",
+      "date_naissance": "1994-09-02",
+      "nationalite": "BF",
+      "mode_acquisition": "FILIATION",
+      "numero_certificat": "CN-2012-GAO-00266",
+      "date_certificat": "2012-11-11"
+    },
+    {
+      "identifiant_unique": "990023970581",
+      "nom": "LOMPO",
+      "prenoms": "Yempabou",
+      "date_naissance": "2003-05-30",
+      "nationalite": "BF",
+      "mode_acquisition": "FILIATION",
+      "numero_certificat": "CN-2021-FDG-00387",
+      "date_certificat": "2021-12-24"
+    },
+    {
+      "identifiant_unique": "990024135796",
+      "nom": "KINDA",
+      "prenoms": "Rasmané",
+      "date_naissance": "1983-12-19",
+      "nationalite": "BF",
+      "mode_acquisition": "FILIATION",
+      "numero_certificat": "CN-2001-KYA-00055",
+      "date_certificat": "2001-04-16"
+    },
+    {
+      "identifiant_unique": "990025782940",
+      "nom": "BAMBARA",
+      "prenoms": "Charlotte",
+      "date_naissance": "1996-02-07",
+      "nationalite": "BF",
+      "mode_acquisition": "FILIATION",
+      "numero_certificat": "CN-2014-TKD-00542",
+      "date_certificat": "2014-11-17"
+    },
+    {
+      "identifiant_unique": "990026340815",
+      "nom": "DEMBÉLÉ",
+      "prenoms": "Moussa",
+      "date_naissance": "2000-06-26",
+      "nationalite": "ML",
+      "mode_acquisition": null,
+      "numero_certificat": null,
+      "date_certificat": null
+    },
+    {
+      "identifiant_unique": "990027894603",
+      "nom": "OUATTARA",
+      "prenoms": "Fatimata",
+      "date_naissance": "2005-01-16",
+      "nationalite": "BF",
+      "mode_acquisition": "FILIATION",
+      "numero_certificat": "CN-2023-BFR-00148",
+      "date_certificat": "2023-05-02"
+    },
+    {
+      "identifiant_unique": "990028061372",
+      "nom": "ZIDA",
+      "prenoms": "Parfait Wendpanga",
+      "date_naissance": "1990-10-04",
+      "nationalite": "BF",
+      "mode_acquisition": "NAISSANCE",
+      "numero_certificat": "CN-2008-ZNR-00128",
+      "date_certificat": "2008-05-08"
+    },
+    {
+      "identifiant_unique": "990030257948",
+      "nom": "SIMPORÉ",
+      "prenoms": "Alimata",
+      "date_naissance": "1998-08-13",
+      "nationalite": "BF",
+      "mode_acquisition": "FILIATION",
+      "numero_certificat": "CN-2016-TKD-00680",
+      "date_certificat": "2016-05-20"
+    },
+    {
+      "identifiant_unique": "990031603275",
+      "nom": "PODA",
+      "prenoms": "Naapouo Éric",
+      "date_naissance": "2002-04-21",
+      "nationalite": "BF",
+      "mode_acquisition": "FILIATION",
+      "numero_certificat": "CN-2020-DBG-00173",
+      "date_certificat": "2020-02-26"
+    }
+  ]
+}

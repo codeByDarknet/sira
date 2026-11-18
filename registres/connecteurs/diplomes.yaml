@@ -1,0 +1,64 @@
+# Politique locale du registre des diplômes (démonstration).
+
+validite:
+  par_defaut: P365D
+  maximale: P365D
+
+champs:
+  - chemin: baccalaureat_obtenu
+    libelle: Baccalauréat obtenu
+    type: BOOLEEN
+    niveau: STATUT
+    operateurs: [EGAL]
+    valeurs: [true]
+  - chemin: baccalaureat_serie
+    libelle: Série du baccalauréat
+    type: TEXTE
+    niveau: CHAMPS
+  - chemin: baccalaureat_annee
+    libelle: Année d’obtention du baccalauréat
+    type: NOMBRE
+    niveau: CHAMPS
+  - chemin: baccalaureat_mention
+    libelle: Mention au baccalauréat
+    type: TEXTE
+    niveau: CHAMPS
+
+  # Identité et parcours, pour les inscriptions et les concours.
+  - chemin: nom
+    libelle: Nom
+    type: TEXTE
+    niveau: CHAMPS
+  - chemin: prenoms
+    libelle: Prénoms
+    type: TEXTE
+    niveau: CHAMPS
+  - chemin: date_naissance
+    libelle: Date de naissance
+    type: DATE
+    niveau: CHAMPS
+  - chemin: baccalaureat_moyenne
+    libelle: Moyenne au baccalauréat (sur 20)
+    type: NOMBRE
+    niveau: CHAMPS
+  - chemin: baccalaureat_numero_pv
+    libelle: Numéro du procès-verbal du baccalauréat
+    type: TEXTE
+    niveau: CHAMPS
+  - chemin: diplome_superieur
+    libelle: Diplôme de l’enseignement supérieur
+    type: TEXTE
+    niveau: CHAMPS
+  - chemin: etablissement
+    libelle: Établissement de délivrance
+    type: TEXTE
+    niveau: CHAMPS
+
+documents:
+  - attestation-diplome
+  - releve-notes-bac
+
+# Nom lisible de chaque document, montré dans la console.
+libelles_documents:
+  attestation-diplome: Attestation de diplôme
+  releve-notes-bac: Relevé de notes du baccalauréat
