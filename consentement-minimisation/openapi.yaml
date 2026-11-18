@@ -1,0 +1,686 @@
+openapi: 3.1.0
+info:
+  title: Sira — Consentement et minimisation
+  version: 0.1.0
+  summary: L'accord du citoyen (dans la passerelle) et la réponse minimale du registre (connecteur).
+  description: |
+    Deux composants, deux serveurs :
+
+    - **Consentement** (`sira-consentement`), bibliothèque assemblée dans la passerelle : routes
+      `/v1/citoyen/**` hors journal, servies par `https://passerelle:8443`. Le citoyen y arrive
+      toujours par le serveur de l'espace citoyen (`espace-usager/openapi.yaml`), qui présente son
+      certificat et relaie le jeton de la personne. Le citoyen est celui du jeton : aucun
+      paramètre ne le désigne.
+    - **Connecteur** (`sira-connecteur`), un par administration : `POST /v1/requetes` sur
+      `https://connecteur-<registre>:8443`, appelé par la passerelle seule. Il applique la règle
+      du jeu et ne rend que le niveau demandé (`STATUT`, `CHAMPS` ou `DOCUMENT`), dans une
+      attestation signée par le registre puis chiffrée pour le service.
+
+    Le journal du citoyen (`/v1/citoyen/journal`) est décrit dans `journal/openapi.yaml`.
+
+    Conventions : JSON en `snake_case`, dates ISO 8601 UTC, identifiants UUID, listes paginées
+    (`page` de 1 à 1 000 000, `taille` de 1 à 100), erreurs RFC 9457 en
+    `application/problem+json`.
+  license:
+    name: Licence du dépôt Sira
+servers:
+  - url: https://passerelle:8443
+    description: Passerelle (mTLS obligatoire)
+tags:
+  - name: Citoyen
+    description: Identité `urn:sira:socle:espace-citoyen` et jeton du royaume `sira-citoyens`.
+  - name: Connecteur
+    description: Identité exigée `urn:sira:socle:passerelle`.
+paths:
+  /v1/citoyen/resume:
+    get:
+      tags: [Citoyen]
+      operationId: lireResume
+      summary: Les compteurs de l'accueil
+      security:
+        - certificatMembre: []
+          jetonCitoyen: []
+      responses:
+        '200':
+          description: Compteurs du citoyen du jeton.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Resume'}
+              example: {demandes_en_attente: 1, autorisations_actives: 2, consultations_30_jours: 7}
+        '401': {$ref: '#/components/responses/NonAuthentifie'}
+        '403': {$ref: '#/components/responses/AccesRefuse'}
+  /v1/citoyen/demandes:
+    get:
+      tags: [Citoyen]
+      operationId: listerMesDemandes
+      summary: Les demandes du citoyen, les plus récentes d'abord
+      description: |
+        Avec `etat=EN_ATTENTE_ACCORD`, seules les demandes auxquelles il est encore temps de répondre.
+        Une demande qui désigne la personne par son identifiant unique (canal NOTIFICATION, ou
+        REDIRECTION et CODE quand le service l'a transmis) lui est remise à sa première requête
+        après connexion ; elle n'existe pour aucun autre citoyen.
+      security: [{certificatMembre: [], jetonCitoyen: []}]
+      parameters:
+        - name: etat
+          in: query
+          schema: {type: string, pattern: '^[A-Z_]{0,32}$'}
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Taille'
+      responses:
+        '200':
+          description: Page de demandes.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/PageDeDemandes'}
+              example:
+                elements:
+                  -
+                    id: 8d2f4b61-3c7e-4a90-b5d1-0e9f6a2c7b14
+                    etat: EN_ATTENTE_ACCORD
+                    canal: CODE
+                    creee_le: '2026-11-16T09:30:00Z'
+                    expire_le: '2026-11-16T09:45:00Z'
+                    code_verification_exige: true
+                    service: {code: concours, nom: Concours directs 2026, organisme: Ministère de la Fonction publique}
+                    demarche:
+                      code: concours-direct
+                      libelle: Inscription à un concours direct
+                      finalite: Vérifier que vous remplissez les conditions du concours.
+                      duree_autorisation_jours: 30
+                    jeux:
+                      - code: etat-civil.majeur
+                        libelle: Vous êtes majeur
+                        niveau: STATUT
+                        registre: {code: etat-civil, nom: État civil}
+                        detail: 'Réponse : oui ou non'
+                page: 1
+                taille: 20
+                total: 1
+        '400': {$ref: '#/components/responses/RequeteInvalide'}
+        '401': {$ref: '#/components/responses/NonAuthentifie'}
+        '403': {$ref: '#/components/responses/AccesRefuse'}
+  /v1/citoyen/demandes/rattachement:
+    post:
+      tags: [Citoyen]
+      operationId: rattacherParCodeCourt
+      summary: Rattacher à soi une demande du canal CODE par son code court
+      description: |
+        Les codes faux sont comptés par citoyen et pour tous ; au-delà des limites réglées
+        (`essais-rattachement-max`, `essais-rattachement-global-max`), tout code est refusé (`429`)
+        jusqu'à ce que les essais vieillissent.
+      security: [{certificatMembre: [], jetonCitoyen: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/Rattachement'}
+            example: {code_court: KLPM-4821}
+      responses:
+        '413': {$ref: '#/components/responses/CorpsTropVolumineux'}
+        '200': {$ref: '#/components/responses/Demande'}
+        '400': {$ref: '#/components/responses/RequeteInvalide'}
+        '401': {$ref: '#/components/responses/NonAuthentifie'}
+        '403': {$ref: '#/components/responses/AccesRefuse'}
+        '404':
+          description: Code inconnu, expiré, déjà utilisé ou d'une demande qui désigne une autre personne
+            (`urn:sira:erreur:code-invalide`, code `CODE_INVALIDE`).
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/Probleme'}
+        '429': {$ref: '#/components/responses/TropDeRequetes'}
+  /v1/citoyen/demandes/{id}/rattachement:
+    post:
+      tags: [Citoyen]
+      operationId: rattacherParIdentifiant
+      summary: Rattacher la demande ouverte par son lien (`url_accord`, QR code)
+      security: [{certificatMembre: [], jetonCitoyen: []}]
+      parameters:
+        - $ref: '#/components/parameters/IdDemande'
+      responses:
+        '200': {$ref: '#/components/responses/Demande'}
+        '401': {$ref: '#/components/responses/NonAuthentifie'}
+        '403': {$ref: '#/components/responses/AccesRefuse'}
+        '404': {$ref: '#/components/responses/DemandeIntrouvable'}
+  /v1/citoyen/demandes/{id}:
+    get:
+      tags: [Citoyen]
+      operationId: lireMaDemande
+      summary: Le détail d'une demande, pour l'écran d'accord
+      security: [{certificatMembre: [], jetonCitoyen: []}]
+      parameters:
+        - $ref: '#/components/parameters/IdDemande'
+      responses:
+        '200': {$ref: '#/components/responses/Demande'}
+        '401': {$ref: '#/components/responses/NonAuthentifie'}
+        '403': {$ref: '#/components/responses/AccesRefuse'}
+        '404': {$ref: '#/components/responses/DemandeIntrouvable'}
+  /v1/citoyen/demandes/{id}/decision:
+    post:
+      tags: [Citoyen]
+      operationId: decider
+      summary: Accepter ou refuser une demande
+      description: |
+        Pour accepter une demande dont `code_verification_exige` est vrai, le citoyen recopie le code
+        affiché par l'écran du service : il n'accepte ainsi que la demande faite devant lui. Refuser
+        ne demande pas de code. Accepter ouvre une autorisation et interroge aussitôt les registres.
+      security: [{certificatMembre: [], jetonCitoyen: []}]
+      parameters:
+        - $ref: '#/components/parameters/IdDemande'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/Decision'}
+            example: {decision: ACCEPTER, code_verification: '492113'}
+      responses:
+        '413': {$ref: '#/components/responses/CorpsTropVolumineux'}
+        '200':
+          description: Décision enregistrée.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/DecisionEnregistree'}
+              example: {etat: EN_COURS, retour_url: null}
+        '400': {$ref: '#/components/responses/RequeteInvalide'}
+        '401': {$ref: '#/components/responses/NonAuthentifie'}
+        '403':
+          description: |
+            Certificat ou jeton refusé (`acces-refuse`), ou habilitation suspendue depuis la demande
+            (`urn:sira:erreur:habilitation-absente`, code `HABILITATION_ABSENTE`).
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/Probleme'}
+        '404': {$ref: '#/components/responses/DemandeIntrouvable'}
+        '409':
+          description: Décision déjà prise (`urn:sira:erreur:decision-deja-prise`, code `DECISION_DEJA_PRISE`).
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/Probleme'}
+        '410':
+          description: Délai de réponse dépassé (`urn:sira:erreur:demande-expiree`, code `DEMANDE_EXPIREE`).
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/Probleme'}
+        '422':
+          description: Code de vérification absent ou faux (`urn:sira:erreur:code-invalide`, code `CODE_INVALIDE`).
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/Probleme'}
+              example:
+                type: urn:sira:erreur:code-invalide
+                title: Code invalide
+                status: 422
+                detail: Ce n'est pas le code affiché par le service. Vérifiez que vous répondez à la demande que vous avez faite vous-même.
+                code: CODE_INVALIDE
+        '429': {$ref: '#/components/responses/TropDeRequetes'}
+  /v1/citoyen/autorisations:
+    get:
+      tags: [Citoyen]
+      operationId: listerMesAutorisations
+      summary: Les services qui ont, ou ont eu, accès
+      security: [{certificatMembre: [], jetonCitoyen: []}]
+      parameters:
+        - name: etat
+          in: query
+          schema: {type: string, enum: ['', ACTIVE, RETIREE, EXPIREE]}
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Taille'
+      responses:
+        '200':
+          description: Page d'autorisations.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/PageDAutorisations'}
+              example:
+                elements:
+                  -
+                    id: 1e5a9c03-6b2d-4f71-8a4e-c3d0b7f92e56
+                    etat: ACTIVE
+                    accordee_le: '2026-11-16T09:33:12Z'
+                    expire_le: '2026-12-16T09:33:12Z'
+                    retiree_le: null
+                    service: {code: concours, nom: Concours directs 2026, organisme: Ministère de la Fonction publique}
+                    demarche:
+                      code: concours-direct
+                      libelle: Inscription à un concours direct
+                      finalite: Vérifier que vous remplissez les conditions du concours.
+                    jeux:
+                      - code: etat-civil.majeur
+                        libelle: Vous êtes majeur
+                        niveau: STATUT
+                        registre: {code: etat-civil, nom: État civil}
+                        detail: 'Réponse : oui ou non'
+                    consultations: 1
+                    derniere_consultation_le: '2026-11-16T09:33:14Z'
+                page: 1
+                taille: 20
+                total: 1
+        '400': {$ref: '#/components/responses/RequeteInvalide'}
+        '401': {$ref: '#/components/responses/NonAuthentifie'}
+        '403': {$ref: '#/components/responses/AccesRefuse'}
+  /v1/citoyen/autorisations/{id}:
+    get:
+      tags: [Citoyen]
+      operationId: lireMonAutorisation
+      summary: Le détail d'une autorisation
+      security: [{certificatMembre: [], jetonCitoyen: []}]
+      parameters:
+        - $ref: '#/components/parameters/IdAutorisation'
+      responses:
+        '200':
+          description: L'autorisation.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/AutorisationCitoyen'}
+              example: {"id": "1e5a9c03-6b2d-4f71-8a4e-c3d0b7f92e56", "etat": "ACTIVE", "accordee_le": "2026-11-16T09:33:12Z", "expire_le": "2026-12-16T09:33:12Z", "retiree_le": null, "service": {"code": "concours", "nom": "Concours directs 2026", "organisme": "Ministère de la Fonction publique"}, "demarche": {"code": "concours-direct", "libelle": "Inscription à un concours direct", "finalite": "Vérifier que vous remplissez les conditions du concours."}, "jeux": [{"code": "etat-civil.majeur", "libelle": "Vous êtes majeur", "niveau": "STATUT", "registre": {"code": "etat-civil", "nom": "État civil"}, "detail": "Réponse : oui ou non"}], "consultations": 1, "derniere_consultation_le": "2026-11-16T09:33:14Z"}
+        '401': {$ref: '#/components/responses/NonAuthentifie'}
+        '403': {$ref: '#/components/responses/AccesRefuse'}
+        '404': {$ref: '#/components/responses/Introuvable'}
+    delete:
+      tags: [Citoyen]
+      operationId: retirerMonAutorisation
+      summary: Retirer l'accès
+      description: Les éléments encore à obtenir ne le seront pas et les attestations non remises sont effacées. Retirer deux fois ne change rien.
+      security: [{certificatMembre: [], jetonCitoyen: []}]
+      parameters:
+        - $ref: '#/components/parameters/IdAutorisation'
+      responses:
+        '204':
+          description: Accès retiré (journalisé, type `RETRAIT`).
+        '401': {$ref: '#/components/responses/NonAuthentifie'}
+        '403': {$ref: '#/components/responses/AccesRefuse'}
+        '404': {$ref: '#/components/responses/Introuvable'}
+  /v1/schema:
+    servers:
+      - url: https://connecteur-etat-civil:8443
+        description: Un connecteur par registre (`connecteur-<registre>`), mTLS obligatoire.
+    get:
+      tags: [Connecteur]
+      operationId: lireSchema
+      summary: Ce que le registre accepte d'exposer
+      description: |
+        Les champs et documents de la politique locale, avec leur nature (texte, date, nombre,
+        oui/non), leur niveau maximal et les questions admises. Aucune donnée de personne, aucun
+        détail du raccordement. Réservé au même appelant que `/v1/requetes` (la passerelle). La
+        console s'en sert pour ne proposer que ce que le registre peut rendre.
+      security:
+        - certificatMembre: []
+      responses:
+        '200':
+          description: Schéma du registre.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [champs, documents]
+                additionalProperties: false
+                properties:
+                  champs:
+                    type: array
+                    items:
+                      type: object
+                      required: [chemin, libelle, type, niveau]
+                      additionalProperties: false
+                      properties:
+                        chemin: {type: string, example: date_naissance}
+                        libelle: {type: string, example: Date de naissance}
+                        type: {type: string, enum: [TEXTE, DATE, NOMBRE, BOOLEEN]}
+                        niveau: {type: string, enum: [STATUT, CHAMPS]}
+                        operateurs:
+                          type: [array, 'null']
+                          items:
+                            type: string
+                            enum: [EGAL, DIFFERENT, AU_MOINS, AU_PLUS, AGE_AU_MOINS, AGE_AU_PLUS, EXISTE, AUCUN, ENCORE_VALIDE]
+                        valeurs:
+                          type: [array, 'null']
+                          items: {}
+                  documents:
+                    type: array
+                    items:
+                      type: object
+                      required: [code, libelle]
+                      additionalProperties: false
+                      properties:
+                        code: {type: string, example: extrait-naissance}
+                        libelle: {type: string, example: Extrait d'acte de naissance}
+        '403':
+          description: Appelant non admis.
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/Probleme'}
+  /v1/requetes:
+    servers:
+      - url: https://connecteur-etat-civil:8443
+        description: Un connecteur par registre (`connecteur-<registre>`), mTLS obligatoire.
+    post:
+      tags: [Connecteur]
+      operationId: traiterRequete
+      summary: Répondre à une question signée de la passerelle
+      description: |
+        Le corps est un JWS compact (ES256) signé par le cachet de la passerelle, valable 60
+        secondes, à usage unique (`jti`). Le connecteur vérifie la signature, l'audience, le rejeu,
+        le certificat de chiffrement du service (chaîne Sira et SAN du service nommé), puis applique
+        sa politique locale : un champ ou un niveau qu'il n'expose pas est refusé (`422`), quelle
+        que soit l'habilitation centrale. L'attestation est un JWS signé par le registre, chiffré
+        en JWE pour le service : la passerelle ne peut pas la lire.
+      security:
+        - certificatMembre: []
+      requestBody:
+        required: true
+        content:
+          application/jose:
+            schema:
+              type: string
+              description: JWS compact (trois segments base64url).
+              pattern: '^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$'
+            example: eyJhbGciOiJFUzI1NiIsImtpZCI6InBhc3NlcmVsbGUifQ.eyJqdGkiOiJleGVtcGxlIn0.c2lnbmF0dXJlLWRlLWRlbW9uc3RyYXRpb24
+      responses:
+        '413': {$ref: '#/components/responses/CorpsTropVolumineux'}
+        '200':
+          description: Attestation chiffrée pour le service.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [attestation]
+                additionalProperties: false
+                properties:
+                  attestation:
+                    type: string
+                    description: JWE compact (cinq segments base64url).
+                    pattern: '^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]*\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$'
+              example:
+                attestation: eyJhbGciOiJFQ0RILUVTIiwiZW5jIjoiQTI1NkdDTSJ9..aXYtZGVtbw.Y2hpZmZyZS1kZW1v.dGFnLWRlbW8
+        '400':
+          description: JWS illisible ou contenu mal formé (`urn:sira:erreur:requete-invalide`).
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/Probleme'}
+        '403':
+          description: |
+            Certificat d'un autre membre que la passerelle, ou requête refusée par les contrôles JOSE
+            (signature, audience, expiration, rejeu, certificat de chiffrement) : `urn:sira:erreur:acces-refuse`.
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/Probleme'}
+        '404':
+          description: Personne inconnue du registre (`urn:sira:erreur:personne-inconnue`).
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/Probleme'}
+              example: {type: 'urn:sira:erreur:personne-inconnue', title: Personne inconnue du registre, status: 404}
+        '415':
+          description: Corps qui n'est pas `application/jose` (`urn:sira:erreur:format-non-pris-en-charge`).
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/Probleme'}
+        '422':
+          description: Jeu refusé par la politique du registre (`urn:sira:erreur:jeu-refuse`) ; le détail ne contient aucune valeur du registre.
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/Probleme'}
+              example:
+                type: urn:sira:erreur:jeu-refuse
+                title: Jeu refusé par le registre
+                status: 422
+                detail: Le registre n'expose pas ce champ à ce niveau.
+        '503':
+          description: Registre momentanément indisponible (`urn:sira:erreur:registre-indisponible`).
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/Probleme'}
+components:
+  securitySchemes:
+    certificatMembre:
+      type: mutualTLS
+      description: |
+        Certificat client émis par l'autorité Sira ; l'identité est l'URI du SAN. Routes du
+        citoyen : `urn:sira:socle:espace-citoyen`. Connecteur : `urn:sira:socle:passerelle`. Toute
+        autre identité reçoit `403`.
+    jetonCitoyen:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        Jeton du royaume `sira-citoyens` (émetteur exact, audience de la passerelle, signature
+        RS256, PS256 ou ES256), lié au certificat du serveur qui le relaie. L'identifiant unique du
+        citoyen vient de la revendication `iue` ; un jeton sans elle reçoit `403`.
+  parameters:
+    Page:
+      name: page
+      in: query
+      schema: {type: integer, minimum: 1, maximum: 1000000, default: 1}
+    Taille:
+      name: taille
+      in: query
+      schema: {type: integer, minimum: 1, maximum: 100, default: 20}
+    IdDemande:
+      name: id
+      in: path
+      required: true
+      schema: {type: string, format: uuid}
+    IdAutorisation:
+      name: id
+      in: path
+      required: true
+      schema: {type: string, format: uuid}
+  responses:
+    CorpsTropVolumineux:
+      description: Corps au-delà de la borne `sira.http.taille-corps-max` (256 Kio par défaut), refusé avant toute lecture (`urn:sira:erreur:corps-trop-volumineux`).
+      content:
+        application/problem+json:
+          schema: {$ref: '#/components/schemas/Probleme'}
+          example: {type: 'urn:sira:erreur:corps-trop-volumineux', title: Corps trop volumineux, status: 413}
+    Demande:
+      description: La demande vue par le citoyen.
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/DemandeCitoyen'}
+          example: {"id": "8d2f4b61-3c7e-4a90-b5d1-0e9f6a2c7b14", "etat": "EN_ATTENTE_ACCORD", "canal": "CODE", "creee_le": "2026-11-16T09:30:00Z", "expire_le": "2026-11-16T09:45:00Z", "code_verification_exige": true, "service": {"code": "concours", "nom": "Concours directs 2026", "organisme": "Ministère de la Fonction publique"}, "demarche": {"code": "concours-direct", "libelle": "Inscription à un concours direct", "finalite": "Vérifier que vous remplissez les conditions du concours.", "duree_autorisation_jours": 30}, "jeux": [{"code": "etat-civil.majeur", "libelle": "Vous êtes majeur", "niveau": "STATUT", "registre": {"code": "etat-civil", "nom": "État civil"}, "detail": "Réponse : oui ou non"}]}
+    RequeteInvalide:
+      description: Paramètre ou corps refusé (`urn:sira:erreur:requete-invalide`, code `VALIDATION` et liste `erreurs` pour un corps).
+      content:
+        application/problem+json:
+          schema: {$ref: '#/components/schemas/Probleme'}
+          example:
+            type: urn:sira:erreur:requete-invalide
+            title: Requête invalide
+            status: 400
+            code: VALIDATION
+            erreurs:
+              - {champ: code_court, message: Le format de ce champ n'est pas admis.}
+    NonAuthentifie:
+      description: Jeton absent ou refusé (`urn:sira:erreur:non-authentifie`).
+      content:
+        application/problem+json:
+          schema: {$ref: '#/components/schemas/Probleme'}
+          example: {type: 'urn:sira:erreur:non-authentifie', title: Authentification requise, status: 401}
+    AccesRefuse:
+      description: Certificat d'un autre membre, ou jeton sans identifiant unique (`urn:sira:erreur:acces-refuse`).
+      content:
+        application/problem+json:
+          schema: {$ref: '#/components/schemas/Probleme'}
+          example: {type: 'urn:sira:erreur:acces-refuse', title: Accès refusé, status: 403}
+    Introuvable:
+      description: Absente, ou celle d'un autre citoyen (`urn:sira:erreur:introuvable`).
+      content:
+        application/problem+json:
+          schema: {$ref: '#/components/schemas/Probleme'}
+    DemandeIntrouvable:
+      description: Demande absente, celle d'un autre ou qui en désigne un autre (`urn:sira:erreur:demande-introuvable`, code `DEMANDE_INTROUVABLE`).
+      content:
+        application/problem+json:
+          schema: {$ref: '#/components/schemas/Probleme'}
+          example:
+            type: urn:sira:erreur:demande-introuvable
+            title: Demande introuvable
+            status: 404
+            detail: Cette demande n'existe pas ou n'existe plus.
+            code: DEMANDE_INTROUVABLE
+    TropDeRequetes:
+      description: Trop d'essais de code (`urn:sira:erreur:trop-de-requetes`, code `TROP_DE_REQUETES`).
+      content:
+        application/problem+json:
+          schema: {$ref: '#/components/schemas/Probleme'}
+  schemas:
+    Probleme:
+      type: object
+      description: Problème RFC 9457. `code` (passerelle) et `erreurs` ne sont présents que lorsqu'ils s'appliquent.
+      required: [type, title, status]
+      additionalProperties: false
+      properties:
+        type: {type: string, pattern: '^urn:sira:erreur:[a-z0-9-]+$'}
+        title: {type: string}
+        status: {type: integer, minimum: 400, maximum: 599}
+        detail: {type: [string, 'null']}
+        instance: {type: [string, 'null']}
+        code: {type: string, pattern: '^[A-Z0-9_]+$'}
+        erreurs:
+          type: array
+          items:
+            type: object
+            required: [champ]
+            additionalProperties: false
+            properties:
+              champ: {type: string}
+              message: {type: string}
+              regle: {type: string}
+        reference: {type: string, description: Référence à citer pour une erreur interne (500).}
+    PageCommune:
+      type: object
+      required: [elements, page, taille, total]
+      additionalProperties: false
+      properties:
+        elements: {type: array}
+        page: {type: integer, minimum: 1}
+        taille: {type: integer, minimum: 1, maximum: 100}
+        total: {type: integer, minimum: 0}
+    EtatDemande:
+      type: string
+      enum: [EN_ATTENTE_ACCORD, REFUSEE, EXPIREE, ANNULEE, EN_COURS, PARTIELLE, COMPLETE]
+    Canal:
+      type: string
+      enum: [REDIRECTION, CODE, NOTIFICATION]
+    Niveau:
+      type: string
+      enum: [STATUT, CHAMPS, DOCUMENT]
+    ServiceVu:
+      type: object
+      required: [code, nom, organisme]
+      additionalProperties: false
+      properties:
+        code: {type: string}
+        nom: {type: string}
+        organisme: {type: string}
+    JeuVu:
+      type: object
+      required: [code, libelle, niveau, registre, detail]
+      additionalProperties: false
+      properties:
+        code: {type: string}
+        libelle: {type: string}
+        niveau: {$ref: '#/components/schemas/Niveau'}
+        registre:
+          type: object
+          required: [code, nom]
+          additionalProperties: false
+          properties:
+            code: {type: string}
+            nom: {type: string}
+        detail:
+          type: string
+          description: Ce qui sera transmis, dit simplement (« Réponse oui ou non », liste des champs, document).
+    DemandeCitoyen:
+      type: object
+      required: [id, etat, canal, creee_le, expire_le, code_verification_exige, service, demarche, jeux]
+      additionalProperties: false
+      properties:
+        id: {type: string, format: uuid}
+        etat: {$ref: '#/components/schemas/EtatDemande'}
+        canal: {$ref: '#/components/schemas/Canal'}
+        creee_le: {type: string, format: date-time}
+        expire_le: {type: string, format: date-time}
+        code_verification_exige: {type: boolean}
+        service: {$ref: '#/components/schemas/ServiceVu'}
+        demarche:
+          type: object
+          required: [code, libelle, finalite, duree_autorisation_jours]
+          additionalProperties: false
+          properties:
+            code: {type: string}
+            libelle: {type: string}
+            finalite: {type: string}
+            duree_autorisation_jours: {type: integer, minimum: 0}
+        jeux:
+          type: array
+          items: {$ref: '#/components/schemas/JeuVu'}
+    AutorisationCitoyen:
+      type: object
+      required: [id, etat, accordee_le, expire_le, retiree_le, service, demarche, jeux, consultations, derniere_consultation_le]
+      additionalProperties: false
+      properties:
+        id: {type: string, format: uuid}
+        etat: {type: string, enum: [ACTIVE, RETIREE, EXPIREE]}
+        accordee_le: {type: string, format: date-time}
+        expire_le: {type: string, format: date-time}
+        retiree_le: {type: [string, 'null'], format: date-time}
+        service: {$ref: '#/components/schemas/ServiceVu'}
+        demarche:
+          type: object
+          required: [code, libelle, finalite]
+          additionalProperties: false
+          properties:
+            code: {type: string}
+            libelle: {type: string}
+            finalite: {type: string}
+        jeux:
+          type: array
+          items: {$ref: '#/components/schemas/JeuVu'}
+        consultations: {type: integer, minimum: 0}
+        derniere_consultation_le: {type: [string, 'null'], format: date-time}
+    Resume:
+      type: object
+      required: [demandes_en_attente, autorisations_actives, consultations_30_jours]
+      additionalProperties: false
+      properties:
+        demandes_en_attente: {type: integer, minimum: 0}
+        autorisations_actives: {type: integer, minimum: 0}
+        consultations_30_jours:
+          type: integer
+          minimum: 0
+          description: Consultations et réutilisations réussies des 30 derniers jours.
+    PageDeDemandes:
+      allOf:
+        - $ref: '#/components/schemas/PageCommune'
+        - type: object
+          properties:
+            elements:
+              type: array
+              items: {$ref: '#/components/schemas/DemandeCitoyen'}
+    PageDAutorisations:
+      allOf:
+        - $ref: '#/components/schemas/PageCommune'
+        - type: object
+          properties:
+            elements:
+              type: array
+              items: {$ref: '#/components/schemas/AutorisationCitoyen'}
+    Rattachement:
+      type: object
+      required: [code_court]
+      properties:
+        code_court: {type: string, pattern: '^[A-Za-z0-9 -]{1,16}$'}
+    Decision:
+      type: object
+      required: [decision]
+      properties:
+        decision: {type: string, enum: [ACCEPTER, REFUSER]}
+        code_verification: {type: [string, 'null'], pattern: '^[0-9 ]{1,16}$'}
+    DecisionEnregistree:
+      type: object
+      required: [etat, retour_url]
+      additionalProperties: false
+      properties:
+        etat: {$ref: '#/components/schemas/EtatDemande'}
+        retour_url:
+          type: [string, 'null']
+          description: Canal REDIRECTION seulement, avec le code de retour à usage unique ; sinon `null`.
