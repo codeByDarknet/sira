@@ -1,0 +1,85 @@
+<div class="sira-titre-page">
+  <div>
+    <h1>Bonjour{{ prenom() ? ' ' + prenom() : '' }}</h1>
+    <p>Voici où en sont vos informations. Rien ne part sans votre accord.</p>
+  </div>
+  <div class="sira-groupe-boutons ec-actions-titre">
+    <a siraBouton routerLink="/scanner">
+      <sira-icone nom="qr-code" />
+      Scanner un code
+    </a>
+    <a siraBouton variante="secondaire" routerLink="/historique">
+      <sira-icone nom="history" />
+      Mon historique
+    </a>
+  </div>
+</div>
+
+<section aria-labelledby="titre-resume">
+  <h2 id="titre-resume" class="sira-masque">En ce moment</h2>
+  @if (probleme(); as message) {
+    <sira-alerte type="erreur" titre="Le résumé ne s’affiche pas">
+      <p>{{ message }}</p>
+      <button siraBouton variante="secondaire" type="button" (click)="situation.reload()">
+        Réessayer
+      </button>
+    </sira-alerte>
+  } @else if (situation.value(); as etat) {
+    <div class="sira-stats">
+      <a class="sira-stat sira-stat--forte" routerLink="/demandes">
+        <span class="sira-stat__libelle">Demandes en attente</span>
+        <span class="sira-stat__valeur">{{ etat.resume.demandes_en_attente }}</span>
+        <span class="sira-stat__note">Un service attend votre réponse</span>
+        <span class="sira-stat__fleche" aria-hidden="true"
+          ><sira-icone nom="arrow-up-right"
+        /></span>
+      </a>
+      <a class="sira-stat" routerLink="/acces">
+        <span class="sira-stat__libelle">Accès en cours</span>
+        <span class="sira-stat__valeur">{{ etat.resume.autorisations_actives }}</span>
+        <span class="sira-stat__note">Vous pouvez les retirer à tout moment</span>
+        <span class="sira-stat__fleche" aria-hidden="true"
+          ><sira-icone nom="arrow-up-right"
+        /></span>
+      </a>
+      <a class="sira-stat" routerLink="/historique">
+        <span class="sira-stat__libelle">Consultations sur 30 jours</span>
+        <span class="sira-stat__valeur">{{ etat.resume.consultations_30_jours }}</span>
+        <span class="sira-stat__note">Chacune est inscrite au journal</span>
+        <span class="sira-stat__fleche" aria-hidden="true"
+          ><sira-icone nom="arrow-up-right"
+        /></span>
+      </a>
+    </div>
+  } @else {
+    <sira-squelette [lignes]="3" libelle="Chargement du résumé" />
+  }
+</section>
+
+<div class="ec-colonnes">
+  <section class="ec-colonne" aria-labelledby="titre-attente">
+    <h2 id="titre-attente">
+      @if (enAttente().length > 0) {
+        {{ titreAttente() }}
+      } @else {
+        Aucune demande en attente
+      }
+    </h2>
+    @if (enAttente().length > 0) {
+      <ec-liste-demandes [demandes]="enAttente()" [niveauTitre]="3" />
+    } @else {
+      <sira-etat-vide titre="Tout est à jour" icone="circle-check">
+        <p>Quand un service vous demandera une information, elle apparaîtra ici.</p>
+      </sira-etat-vide>
+    }
+  </section>
+
+  <section class="ec-colonne" aria-labelledby="titre-code">
+    <sira-carte titre="Un service vous montre un code ?" [niveauTitre]="2">
+      <p class="sira-secondaire">
+        Au guichet ou sur un autre écran, scannez le QR code ou recopiez le code court.
+      </p>
+      <ec-saisie-code />
+    </sira-carte>
+  </section>
+</div>
