@@ -1,0 +1,145 @@
+<sira-fil
+  [elements]="[
+    { libelle: 'Questions', chemin: '/questions' },
+    { libelle: fiche()?.libelle ?? 'Détail' },
+  ]"
+/>
+
+@if (message(); as texte) {
+  <sira-alerte type="succes" ephemere>{{ texte }}</sira-alerte>
+}
+
+@if (probleme(); as message) {
+  <h1>Question introuvable</h1>
+  <sira-alerte type="erreur">{{ message }}</sira-alerte>
+} @else if (fiche(); as jeu) {
+  @let etat = libelleActif(jeu.actif);
+  <div class="sira-titre-page">
+    <div>
+      <h1>{{ jeu.libelle }}</h1>
+      <p>Fiche de la question : ce qu’elle demande au registre, et ce que le service reçoit.</p>
+    </div>
+    @if (droits.ecriture()) {
+      <div class="sira-fiche__actions">
+        <button siraBouton variante="secondaire" type="button" (click)="modification.set(true)">
+          <sira-icone nom="pencil" />
+          Modifier
+        </button>
+        @if (jeu.actif) {
+          <button siraBouton variante="danger" type="button" (click)="desactivation.set(true)">
+            <sira-icone nom="ban" />
+            Désactiver
+          </button>
+        }
+      </div>
+    }
+  </div>
+
+  <div class="sira-fiche">
+    <div class="sira-fiche__grille">
+      <section class="sira-fiche__case">
+        <p class="sira-fiche__cle"><sira-icone nom="key-round" /> Code</p>
+        <p class="sira-fiche__valeur co-technique">{{ jeu.code }}</p>
+        <p class="sira-fiche__explication">
+          Registre, puis nom court. Les habilitations citent ce code. Il ne change jamais.
+        </p>
+      </section>
+      <section class="sira-fiche__case">
+        <p class="sira-fiche__cle"><sira-icone nom="landmark" /> Registre</p>
+        <p class="sira-fiche__valeur">
+          <a siraLien [routerLink]="['/registres', jeu.registre]">{{
+            noms.registre(jeu.registre)
+          }}</a>
+        </p>
+        <p class="sira-fiche__explication">Le registre qui détient l’information et répond.</p>
+      </section>
+      <section class="sira-fiche__case">
+        <p class="sira-fiche__cle"><sira-icone nom="circle-check" /> État</p>
+        <p class="sira-fiche__valeur">
+          <sira-etiquette [etat]="etat.etat">{{ etat.texte }}</sira-etiquette>
+        </p>
+        <p class="sira-fiche__explication">
+          @if (jeu.actif) {
+            Active : les services habilités peuvent la poser.
+          } @else {
+            Désactivée : plus aucun service ne peut la poser.
+          }
+        </p>
+      </section>
+      <section class="sira-fiche__case">
+        <p class="sira-fiche__cle"><sira-icone nom="clock" /> Validité d’une réponse</p>
+        <p class="sira-fiche__valeur">{{ phraseValidite(jeu.validite) }}</p>
+        <p class="sira-fiche__explication">
+          Pendant cette durée, une réponse déjà obtenue est réutilisée au lieu de réinterroger le
+          registre.
+        </p>
+      </section>
+      <section class="sira-fiche__case sira-fiche__case--large">
+        <p class="sira-fiche__cle"><sira-icone nom="shield-check" /> Forme de la réponse</p>
+        <p class="sira-fiche__valeur">{{ libelleNiveau(jeu.niveau) }}</p>
+        <p class="sira-fiche__explication">
+          @switch (jeu.niveau) {
+            @case ('STATUT') {
+              Le service ne reçoit qu’un oui ou un non : jamais l’information elle-même. C’est la
+              forme la plus protectrice.
+            }
+            @case ('CHAMPS') {
+              Le service reçoit la valeur des informations choisies, et seulement celles-là.
+            }
+            @default {
+              Le service reçoit un document délivré par le registre.
+            }
+          }
+        </p>
+      </section>
+      <section class="sira-fiche__case sira-fiche__case--large">
+        <p class="sira-fiche__cle"><sira-icone nom="send" /> Ce que le service reçoit</p>
+        <p class="sira-fiche__valeur">{{ phraseContenu(jeu) }}</p>
+        <p class="sira-fiche__explication">
+          C’est tout ce qui sort du registre pour cette question.
+        </p>
+      </section>
+      <section class="sira-fiche__case sira-fiche__case--large">
+        <p class="sira-fiche__cle"><sira-icone nom="message-square" /> Libellé lu par le citoyen</p>
+        <p class="sira-fiche__valeur">{{ jeu.libelle }}</p>
+        <p class="sira-fiche__explication">
+          Affiché sur l’écran où le citoyen donne son accord, pour qu’il sache ce qui sera vérifié.
+        </p>
+      </section>
+      @if (jeu.description) {
+        <section class="sira-fiche__case sira-fiche__case--large">
+          <p class="sira-fiche__cle"><sira-icone nom="info" /> Note interne</p>
+          <p class="sira-fiche__valeur">{{ jeu.description }}</p>
+          <p class="sira-fiche__explication">Visible seulement dans la console.</p>
+        </section>
+      }
+    </div>
+  </div>
+
+  <co-fenetre
+    large
+    titre="Modifier la question"
+    intro="Reprenez les étapes, faites un essai, puis publiez la nouvelle version."
+    [(ouvert)]="modification"
+  >
+    @if (modification()) {
+      <co-assistant-jeu
+        [code]="jeu.code"
+        (termine)="apresModification($event)"
+        (annule)="modification.set(false)"
+      />
+    }
+  </co-fenetre>
+
+  <co-confirmation
+    [question]="'Désactiver « ' + jeu.libelle + ' » ?'"
+    confirmer="Désactiver"
+    [(ouvert)]="desactivation"
+    [appel]="desactiver"
+    (fait)="apresDesactivation()"
+  >
+    <p>Plus aucun service ne pourra la poser. L’historique est conservé.</p>
+  </co-confirmation>
+} @else {
+  <sira-squelette [lignes]="6" libelle="Chargement de la question" />
+}

@@ -1,0 +1,185 @@
+<sira-fil
+  [elements]="[
+    { libelle: 'Registres', chemin: '/registres' },
+    { libelle: fiche()?.nom ?? 'Détail' },
+  ]"
+/>
+
+@if (message(); as texte) {
+  <sira-alerte type="succes" ephemere>{{ texte }}</sira-alerte>
+}
+
+@if (probleme(); as message) {
+  <h1>Registre introuvable</h1>
+  <sira-alerte type="erreur">{{ message }}</sira-alerte>
+} @else if (fiche(); as registre) {
+  @let actif = libelleActif(registre.actif);
+  <div class="sira-titre-page">
+    <div>
+      <h1>{{ registre.nom }}</h1>
+      <p>Fiche du registre : ce que chaque information veut dire, et son état en ce moment.</p>
+    </div>
+    <div class="sira-fiche__actions">
+      <a
+        siraBouton
+        variante="secondaire"
+        routerLink="/questions"
+        [queryParams]="{ registre: registre.code }"
+      >
+        <sira-icone nom="message-square" />
+        Voir ses questions
+      </a>
+      @if (droits.ecriture()) {
+        <button siraBouton variante="secondaire" type="button" (click)="modification.set(true)">
+          <sira-icone nom="pencil" />
+          Modifier
+        </button>
+        @if (registre.actif) {
+          <button siraBouton variante="danger" type="button" (click)="desactivation.set(true)">
+            <sira-icone nom="ban" />
+            Désactiver
+          </button>
+        }
+      }
+    </div>
+  </div>
+
+  <div class="sira-fiche">
+    <div class="sira-fiche__grille">
+      <section class="sira-fiche__case">
+        <p class="sira-fiche__cle"><sira-icone nom="key-round" /> Code</p>
+        <p class="sira-fiche__valeur">{{ registre.code }}</p>
+        <p class="sira-fiche__explication">
+          Identifiant court du registre. Les questions et les habilitations s’y réfèrent. Il ne
+          change jamais.
+        </p>
+      </section>
+      <section class="sira-fiche__case">
+        <p class="sira-fiche__cle"><sira-icone nom="building-2" /> Administration rattaché</p>
+        <p class="sira-fiche__valeur">
+          <a siraLien [routerLink]="['/membres', registre.membre]">{{
+            noms.membre(registre.membre)
+          }}</a>
+        </p>
+        <p class="sira-fiche__explication">
+          L' administration qui gère ce registre et répond de ses données.
+        </p>
+      </section>
+      <section class="sira-fiche__case">
+        <p class="sira-fiche__cle"><sira-icone nom="circle-check" /> État</p>
+        <p class="sira-fiche__valeur">
+          <sira-etiquette [etat]="actif.etat">{{ actif.texte }}</sira-etiquette>
+        </p>
+        <p class="sira-fiche__explication">
+          @if (registre.actif) {
+            Actif : Sira peut lui poser les questions publiées.
+          } @else {
+            Désactivé : aucune question ne lui est envoyée.
+          }
+        </p>
+      </section>
+      <section class="sira-fiche__case">
+        <p class="sira-fiche__cle"><sira-icone nom="external-link" /> Adresse du connecteur</p>
+        <p class="sira-fiche__valeur co-technique">{{ registre.adresse }}</p>
+        <p class="sira-fiche__explication">
+          Le connecteur est le serveur de sécurité posé devant le registre : il reçoit la question,
+          lit la donnée et ne renvoie que la réponse demandée (par exemple « oui » ou « non »).
+        </p>
+        @if (droits.decision()) {
+          <div class="co-decision">
+            <co-decision-adresse
+              titre="Changer l’adresse du connecteur"
+              libelle="Nouvelle adresse"
+              aide="Vérifiez qu’elle est bien celle de ce registre. Elle commence par https://."
+              champ="adresse"
+              [valeur]="registre.adresse"
+              [verifier]="verifierAdresse"
+              [appel]="changerAdresse"
+              retour="/registres"
+              annonce="Adresse du connecteur changée."
+            />
+          </div>
+        }
+      </section>
+      @if (etat(); as liaison) {
+        <section class="sira-fiche__case sira-fiche__case--large">
+          <p class="sira-fiche__cle"><sira-icone nom="wifi" /> Disponibilité en ce moment</p>
+          <co-etat-registre [etat]="liaison" />
+          <p class="sira-fiche__explication">
+            Si le registre ne répond plus, Sira suspend les appels un moment puis réessaie seul. Les
+            réponses en attente partent dès qu’il revient.
+          </p>
+        </section>
+      }
+    </div>
+  </div>
+
+  <section class="co-section" aria-labelledby="titre-schema">
+    <div class="co-section__entete">
+      <h2 id="titre-schema">Informations partagées</h2>
+      <p class="sira-secondaire">
+        Déclarées par le registre sur son connecteur. Rien d’autre ne peut sortir, quelle que soit
+        la question.
+      </p>
+    </div>
+    @if (schemaIndisponible(); as erreur) {
+      <sira-alerte type="erreur" titre="Connecteur injoignable">
+        {{ erreur }} Les informations partagées s’afficheront quand il répondra.
+      </sira-alerte>
+    } @else if (schema(); as contenu) {
+      @if (contenu.champs.length === 0 && contenu.documents.length === 0) {
+        <sira-alerte type="info">Ce registre ne partage encore aucune information.</sira-alerte>
+      } @else {
+        <div class="co-partage">
+          @for (champ of contenu.champs; track champ.chemin) {
+            @let nature = type(champ);
+            <article class="co-partage__carte">
+              <p class="co-partage__type">
+                <sira-icone [nom]="nature.icone" /> {{ nature.libelle }}
+              </p>
+              <h3 class="co-partage__nom">{{ champ.libelle }}</h3>
+              <p class="co-partage__texte">{{ recu(champ) }}</p>
+              <p class="co-partage__code co-technique">{{ champ.chemin }}</p>
+            </article>
+          }
+          @for (document of contenu.documents; track document.code) {
+            <article class="co-partage__carte">
+              <p class="co-partage__type"><sira-icone nom="file-text" /> Document</p>
+              <h3 class="co-partage__nom">{{ document.libelle }}</h3>
+              <p class="co-partage__texte">Délivré par le registre, en PDF.</p>
+              <p class="co-partage__code co-technique">{{ document.code }}</p>
+            </article>
+          }
+        </div>
+      }
+    } @else {
+      <sira-squelette [lignes]="3" libelle="Lecture des informations partagées" />
+    }
+  </section>
+
+  <co-fenetre
+    titre="Modifier le registre"
+    intro="Le code ne change pas. L’adresse du connecteur se décide plus bas, sur cette fiche."
+    [(ouvert)]="modification"
+  >
+    @if (modification()) {
+      <co-formulaire-registre
+        [code]="registre.code"
+        (termine)="apresModification($event)"
+        (annule)="modification.set(false)"
+      />
+    }
+  </co-fenetre>
+
+  <co-confirmation
+    [question]="'Désactiver « ' + registre.nom + ' » ?'"
+    confirmer="Désactiver"
+    [(ouvert)]="desactivation"
+    [appel]="desactiver"
+    (fait)="apresDesactivation()"
+  >
+    <p>Ses questions resteront sans réponse. L’historique est conservé.</p>
+  </co-confirmation>
+} @else {
+  <sira-squelette [lignes]="6" libelle="Chargement du registre" />
+}

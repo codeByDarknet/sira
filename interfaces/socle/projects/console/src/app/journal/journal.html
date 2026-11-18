@@ -1,0 +1,202 @@
+<div class="sira-titre-page">
+  <div>
+    <h1>Journal</h1>
+    <p>
+      Chaque échange laisse une ligne : qui a demandé quoi, quand, pourquoi et avec quel résultat.
+    </p>
+    <p class="sira-compte">
+      {{ liste.chargement() && !liste.total() ? 'Chargement…' : compte(liste.total()) }}
+    </p>
+  </div>
+  <button siraBouton variante="secondaire" type="button" (click)="ouvrirVerification()">
+    <sira-icone nom="shield-check" />
+    Vérifier l’intégrité
+  </button>
+</div>
+
+<section class="co-section">
+  @if (liste.probleme(); as probleme) {
+    <sira-alerte type="erreur" titre="Journal indisponible">{{ probleme }}</sira-alerte>
+  }
+  <div class="co-liste">
+    <sira-tableau
+      legende="Lignes du journal"
+      [outils]="false"
+      [colonnes]="colonnes"
+      [lignes]="liste.lignes()"
+      [total]="liste.total()"
+      [chargement]="liste.chargement()"
+      [pageCourante]="liste.page()"
+      [parPage]="liste.taille()"
+      (requete)="liste.demander($event)"
+    >
+      <p-select
+        tableau-filtres
+        class="sira-tableau__filtre"
+        [options]="choixTypes"
+        optionLabel="libelle"
+        optionValue="valeur"
+        appendTo="body"
+        ariaLabel="Filtrer par événement"
+        [ngModel]="liste.filtres()['type'] ?? ''"
+        (ngModelChange)="liste.filtrer('type', $event)"
+      />
+      <p-select
+        tableau-filtres
+        class="sira-tableau__filtre"
+        [options]="choixServices()"
+        optionLabel="libelle"
+        optionValue="valeur"
+        appendTo="body"
+        ariaLabel="Filtrer par service"
+        [ngModel]="liste.filtres()['service'] ?? ''"
+        (ngModelChange)="liste.filtrer('service', $event)"
+      />
+      <p-select
+        tableau-filtres
+        class="sira-tableau__filtre"
+        [options]="choixRegistres()"
+        optionLabel="libelle"
+        optionValue="valeur"
+        appendTo="body"
+        ariaLabel="Filtrer par registre"
+        [ngModel]="liste.filtres()['registre'] ?? ''"
+        (ngModelChange)="liste.filtrer('registre', $event)"
+      />
+      <ng-template siraCellule="horodatage" let-ligne>{{
+        ligne.horodatage | siraDate
+      }}</ng-template>
+      <ng-template siraCellule="type" let-ligne>{{ libelleType(ligne.type) }}</ng-template>
+      <ng-template siraCellule="service" let-ligne>{{ nomDe(ligne.service) || '—' }}</ng-template>
+      <ng-template siraCellule="registre" let-ligne>{{ nomDe(ligne.registre) || '—' }}</ng-template>
+      <ng-template siraCellule="jeu" let-ligne>
+        @if (nomDe(ligne.jeu); as question) {
+          {{ question }}
+          @if (niveauDe(ligne); as niveau) {
+            <span class="co-ligne sira-secondaire">{{ libelleNiveau(niveau) }}</span>
+          }
+        } @else {
+          —
+        }
+      </ng-template>
+      <ng-template siraCellule="resultat" let-ligne>
+        @let resultat = libelleResultat(ligne.resultat);
+        <sira-etiquette [etat]="resultat.etat">{{ resultat.texte }}</sira-etiquette>
+      </ng-template>
+      <ng-template siraActions let-ligne>
+        <button
+          siraAction="eye"
+          [libelle]="'Voir la ligne du ' + (ligne.horodatage | siraDate)"
+          (click)="voir(ligne)"
+        ></button>
+      </ng-template>
+    </sira-tableau>
+  </div>
+</section>
+
+<sira-dialogue titre="Détail de la ligne" [(ouvert)]="detailOuvert">
+  @if (choisie(); as ligne) {
+    @let resultat = libelleResultat(ligne.resultat);
+    <dl siraSynthese>
+      <div siraSyntheseLigne cle="Date">{{ ligne.horodatage | siraDate }}</div>
+      <div siraSyntheseLigne cle="Événement">{{ libelleType(ligne.type) }}</div>
+      <div siraSyntheseLigne cle="Résultat">
+        <sira-etiquette [etat]="resultat.etat">{{ resultat.texte }}</sira-etiquette>
+      </div>
+      @if (ligne.acteur) {
+        <div siraSyntheseLigne cle="Fait par">{{ ligne.acteur }}</div>
+      }
+      @if (ligne.objet) {
+        <div siraSyntheseLigne cle="Objet">
+          <span class="co-technique">{{ ligne.objet }}</span>
+        </div>
+      }
+      @if (nomDe(ligne.service); as service) {
+        <div siraSyntheseLigne cle="Service">{{ service }}</div>
+      }
+      @if (nomDe(ligne.registre); as registre) {
+        <div siraSyntheseLigne cle="Registre">{{ registre }}</div>
+      }
+      @if (nomDe(ligne.jeu); as question) {
+        <div siraSyntheseLigne cle="Question">{{ question }}</div>
+      }
+      @if (niveauDe(ligne); as niveau) {
+        <div siraSyntheseLigne cle="Forme de la réponse">{{ libelleNiveau(niveau) }}</div>
+      }
+      @if (nomDe(ligne.demarche); as demarche) {
+        <div siraSyntheseLigne cle="Démarche">{{ demarche }}</div>
+      }
+      @if (ligne.finalite) {
+        <div siraSyntheseLigne cle="Finalité">{{ ligne.finalite }}</div>
+      }
+      @if (ligne.canal) {
+        <div siraSyntheseLigne cle="Accord donné par">{{ libelleCanal(ligne.canal) }}</div>
+      }
+      @if (ligne.detail) {
+        <div siraSyntheseLigne cle="Précision">{{ ligne.detail }}</div>
+      }
+      @if (ligne.pseudonyme) {
+        <div siraSyntheseLigne cle="Citoyen (pseudonyme)">
+          <span class="co-technique">{{ ligne.pseudonyme }}</span>
+        </div>
+      }
+      @if (ligne.id_echange) {
+        <div siraSyntheseLigne cle="Identifiant d’échange">
+          <span class="co-technique">{{ ligne.id_echange }}</span>
+        </div>
+      }
+    </dl>
+  }
+  <button
+    dialogue-actions
+    siraBouton
+    variante="secondaire"
+    type="button"
+    (click)="detailOuvert.set(false)"
+  >
+    Fermer
+  </button>
+</sira-dialogue>
+
+<sira-dialogue titre="Vérifier l’intégrité du journal" [(ouvert)]="verificationOuverte">
+  <p>
+    Chaque ligne du journal porte l’empreinte de la précédente, comme les maillons d’une chaîne. La
+    vérification recalcule toute la chaîne : si une ligne a été modifiée, retirée ou ajoutée après
+    coup, le maillon ne correspond plus et la vérification le signale.
+  </p>
+  <p class="sira-secondaire">Rien n’est modifié. Cela peut prendre quelques secondes.</p>
+  <div aria-live="polite">
+    @if (verificationEnCours()) {
+      <p>Vérification en cours…</p>
+    }
+    @if (verificationImpossible(); as message) {
+      <sira-alerte type="erreur" titre="Vérification impossible">{{ message }}</sira-alerte>
+    }
+    @if (verification(); as compte) {
+      <sira-alerte [type]="compte.valide ? 'succes' : 'erreur'" [titre]="compte.titre">
+        @for (phrase of compte.phrases; track phrase) {
+          <p>{{ phrase }}</p>
+        }
+      </sira-alerte>
+    }
+  </div>
+  <button
+    dialogue-actions
+    siraBouton
+    variante="secondaire"
+    type="button"
+    (click)="verificationOuverte.set(false)"
+  >
+    Fermer
+  </button>
+  <button
+    dialogue-actions
+    siraBouton
+    type="button"
+    [enCours]="verificationEnCours()"
+    (click)="verifier()"
+  >
+    <sira-icone nom="shield-check" />
+    Lancer la vérification
+  </button>
+</sira-dialogue>

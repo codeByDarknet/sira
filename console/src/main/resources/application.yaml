@@ -1,0 +1,20 @@
+spring:
+  application:
+    name: console
+
+server:
+  servlet:
+    session:
+      cookie:
+        # Un nom par application : la session d'un administrateur ne se confond avec aucune autre.
+        name: SIRA_CONSOLE
+
+sira:
+  mtls:
+    mode: client
+  oidc:
+    client-id: console
+    # Contrat §4 : un seul émetteur, le royaume du socle. Seules les adresses se règlent.
+    emetteur: ${SIRA_IDENTITE_URL_PUBLIQUE:http://identite.sira.localhost:8600}/realms/sira-socle
+    url-interne: ${SIRA_IDENTITE_URL_INTERNE:https://keycloak:8443}/realms/sira-socle
+    url-publique: ${SIRA_URL_PUBLIQUE:http://console.sira.localhost:8600}

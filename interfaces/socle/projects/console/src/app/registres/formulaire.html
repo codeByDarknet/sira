@@ -1,0 +1,89 @@
+@if (introuvable(); as message) {
+  <sira-alerte type="erreur">{{ message }}</sira-alerte>
+} @else if (existant.isLoading()) {
+  <sira-squelette [lignes]="5" libelle="Chargement du registre" />
+} @else {
+  <sira-resume-erreurs [erreurs]="envoi.resume()" />
+  @if (envoi.echec(); as message) {
+    <sira-alerte type="erreur" titre="Registre non enregistré">{{ message }}</sira-alerte>
+  }
+
+  <form novalidate [formGroup]="formulaire" (ngSubmit)="enregistrer()">
+    <div class="sira-grille-formulaire">
+      <sira-champ
+        obligatoire
+        libelle="Code"
+        [aide]="
+          code()
+            ? 'Le code ne change jamais.'
+            : 'Minuscules, chiffres et tirets.  Exemple : etat-civil'
+        "
+        identifiant="code"
+        [erreur]="envoi.erreurs()['code']"
+      >
+        <input siraSaisie siraFiltre="code" formControlName="code" autocomplete="off" />
+      </sira-champ>
+
+      <sira-champ
+        obligatoire
+        libelle="Nom"
+        aide="Lu par le citoyen. Exemple : État civil"
+        identifiant="nom"
+        [erreur]="envoi.erreurs()['nom']"
+      >
+        <input siraSaisie formControlName="nom" autocomplete="off" />
+      </sira-champ>
+
+      <div class="sira-champ sira-pleine-largeur">
+        <p-floatlabel variant="in" class="sira-champ__flottant">
+          <p-select
+            inputId="membre"
+            formControlName="membre"
+            [options]="teneurs()"
+            optionLabel="nom"
+            optionValue="code"
+            appendTo="body"
+            styleClass="co-select"
+            [invalid]="!!envoi.erreurs()['membre']"
+          />
+          <label for="membre"
+            >Administration rattaché
+            <span class="sira-champ__requis" aria-hidden="true">*</span></label
+          >
+        </p-floatlabel>
+        <span class="sira-champ__aide">
+          Administration qui tient ce registre. Seuls les membres qui fournissent des informations
+          sont proposés.
+        </span>
+        @if (envoi.erreurs()['membre']; as erreur) {
+          <p class="sira-champ__erreur">{{ erreur }}</p>
+        }
+      </div>
+
+      <sira-champ
+        obligatoire
+        class="sira-pleine-largeur"
+        libelle="Adresse du connecteur"
+        [aide]="
+          code()
+            ? 'Se change sur la fiche du registre, par une personne qui a le rôle d’autorité.'
+            : 'Adresse du serveur de sécurité posé devant le registre, qui reçoit les questions. Exemple : https://connecteur-etat-civil:8443'
+        "
+        identifiant="adresse"
+        [erreur]="envoi.erreurs()['adresse']"
+      >
+        <input siraSaisie formControlName="adresse" inputmode="url" autocomplete="off" />
+      </sira-champ>
+    </div>
+
+    <div class="sira-fenetre-formulaire__pied">
+      <button siraBouton variante="secondaire" type="button" (click)="annule.emit()">
+        Annuler
+      </button>
+      <button siraBouton type="submit" [enCours]="envoi.enCours()">
+        <sira-icone nom="check" />
+        {{ code() ? 'Enregistrer les changements' : 'Ajouter le registre' }}
+      </button>
+    </div>
+  </form>
+}

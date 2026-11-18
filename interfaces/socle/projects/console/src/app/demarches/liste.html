@@ -1,0 +1,115 @@
+<div class="sira-titre-page">
+  <div>
+    <h1>Démarches</h1>
+    <p class="sira-compte">
+      {{ liste.chargement() && !liste.total() ? 'Chargement…' : compte(liste.total()) }}
+    </p>
+    <p>
+      Les services rendus au citoyen (concours, bourse, création d’entreprise…). Chacune dit
+      pourquoi le service a besoin des informations, et combien de temps l’accord vaut.
+    </p>
+  </div>
+</div>
+
+@if (message(); as texte) {
+  <sira-alerte type="succes" ephemere>{{ texte }}</sira-alerte>
+}
+
+@if (liste.probleme(); as probleme) {
+  <sira-alerte type="erreur" titre="Liste indisponible">{{ probleme }}</sira-alerte>
+}
+<div class="co-liste">
+  <sira-tableau
+    legende="Démarches déclarées"
+    [colonnes]="colonnes"
+    [lignes]="liste.lignes()"
+    [total]="liste.total()"
+    [chargement]="liste.chargement()"
+    [pageCourante]="liste.page()"
+    [parPage]="liste.taille()"
+    (requete)="liste.demander($event)"
+  >
+    <p-select
+      tableau-filtres
+      class="sira-tableau__filtre"
+      [options]="choixActif"
+      optionLabel="libelle"
+      optionValue="valeur"
+      appendTo="body"
+      ariaLabel="Filtrer par état"
+      [ngModel]="liste.filtres()['actif'] ?? ''"
+      (ngModelChange)="liste.filtrer('actif', $event)"
+    />
+
+    @if (droits.ecriture()) {
+      <button tableau-actions siraBouton type="button" (click)="ajouter()">
+        <sira-icone nom="plus" />
+        Ajouter une démarche
+      </button>
+    }
+    <ng-template siraCellule="libelle" let-ligne>
+      <span class="sira-tableau__principal">{{ ligne.libelle }}</span>
+      <span class="sira-tableau__secondaire">{{ ligne.code }}</span>
+    </ng-template>
+    <ng-template siraCellule="service" let-ligne>{{ noms.membre(ligne.service) }}</ng-template>
+    <ng-template siraCellule="duree_autorisation_jours" let-ligne>{{
+      phraseDuree(ligne.duree_autorisation_jours)
+    }}</ng-template>
+    <ng-template siraCellule="actif" let-ligne>
+      @let etat = libelleActif(ligne.actif);
+      <sira-etiquette [etat]="etat.etat">{{ etat.texte }}</sira-etiquette>
+    </ng-template>
+    <ng-template siraActions let-ligne>
+      <a
+        siraAction="eye"
+        [libelle]="'Voir la fiche de ' + ligne.libelle"
+        [routerLink]="ligne.code"
+      ></a>
+      @if (droits.ecriture()) {
+        <button
+          siraAction="pencil"
+          [libelle]="'Modifier ' + ligne.libelle"
+          (click)="modifier(ligne.code)"
+        ></button>
+        @if (ligne.actif) {
+          <button
+            siraAction="ban"
+            ton="danger"
+            [libelle]="'Désactiver ' + ligne.libelle"
+            (click)="aDesactiver.set(ligne)"
+          ></button>
+        }
+      }
+    </ng-template>
+  </sira-tableau>
+</div>
+
+<co-fenetre
+  [titre]="fenetre()?.code ? 'Modifier la démarche' : 'Ajouter une démarche'"
+  [intro]="
+    fenetre()?.code
+      ? 'Le code ne change pas.'
+      : 'Une démarche est un service rendu au citoyen. Le citoyen lit son nom et sa finalité avant de donner son accord.'
+  "
+  [ouvert]="fenetre() !== null"
+  (ouvertChange)="!$event && fenetre.set(null)"
+>
+  @if (fenetre(); as ouverte) {
+    <co-formulaire-demarche
+      [code]="ouverte.code"
+      (termine)="apresEnregistrement($event, ouverte.code)"
+      (annule)="fenetre.set(null)"
+    />
+  }
+</co-fenetre>
+
+<co-confirmation
+  [question]="'Désactiver « ' + (aDesactiver()?.libelle ?? '') + ' » ?'"
+  confirmer="Désactiver"
+  [ouvert]="aDesactiver() !== null"
+  (ouvertChange)="!$event && aDesactiver.set(null)"
+  [appel]="desactiver"
+  (fait)="apresDesactivation()"
+>
+  <p>Plus aucune demande ne sera possible pour cette démarche. L’historique est conservé.</p>
+</co-confirmation>

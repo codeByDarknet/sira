@@ -1,0 +1,166 @@
+<sira-fil
+  [elements]="[{ libelle: 'Membres', chemin: '/membres' }, { libelle: fiche()?.nom ?? 'Détail' }]"
+/>
+
+@if (message(); as texte) {
+  <sira-alerte type="succes" ephemere>{{ texte }}</sira-alerte>
+}
+
+@if (probleme(); as message) {
+  <h1>Membre introuvable</h1>
+  <sira-alerte type="erreur">{{ message }}</sira-alerte>
+} @else if (fiche(); as membre) {
+  @let etat = libelleActif(membre.actif);
+  <div class="sira-titre-page">
+    <div>
+      <h1>{{ membre.nom }}</h1>
+      <p>Fiche du membre : ce que chaque information veut dire, et ce qu’elle permet.</p>
+    </div>
+    @if (droits.ecriture()) {
+      <div class="sira-fiche__actions">
+        <button siraBouton variante="secondaire" type="button" (click)="modification.set(true)">
+          <sira-icone nom="pencil" />
+          Modifier
+        </button>
+        @if (membre.actif) {
+          <button siraBouton variante="danger" type="button" (click)="desactivation.set(true)">
+            <sira-icone nom="ban" />
+            Désactiver
+          </button>
+        }
+      </div>
+    }
+  </div>
+
+  <div class="sira-fiche">
+    <div class="sira-fiche__grille">
+      <section class="sira-fiche__case">
+        <p class="sira-fiche__cle"><sira-icone nom="key-round" /> Code</p>
+        <p class="sira-fiche__valeur">{{ membre.code }}</p>
+        <p class="sira-fiche__explication">
+          Identifiant court du membre dans Sira. Il apparaît dans les adresses, les habilitations et
+          le journal.
+        </p>
+      </section>
+      <section class="sira-fiche__case">
+        <p class="sira-fiche__cle"><sira-icone nom="landmark" /> Organisme</p>
+        <p class="sira-fiche__valeur">{{ membre.organisme }}</p>
+        <p class="sira-fiche__explication">
+          Administration responsable de ce membre et de ses échanges.
+        </p>
+      </section>
+      <section class="sira-fiche__case">
+        <p class="sira-fiche__cle"><sira-icone nom="circle-check" /> État</p>
+        <p class="sira-fiche__valeur">
+          <sira-etiquette [etat]="etat.etat">{{ etat.texte }}</sira-etiquette>
+        </p>
+        <p class="sira-fiche__explication">
+          @if (membre.actif) {
+            Actif : ce membre peut échanger des informations avec les autres.
+          } @else {
+            Désactivé : Sira refuse tous ses échanges. Son historique reste consultable.
+          }
+        </p>
+      </section>
+      <section class="sira-fiche__case">
+        <p class="sira-fiche__cle"><sira-icone nom="message-square" /> Nom affiché</p>
+        <p class="sira-fiche__valeur">{{ membre.nom }}</p>
+        <p class="sira-fiche__explication">
+          C’est ce nom que le citoyen lit quand ce membre lui demande son accord.
+        </p>
+      </section>
+      <section class="sira-fiche__case sira-fiche__case--large">
+        <p class="sira-fiche__cle"><sira-icone nom="users" /> Ce que fait ce membre</p>
+        <ul class="co-roles">
+          @if (membre.roles.includes('SERVICE')) {
+            <li class="co-roles--actif">
+              <sira-icone nom="circle-check" />
+              <span>
+                <strong>Demande des informations</strong> : c’est un service. Il pose des questions
+                aux registres (par exemple « cette personne a-t-elle plus de 18 ans ? »), seulement
+                avec l’accord du citoyen et pour les démarches où il est habilité.
+              </span>
+            </li>
+          }
+          @if (membre.roles.includes('REGISTRE')) {
+            <li class="co-roles--actif">
+              <sira-icone nom="circle-check" />
+              <span>
+                <strong>Fournit des informations</strong> : c’est un registre. Il répond aux
+                questions des services habilités, sans jamais livrer plus que la réponse demandée.
+              </span>
+            </li>
+          }
+        </ul>
+      </section>
+      <section class="sira-fiche__case sira-fiche__case--large">
+        <p class="sira-fiche__cle"><sira-icone nom="shield-check" /> Certificat</p>
+        <p class="sira-fiche__valeur co-technique">{{ membre.identite }}</p>
+        <p class="sira-fiche__explication">
+          Identité inscrite dans le certificat du membre. À chaque échange, Sira vérifie ce
+          certificat : c’est lui qui prouve qui appelle. Il est attribué par Sira.
+        </p>
+      </section>
+      @if (membre.roles.includes('SERVICE')) {
+        <section class="sira-fiche__case sira-fiche__case--large">
+          <p class="sira-fiche__cle"><sira-icone nom="external-link" /> Adresses de retour</p>
+          @if (membre.retours_autorises.length > 0) {
+            <ul class="sira-fiche__liste">
+              @for (adresse of membre.retours_autorises; track adresse) {
+                <li>{{ adresse }}</li>
+              }
+            </ul>
+          } @else {
+            <p class="sira-fiche__valeur">Aucune</p>
+          }
+          <p class="sira-fiche__explication">
+            Après son accord, le citoyen est renvoyé sur le site du service, et seulement vers une
+            de ces adresses.
+          </p>
+          @if (droits.decision()) {
+            <div class="co-decision">
+              <co-decision-adresse
+                titre="Changer les adresses de retour"
+                libelle="Adresses autorisées"
+                aide="Toutes doivent appartenir au site de ce service."
+                champ="retours_autorises"
+                [valeur]="membre.retours_autorises.join('\n')"
+                [plusieurs]="true"
+                [verifier]="verifierRetours"
+                [appel]="changerRetours"
+                retour="/membres"
+                annonce="Adresses de retour changées."
+              />
+            </div>
+          }
+        </section>
+      }
+    </div>
+  </div>
+
+  <co-fenetre
+    titre="Modifier le membre"
+    intro="Le code ne change pas. Les adresses de retour se décident plus bas, sur cette fiche."
+    [(ouvert)]="modification"
+  >
+    @if (modification()) {
+      <co-formulaire-membre
+        [code]="membre.code"
+        (termine)="apresModification($event)"
+        (annule)="modification.set(false)"
+      />
+    }
+  </co-fenetre>
+
+  <co-confirmation
+    [question]="'Désactiver « ' + membre.nom + ' » ?'"
+    confirmer="Désactiver"
+    [(ouvert)]="desactivation"
+    [appel]="desactiver"
+    (fait)="apresDesactivation()"
+  >
+    <p>Ce membre ne pourra plus échanger d’informations. L’historique est conservé.</p>
+  </co-confirmation>
+} @else {
+  <sira-squelette [lignes]="6" libelle="Chargement du membre" />
+}
