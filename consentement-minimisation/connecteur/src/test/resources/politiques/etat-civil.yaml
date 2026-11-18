@@ -1,0 +1,28 @@
+# Politique locale du registre d'état civil.
+# Tout champ absent de cette liste n'est jamais exposé, quelle que soit l'habilitation centrale.
+
+validite:
+  par_defaut: P90D      # durée d'une attestation quand la requête n'en propose pas
+  maximale: P180D       # plafond appliqué à la durée proposée par la requête
+
+champs:
+  # La date de naissance ne sort jamais : on répond seulement à une question d'âge,
+  # et seulement pour les seuils légaux.
+  - chemin: date_naissance
+    niveau: STATUT
+    operateurs: [AGE_AU_MOINS, AGE_AU_PLUS]
+    valeurs: [15, 18, 21, 35]
+  - chemin: date_deces
+    niveau: STATUT
+    operateurs: [EXISTE, AUCUN]
+  - chemin: nom
+    niveau: CHAMPS
+  - chemin: prenoms
+    niveau: CHAMPS
+  - chemin: sexe
+    niveau: CHAMPS
+  - chemin: lieu_naissance
+    niveau: CHAMPS
+
+documents:
+  - extrait-naissance

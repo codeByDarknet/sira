@@ -1,0 +1,21 @@
+# Politique locale du registre de la nationalité.
+
+validite:
+  par_defaut: P180D
+  maximale: P365D
+
+champs:
+  # On confirme la nationalité burkinabè ; on ne révèle pas une autre nationalité.
+  - chemin: nationalite
+    niveau: STATUT
+    operateurs: [EGAL]
+    valeurs: ["BF"]
+  - chemin: certificat.numero
+    niveau: STATUT
+    operateurs: [EXISTE, AUCUN]
+  - chemin: certificat.valide_jusqu_au
+    niveau: STATUT
+    operateurs: [ENCORE_VALIDE]
+
+documents:
+  - certificat-nationalite

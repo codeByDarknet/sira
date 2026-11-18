@@ -1,0 +1,14 @@
+# Politique locale du casier judiciaire.
+# Le contenu d'une condamnation ne sort jamais : on dit seulement si le casier est vierge.
+
+validite:
+  par_defaut: P30D
+  maximale: P90D
+
+champs:
+  - chemin: condamnations
+    niveau: STATUT
+    operateurs: [AUCUN, EXISTE]
+
+documents:
+  - bulletin-n3
