@@ -1,0 +1,64 @@
+# Politique locale du registre d'état civil (démonstration).
+# Tout champ absent de cette liste n'est jamais exposé, quelle que soit l'habilitation centrale.
+
+validite:
+  par_defaut: P90D
+  maximale: P180D
+
+champs:
+  # Une question d'âge reçoit un oui ou un non, pour les seuils légaux seulement. La date sort
+  # avec l'identité, pour les démarches qui constituent un dossier.
+  - chemin: date_naissance
+    libelle: Date de naissance
+    type: DATE
+    niveau: CHAMPS
+    operateurs: [AGE_AU_MOINS, AGE_AU_PLUS]
+    valeurs: [18, 35]
+  # Le nom et les prénoms sortent seuls (concours) ou avec la date de naissance (identité).
+  - chemin: nom
+    libelle: Nom
+    type: TEXTE
+    niveau: CHAMPS
+  - chemin: prenoms
+    libelle: Prénoms
+    type: TEXTE
+    niveau: CHAMPS
+
+  # Identité complète, pour les démarches qui constituent un dossier.
+  - chemin: sexe
+    libelle: Sexe
+    type: TEXTE
+    niveau: CHAMPS
+  - chemin: lieu_naissance
+    libelle: Lieu de naissance
+    type: TEXTE
+    niveau: CHAMPS
+  - chemin: province_naissance
+    libelle: Province de naissance
+    type: TEXTE
+    niveau: CHAMPS
+  - chemin: pays_naissance
+    libelle: Pays de naissance
+    type: TEXTE
+    niveau: CHAMPS
+  - chemin: nom_pere
+    libelle: Nom du père
+    type: TEXTE
+    niveau: CHAMPS
+  - chemin: nom_mere
+    libelle: Nom de la mère
+    type: TEXTE
+    niveau: CHAMPS
+  - chemin: numero_acte
+    libelle: Numéro de l’acte de naissance
+    type: TEXTE
+    niveau: CHAMPS
+
+documents:
+  - extrait-naissance
+  - copie-integrale-naissance
+
+# Nom lisible de chaque document, montré dans la console.
+libelles_documents:
+  extrait-naissance: Extrait d’acte de naissance
+  copie-integrale-naissance: Copie intégrale d’acte de naissance

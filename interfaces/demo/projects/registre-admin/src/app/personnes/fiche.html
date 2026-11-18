@@ -1,0 +1,206 @@
+<sira-fil [elements]="[{ libelle: 'Personnes', chemin: '/personnes' }, { libelle: 'Fiche' }]" />
+
+@if (probleme(); as message) {
+  <h1>Fiche introuvable</h1>
+  <sira-alerte type="erreur">
+    <p>{{ message }}</p>
+    <a siraBouton variante="secondaire" routerLink="/personnes">Revenir à la liste</a>
+  </sira-alerte>
+} @else if (donnees.value(); as page) {
+  <div class="sira-titre-page">
+    <div>
+      <h1>{{ page.personne.fiche['nom'] }} {{ page.personne.fiche['prenoms'] }}</h1>
+      <p>
+        Identifiant unique : <span class="sira-chiffres">{{ page.personne.identifiant }}</span>
+      </p>
+    </div>
+    <div class="sira-groupe-boutons">
+      @if (corrigeable() && session.peut('PERSONNES_MODIFIER')) {
+        <a siraBouton variante="secondaire" routerLink="correction">
+          <sira-icone nom="pencil" />
+          Modifier
+        </a>
+      }
+      @if (session.peut('PERSONNES_SUPPRIMER')) {
+        <button siraBouton variante="danger" type="button" (click)="suppressionOuverte.set(true)">
+          <sira-icone nom="trash-2" />
+          Supprimer
+        </button>
+      }
+    </div>
+  </div>
+
+  @if (confirmation) {
+    <sira-alerte type="succes" ephemere>{{ confirmation }}</sira-alerte>
+  }
+
+  <dl siraSynthese>
+    @for (champ of page.registre.champs; track champ.nom) {
+      <div siraSyntheseLigne [cle]="champ.libelle">
+        {{ afficher(champ, page.personne.fiche[champ.nom]) }}
+      </div>
+    }
+    <div siraSyntheseLigne cle="Dernière modification">
+      {{ page.personne.modifiee_le | siraDate }}
+    </div>
+  </dl>
+
+  @if (session.peut('DOCUMENTS_LIRE')) {
+    <div class="sira-titre-page sira-marge-haut">
+      <h2>Documents</h2>
+      @if (session.peut('DOCUMENTS_DEPOSER')) {
+        <button siraBouton variante="secondaire" type="button" (click)="depotOuvert.set(true)">
+          <sira-icone nom="plus" />
+          Ajouter un document
+        </button>
+      }
+    </div>
+    @if (messagePiece(); as message) {
+      <sira-alerte type="succes" ephemere>{{ message }}</sira-alerte>
+    }
+    <div class="ra-documents">
+      @for (document of page.registre.documents; track document.type) {
+        @let depose = deposePour(document.type);
+        <div class="ra-document">
+          <span class="ra-document__icone" aria-hidden="true"><sira-icone nom="file-text" /></span>
+          <span class="ra-document__textes">
+            <span class="ra-document__titre">{{ document.titre }}</span>
+            <span class="ra-document__note">
+              {{ depose ? 'Pièce déposée' : 'Produit par le registre' }} ·
+              {{ (depose?.champs ?? document.champs).length }} informations
+            </span>
+          </span>
+          <button
+            type="button"
+            siraAction="eye"
+            [libelle]="'Aperçu : ' + document.titre"
+            (click)="
+              ouvrirApercu(document.titre, adresseDocument(page.personne.id, document.type), false)
+            "
+          ></button>
+          <a
+            siraAction="download"
+            [libelle]="'Télécharger : ' + document.titre"
+            download
+            [href]="adresseDocument(page.personne.id, document.type)"
+          ></a>
+        </div>
+      }
+      @for (piece of autresPieces(); track piece.id) {
+        <div class="ra-document">
+          <span class="ra-document__icone" aria-hidden="true"><sira-icone nom="file-text" /></span>
+          <span class="ra-document__textes">
+            <span class="ra-document__titre">{{ piece.titre }}</span>
+            <span class="ra-document__note">
+              {{ piece.type_mime === 'application/pdf' ? 'PDF' : 'Image' }} ·
+              {{ piece.champs.length + (piece.informations?.length ?? 0) }} informations
+            </span>
+          </span>
+          <button
+            type="button"
+            siraAction="eye"
+            [libelle]="'Aperçu : ' + piece.titre"
+            (click)="
+              ouvrirApercu(
+                piece.titre,
+                adressePiece(page.personne.id, piece.id),
+                piece.type_mime !== 'application/pdf'
+              )
+            "
+          ></button>
+          <a
+            siraAction="download"
+            [libelle]="'Télécharger : ' + piece.titre"
+            download
+            [href]="adressePiece(page.personne.id, piece.id)"
+          ></a>
+          @if (session.peut('DOCUMENTS_DEPOSER')) {
+            <button
+              type="button"
+              siraAction="trash-2"
+              [libelle]="'Retirer : ' + piece.titre"
+              (click)="retirerPiece(page.personne.id, piece)"
+            ></button>
+          }
+        </div>
+      }
+    </div>
+
+    @if (deposees().length > 0) {
+      <h3 class="sira-marge-haut">Ce que contiennent les pièces déposées</h3>
+      <dl siraSynthese>
+        @for (piece of deposees(); track piece.id) {
+          <div siraSyntheseLigne [cle]="piece.titre">
+            {{ libellesChamps(page.registre.champs, piece.champs) }}
+            @for (info of piece.informations ?? []; track $index) {
+              <span class="ra-info-libre"
+                >{{ info.libelle }} :
+                {{
+                  info.type === 'BOOLEEN' ? (info.valeur === 'true' ? 'Oui' : 'Non') : info.valeur
+                }}</span
+              >
+            }
+          </div>
+        }
+      </dl>
+    }
+  }
+
+  @if (apercu(); as a) {
+    <demo-apercu-pdf
+      [titre]="a.titre"
+      [adresse]="a.adresse"
+      [image]="a.image"
+      (ferme)="apercu.set(null)"
+    />
+  }
+
+  @if (depotOuvert()) {
+    <ra-depot-piece
+      [documents]="page.registre.documents"
+      [champs]="page.registre.champs"
+      [enCours]="depot()"
+      [echec]="echecDepot()"
+      (valide)="deposer(page.personne.id, $event)"
+      (annule)="depotOuvert.set(false)"
+    />
+  }
+
+  @if (suppressionOuverte()) {
+    <sira-dialogue
+      titre="Supprimer cette personne ?"
+      [ouvert]="true"
+      (ouvertChange)="$event || suppressionOuverte.set(false)"
+    >
+      <p>
+        La fiche de
+        <strong>{{ page.personne.fiche['nom'] }} {{ page.personne.fiche['prenoms'] }}</strong>
+        sera retirée du registre. Sira ne pourra plus rien demander à son sujet.
+      </p>
+      @if (echecSuppression(); as message) {
+        <sira-alerte type="erreur" titre="Suppression impossible">{{ message }}</sira-alerte>
+      }
+      <button
+        dialogue-actions
+        siraBouton
+        variante="secondaire"
+        type="button"
+        (click)="suppressionOuverte.set(false)"
+      >
+        Annuler
+      </button>
+      <button
+        dialogue-actions
+        siraBouton
+        variante="danger"
+        type="button"
+        [enCours]="suppression()"
+        (click)="supprimer(page.personne.id)"
+      >
+        Supprimer
+      </button>
+    </sira-dialogue>
+  }
+} @else {
+  <sira-squelette [lignes]="8" libelle="Chargement de la fiche" />
+}

@@ -1,0 +1,1259 @@
+/*
+ * Habillage de Sira : la forme des écrans, posée sur la structure de composants.css.
+ * Deux inspirations, un seul bleu :
+ *  - applications (espace citoyen, console, registres) : tableau de bord à barre latérale,
+ *    grandes cartes blanches arrondies sur fond gris bleuté, carte mise en avant en dégradé ;
+ *  - sites des démarches : page claire, titres très forts, boutons en pilule, bande bleue.
+ * Les composants PrimeNG (boutons, champs, messages, étiquettes, fenêtres) sont retouchés ici
+ * pour parler la même langue. Ce fichier passe après la couche « primeng ».
+ */
+
+/* ---------- Pleine largeur ---------- */
+
+/* Le contenu occupe toute la largeur disponible, avec une marge qui suit l'écran. */
+.sira-conteneur,
+.sira-conteneur--large {
+  max-width: none;
+  padding-inline: clamp(var(--sira-esp-4), 3vw, var(--sira-esp-12));
+}
+p,
+ul,
+ol,
+.sira-champ,
+.sira-groupe,
+.sira-fichier,
+.sira-carte,
+.sira-synthese {
+  max-width: none;
+}
+
+/* ---------- Fond et typographie ---------- */
+
+html {
+  background: var(--sira-fond-page);
+}
+body {
+  font-family: var(--sira-police);
+  color: var(--sira-texte);
+  background: var(--sira-fond-page);
+  -webkit-font-smoothing: antialiased;
+}
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--sira-police);
+  color: var(--sira-texte-fort);
+  letter-spacing: -0.02em;
+}
+/* Convention de globalstage.bf : grand titre bleu très gras, sous-titre gris de 1,1 rem. */
+h1 {
+  font-weight: 800;
+  font-size: var(--sira-titre-l);
+  line-height: var(--sira-interligne-titre);
+  letter-spacing: -0.01em;
+  color: var(--sira-titre-page);
+}
+h2 {
+  font-weight: 800;
+}
+h3,
+h4 {
+  font-weight: 700;
+}
+.sira-chapeau {
+  font-size: var(--sira-texte-m);
+  color: var(--sira-texte-secondaire);
+}
+.sira-secondaire {
+  color: var(--sira-texte-secondaire);
+}
+
+/* ---------- Bandeau de démonstration : discret, en haut ---------- */
+
+.sira-bandeau {
+  padding-block: 0.4rem;
+  font-size: var(--sira-texte-xs);
+  font-weight: 600;
+  color: var(--sira-bleu-900);
+  background: var(--sira-bleu-100);
+  border: 0;
+}
+.sira-bandeau--attention {
+  color: #6b4100;
+  background: #fff1d6;
+}
+.sira-bandeau__contenu {
+  justify-content: center;
+  align-items: center;
+}
+
+/* ---------- Disposition latérale (applications) ---------- */
+
+.sira-application--laterale {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--sira-esp-4);
+  min-height: 100vh;
+  padding: var(--sira-esp-3);
+  background: var(--sira-gris-100);
+}
+.sira-application--laterale > demo-bandeau,
+.sira-application--laterale > sira-bandeau {
+  grid-column: 1 / -1;
+  border-radius: var(--sira-rayon);
+  overflow: hidden;
+}
+.sira-application--laterale > .sira-page {
+  min-width: 0;
+  background: var(--sira-fond-alt);
+  border-radius: var(--sira-rayon-cadre);
+}
+.sira-application--laterale > .sira-page.sira-conteneur {
+  max-width: none;
+  margin: 0;
+}
+.sira-application--laterale > sira-pied {
+  grid-column: 1 / -1;
+}
+@media (min-width: 64rem) {
+  .sira-application--laterale {
+    grid-template-columns: 17rem minmax(0, 1fr);
+    grid-template-rows: auto 1fr auto;
+    padding: var(--sira-esp-4);
+  }
+  .sira-application--laterale > sira-entete {
+    grid-column: 1;
+    grid-row: span 2;
+  }
+  .sira-application--laterale > .sira-page {
+    grid-column: 2;
+    padding: var(--sira-esp-8) clamp(var(--sira-esp-6), 3vw, var(--sira-esp-12)) var(--sira-esp-16);
+  }
+  .sira-application--laterale > sira-pied {
+    grid-column: 2;
+  }
+}
+
+/* ---------- En-tête : barre latérale ---------- */
+
+.sira-entete--laterale {
+  height: 100%;
+  background: var(--sira-fond);
+  border: 0;
+  border-radius: var(--sira-rayon-cadre);
+}
+.sira-entete--laterale .sira-entete__barre {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sira-esp-3) var(--sira-esp-4);
+  padding: var(--sira-esp-4) var(--sira-esp-4);
+}
+.sira-entete--laterale .sira-entete__marque {
+  flex: 1 1 auto;
+  text-decoration: none;
+}
+.sira-entete--laterale .sira-entete__nav {
+  order: 3;
+  flex: 1 1 100%;
+  border: 0;
+}
+.sira-entete--laterale .sira-entete__rubrique {
+  display: none;
+}
+.sira-entete--laterale .sira-entete__menu {
+  display: flex;
+  gap: var(--sira-esp-1);
+  margin: 0;
+  padding: 0 0 var(--sira-esp-1);
+  overflow-x: auto;
+  list-style: none;
+}
+.sira-entete--laterale .sira-entete__menu a {
+  display: flex;
+  align-items: center;
+  gap: var(--sira-esp-3);
+  min-height: var(--sira-cible);
+  padding: 0 var(--sira-esp-4);
+  font-weight: 600;
+  white-space: nowrap;
+  color: var(--sira-texte-secondaire);
+  text-decoration: none;
+  border: 0;
+  border-radius: var(--sira-rayon);
+}
+.sira-entete--laterale .sira-entete__menu a:hover {
+  color: var(--sira-texte-fort);
+  background: var(--sira-gris-50);
+}
+.sira-entete--laterale .sira-entete__menu a[aria-current='page'] {
+  color: var(--sira-sur-action);
+  background: var(--sira-action);
+}
+.sira-entete--laterale .sira-entete__outils {
+  gap: var(--sira-esp-2);
+}
+.sira-entete--laterale .sira-entete__compte {
+  display: none;
+}
+.sira-entete__outils:not(:has(.sira-entete__compte, a, button)) {
+  display: none;
+}
+@media (min-width: 64rem) {
+  .sira-entete--laterale {
+    position: sticky;
+    top: var(--sira-esp-4);
+    height: calc(100vh - 2 * var(--sira-esp-4));
+  }
+  .sira-entete--laterale .sira-entete__barre {
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    height: 100%;
+    gap: var(--sira-esp-6);
+    padding: var(--sira-esp-6) var(--sira-esp-4);
+  }
+  .sira-entete--laterale .sira-entete__marque {
+    flex: none;
+    padding-inline: var(--sira-esp-2);
+  }
+  .sira-entete--laterale .sira-entete__nav {
+    order: 0;
+    flex: 1 1 auto;
+    overflow-y: auto;
+  }
+  .sira-entete--laterale .sira-entete__rubrique {
+    display: block;
+    margin: 0 0 var(--sira-esp-2);
+    padding-inline: var(--sira-esp-4);
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--sira-gris-400);
+  }
+  .sira-entete--laterale .sira-entete__menu {
+    flex-direction: column;
+    overflow: visible;
+  }
+  .sira-entete--laterale .sira-entete__menu a {
+    position: relative;
+    border-radius: var(--sira-rayon);
+  }
+  .sira-entete--laterale .sira-entete__menu a[aria-current='page'] {
+    color: var(--sira-action);
+    background: var(--sira-theme-teinte);
+  }
+  .sira-entete--laterale .sira-entete__menu a[aria-current='page']::before {
+    content: '';
+    position: absolute;
+    left: calc(-1 * var(--sira-esp-4));
+    top: 20%;
+    bottom: 20%;
+    width: 4px;
+    background: var(--sira-accent);
+    border-radius: 0 3px 3px 0;
+  }
+  .sira-entete--laterale .sira-entete__outils {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--sira-esp-3);
+    padding: var(--sira-esp-4);
+    color: var(--sira-sur-action);
+    background: var(--sira-action);
+    border-radius: var(--sira-rayon-carte);
+  }
+  .sira-entete--laterale .sira-entete__compte {
+    display: flex;
+    align-items: center;
+    gap: var(--sira-esp-3);
+  }
+  .sira-entete--laterale .sira-entete__avatar {
+    color: var(--sira-bleu-800);
+    background: var(--sira-blanc);
+  }
+  .sira-entete--laterale .sira-entete__personne {
+    color: var(--sira-blanc);
+  }
+  .sira-entete--laterale .sira-entete__role {
+    color: rgb(255 255 255 / 70%);
+  }
+  .sira-entete--laterale .sira-entete__deconnexion.p-button {
+    width: 100%;
+    color: var(--sira-bleu-800);
+    background: var(--sira-blanc);
+    border-color: var(--sira-blanc);
+  }
+  .sira-entete--laterale .sira-entete__deconnexion.p-button:hover {
+    color: var(--sira-bleu-900);
+    background: var(--sira-bleu-50);
+    border-color: var(--sira-bleu-50);
+  }
+}
+
+/* Marque et compte, communs aux deux dispositions */
+.sira-entete__signe {
+  width: 2.5rem;
+  height: 2.5rem;
+  color: var(--sira-action);
+}
+.sira-entete__signe--logo {
+  width: auto;
+  height: 2.5rem;
+}
+.sira-entete__signe--icone {
+  padding: 0.5rem;
+  color: var(--sira-sur-action);
+  background: var(--sira-action);
+  border-radius: var(--sira-rayon);
+}
+.sira-entete__nom {
+  font-size: 1.125rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--sira-texte-fort);
+}
+.sira-entete__compte {
+  display: flex;
+  align-items: center;
+  gap: var(--sira-esp-2);
+}
+.sira-entete__avatar {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 2.5rem;
+  height: 2.5rem;
+  font-size: 0.875rem;
+  font-weight: 800;
+  color: var(--sira-sur-action);
+  background: var(--sira-action);
+  border-radius: 50%;
+}
+.sira-entete__utilisateur {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  font-weight: 400;
+  line-height: 1.25;
+}
+.sira-entete__personne {
+  overflow: hidden;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--sira-texte-fort);
+}
+.sira-entete__role {
+  font-size: var(--sira-texte-xs);
+  color: var(--sira-texte-secondaire);
+}
+
+/* ---------- En-tête : barre horizontale (sites des démarches) ---------- */
+
+.sira-entete--barre {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: var(--sira-fond);
+  border-bottom: 1px solid var(--sira-bordure);
+}
+.sira-entete--barre .sira-entete__barre {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sira-esp-3) var(--sira-esp-6);
+  width: 100%;
+  padding: var(--sira-esp-3) clamp(var(--sira-esp-4), 3vw, var(--sira-esp-12));
+}
+.sira-entete--barre .sira-entete__marque,
+.sira-entete--barre .sira-entete__marque:hover {
+  text-decoration: none;
+}
+.sira-entete--barre .sira-entete__service {
+  color: var(--sira-texte-secondaire);
+}
+.sira-entete--barre .sira-entete__nav {
+  border: 0;
+}
+.sira-entete--barre .sira-entete__menu {
+  display: flex;
+  gap: var(--sira-esp-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.sira-entete--barre .sira-entete__menu a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.5rem;
+  padding: 0 var(--sira-esp-4);
+  font-weight: 600;
+  color: var(--sira-texte-secondaire);
+  text-decoration: none;
+  border: 0;
+  border-radius: var(--sira-rayon);
+}
+.sira-entete--barre .sira-entete__menu a:hover,
+.sira-entete--barre .sira-entete__menu a[aria-current='page'] {
+  color: var(--sira-texte-fort);
+  background: var(--sira-gris-50);
+}
+.sira-entete--barre .sira-entete__outils {
+  gap: var(--sira-esp-3);
+}
+.sira-entete--barre .sira-entete__deconnexion.p-button {
+  color: var(--sira-blanc);
+  background: var(--sira-texte-fort);
+  border-color: var(--sira-texte-fort);
+}
+.sira-entete--barre .sira-entete__deconnexion.p-button:hover {
+  background: var(--sira-bleu-800);
+  border-color: var(--sira-bleu-800);
+}
+@media (max-width: 47.99rem) {
+  .sira-entete--barre .sira-entete__compte .sira-entete__utilisateur {
+    display: none;
+  }
+}
+
+/* ---------- Pied ---------- */
+
+.sira-pied {
+  padding-block: var(--sira-esp-6);
+  background: transparent;
+  border: 0;
+}
+.sira-application--laterale .sira-pied {
+  padding-block: var(--sira-esp-2) 0;
+}
+.sira-application--laterale .sira-pied .sira-conteneur {
+  max-width: none;
+}
+
+/* ---------- Boutons (PrimeNG) : pilules ---------- */
+
+.sira-bouton.p-button {
+  gap: var(--sira-esp-2);
+  min-height: 3rem;
+  padding: 0.8rem 1.5rem;
+  font-family: var(--sira-police);
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.2;
+  text-decoration: none;
+  border-radius: var(--sira-rayon);
+  transition:
+    background-color 0.15s,
+    color 0.15s,
+    border-color 0.15s;
+}
+.sira-bouton.p-button-outlined {
+  background: var(--sira-fond);
+  border-width: 1.5px;
+}
+.sira-bouton.p-button-text {
+  padding-inline: var(--sira-esp-3);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+.sira-bouton.p-button[aria-disabled='true'] {
+  cursor: progress;
+  opacity: 0.7;
+}
+.sira-bouton.p-button .sira-icone {
+  width: 1.125rem;
+  height: 1.125rem;
+}
+
+/* ---------- Champs (PrimeNG) ---------- */
+
+/* Comme globalstage.bf : fond gris très clair, trait de 2 px invisible, blanc et bleu au focus. */
+.sira-saisie.p-inputtext {
+  width: 100%;
+  min-height: 3.5rem;
+  font-family: var(--sira-police);
+  font-size: 1rem;
+  color: var(--sira-texte-champ);
+  background: var(--sira-fond-champ);
+  border: 2px solid transparent;
+  border-radius: var(--sira-rayon);
+  box-shadow: none;
+  transition:
+    background-color 0.2s,
+    border-color 0.2s;
+}
+.sira-saisie.p-inputtext::placeholder {
+  color: var(--sira-texte-indice);
+}
+.sira-saisie.p-inputtext:enabled:hover {
+  background: var(--sira-fond-champ-survol);
+}
+.sira-saisie.p-inputtext:enabled:focus {
+  background: var(--sira-fond);
+  border-color: var(--sira-action);
+}
+textarea.sira-saisie.p-inputtext {
+  min-height: 7rem;
+}
+.sira-saisie.p-inputtext:disabled {
+  color: var(--sira-texte);
+  background: var(--sira-gris-50);
+  opacity: 1;
+}
+.sira-saisie.p-inputtext[aria-invalid='true'] {
+  border-color: var(--sira-erreur);
+}
+.sira-saisie--courte.p-inputtext {
+  max-width: 14rem;
+}
+.sira-saisie.p-inputtext[type='file'] {
+  padding: var(--sira-esp-2);
+  cursor: pointer;
+  background: var(--sira-fond-champ);
+  border: 2px dashed var(--sira-bordure-champ);
+}
+.sira-saisie.p-inputtext[type='file']::file-selector-button {
+  margin-right: var(--sira-esp-3);
+  padding: 0.45rem 1rem;
+  font: inherit;
+  font-weight: 700;
+  color: var(--sira-action);
+  cursor: pointer;
+  background: var(--sira-theme-teinte);
+  border: 0;
+  border-radius: var(--sira-rayon);
+}
+.sira-champ {
+  max-width: none;
+}
+.sira-champ__libelle,
+.sira-groupe__legende {
+  font-weight: 700;
+  color: var(--sira-texte-fort);
+}
+.sira-champ__aide {
+  font-size: var(--sira-texte-xs);
+}
+
+/* Groupe de champs : une carte légère */
+.sira-groupe {
+  max-width: none;
+  padding: var(--sira-esp-4) var(--sira-esp-6);
+  background: var(--sira-fond);
+  border: 1px solid var(--sira-bordure);
+  border-radius: var(--sira-rayon-carte);
+}
+
+/* Choix (radio, case) : pastilles */
+.sira-choix {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sira-esp-2);
+  margin: var(--sira-esp-1) var(--sira-esp-2) var(--sira-esp-1) 0;
+  padding: 0.35rem 0.9rem 0.35rem 0.6rem;
+  background: var(--sira-fond-alt);
+  border: 1px solid var(--sira-bordure);
+  border-radius: var(--sira-rayon);
+}
+.sira-choix input {
+  width: 1.15rem;
+  height: 1.15rem;
+  margin: 0;
+  accent-color: var(--sira-action);
+}
+.sira-choix:has(input:checked) {
+  color: var(--sira-action);
+  background: var(--sira-theme-teinte);
+  border-color: var(--sira-bleu-200);
+}
+.sira-choix:has(input:checked) label {
+  font-weight: 700;
+}
+
+/* ---------- Cartes ---------- */
+
+.sira-carte {
+  padding: var(--sira-esp-6);
+  background: var(--sira-fond);
+  border: 1px solid var(--sira-bordure);
+  border-radius: var(--sira-rayon-carte);
+  box-shadow: var(--sira-ombre);
+}
+.sira-carte__titre {
+  font-size: var(--sira-titre-s);
+  font-weight: 750;
+  letter-spacing: -0.01em;
+  color: var(--sira-texte-fort);
+}
+.sira-carte--teintee {
+  color: var(--sira-sur-action);
+  background: var(--sira-action);
+  border-color: transparent;
+  box-shadow: var(--sira-ombre-forte);
+}
+.sira-carte--teintee .sira-carte__titre,
+.sira-carte--teintee a:not(.p-button),
+.sira-carte--teintee .sira-secondaire {
+  color: var(--sira-blanc);
+}
+
+/* ---------- Alertes (PrimeNG Message) ---------- */
+
+sira-alerte {
+  margin-block: var(--sira-esp-4);
+}
+.sira-alerte {
+  padding: 0;
+  background: none;
+  border: 0;
+}
+.sira-alerte .p-message {
+  display: block;
+  width: 100%;
+  border-radius: var(--sira-rayon-carte);
+  outline-width: 1px;
+}
+.sira-alerte .p-message-content {
+  display: block;
+  padding: var(--sira-esp-4) var(--sira-esp-6);
+}
+.sira-alerte .p-message-text {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sira-esp-3);
+  font-weight: 400;
+  color: var(--sira-texte);
+}
+.sira-alerte__corps {
+  flex: 1;
+  min-width: 0;
+}
+.sira-alerte .sira-icone {
+  margin-top: 0.15rem;
+}
+.sira-alerte__titre {
+  margin: 0 0 var(--sira-esp-1);
+  font-weight: 750;
+  color: var(--sira-texte-fort);
+}
+.sira-alerte__corps > :last-child {
+  margin-bottom: 0;
+}
+
+/* ---------- Étiquettes (PrimeNG Tag) ---------- */
+
+.sira-etiquette {
+  display: inline-flex;
+  padding: 0;
+  background: none;
+  border: 0;
+}
+.sira-etiquette .p-tag {
+  gap: 0.3rem;
+  padding: 0.25rem 0.7rem;
+  font-size: var(--sira-texte-xs);
+  font-weight: 700;
+}
+.sira-etiquette .sira-icone {
+  width: 0.9rem;
+  height: 0.9rem;
+}
+
+/* ---------- Étapes ---------- */
+
+.sira-etapes {
+  margin-bottom: var(--sira-esp-8);
+}
+.sira-etapes__position {
+  margin: 0 0 var(--sira-esp-3);
+  font-size: var(--sira-texte-xs);
+  font-weight: 600;
+  color: var(--sira-texte-secondaire);
+}
+.sira-etapes__position strong {
+  color: var(--sira-texte-fort);
+}
+.sira-etapes__liste {
+  display: grid;
+  /* Autant de colonnes que la largeur le permet : une étape ne se coupe jamais en plein mot. */
+  grid-template-columns: repeat(auto-fit, minmax(12.5rem, 1fr));
+  gap: var(--sira-esp-2);
+  margin: 0;
+  padding: var(--sira-esp-2);
+  list-style: none;
+  background: var(--sira-fond);
+  border: 1px solid var(--sira-bordure);
+  border-radius: var(--sira-rayon-carte);
+  box-shadow: var(--sira-ombre);
+}
+.sira-etapes__etape {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--sira-esp-3);
+  margin: 0;
+  padding: var(--sira-esp-2) var(--sira-esp-3);
+  border-radius: var(--sira-rayon);
+}
+.sira-etapes__pastille {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 2.25rem;
+  height: 2.25rem;
+  font-weight: 800;
+  color: var(--sira-gris-500);
+  background: var(--sira-gris-50);
+  border: 1.5px solid var(--sira-gris-200);
+  border-radius: 50%;
+}
+.sira-etapes__pastille .sira-icone {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+.sira-etapes__textes {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.25;
+}
+.sira-etapes__titre {
+  font-weight: 750;
+  color: var(--sira-texte-secondaire);
+}
+.sira-etapes__detail {
+  font-size: var(--sira-texte-xs);
+  color: var(--sira-gris-400);
+}
+.sira-etapes__etape--faite .sira-etapes__pastille {
+  color: var(--sira-blanc);
+  background: var(--sira-succes);
+  border-color: var(--sira-succes);
+}
+.sira-etapes__etape--faite .sira-etapes__titre {
+  color: var(--sira-texte-fort);
+}
+.sira-etapes__etape--courante {
+  background: var(--sira-theme-teinte);
+}
+.sira-etapes__etape--courante .sira-etapes__pastille {
+  color: var(--sira-blanc);
+  background: var(--sira-action);
+  border-color: var(--sira-action);
+}
+.sira-etapes__etape--courante .sira-etapes__titre {
+  color: var(--sira-action);
+}
+.sira-etapes__etape--courante .sira-etapes__detail {
+  color: var(--sira-texte-secondaire);
+}
+.sira-etapes__titre,
+.sira-etapes__detail {
+  overflow-wrap: normal;
+  word-break: normal;
+  hyphens: none;
+}
+@media (max-width: 47.99rem) {
+  .sira-etapes__etape:not(.sira-etapes__etape--courante) .sira-etapes__detail {
+    display: none;
+  }
+}
+
+/* ---------- Pièces jointes ---------- */
+
+.sira-fichier {
+  align-items: center;
+  gap: var(--sira-esp-4);
+  padding: var(--sira-esp-4);
+  background: var(--sira-fond);
+  border: 1px solid var(--sira-bordure);
+  border-radius: var(--sira-rayon-carte);
+  box-shadow: var(--sira-ombre);
+}
+.sira-fichier > .sira-icone {
+  box-sizing: content-box;
+  width: 1.5rem;
+  height: 1.5rem;
+  padding: 0.75rem;
+  color: var(--sira-erreur);
+  background: var(--sira-erreur-fond);
+  border-radius: var(--sira-rayon);
+}
+.sira-fichier__nom {
+  font-weight: 700;
+  color: var(--sira-texte-fort);
+}
+.sira-fichier__details {
+  font-size: var(--sira-texte-xs);
+  color: var(--sira-texte-secondaire);
+}
+.sira-fichier__actions {
+  gap: var(--sira-esp-2);
+}
+
+/* ---------- Tableaux ---------- */
+
+sira-tableau {
+  overflow-x: auto;
+  background: var(--sira-fond);
+  border: 1px solid var(--sira-bordure);
+  border-radius: var(--sira-rayon-carte);
+  box-shadow: var(--sira-ombre);
+}
+.sira-tableau {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+.sira-tableau caption {
+  padding: var(--sira-esp-4) var(--sira-esp-6) 0;
+  font-weight: 750;
+  color: var(--sira-texte-fort);
+}
+.sira-tableau thead th {
+  padding: var(--sira-esp-3) var(--sira-esp-4);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--sira-gris-400);
+  background: transparent;
+  border-bottom: 1px solid var(--sira-bordure);
+}
+.sira-tableau td {
+  padding: var(--sira-esp-3) var(--sira-esp-4);
+  border-bottom: 1px solid var(--sira-gris-50);
+}
+.sira-tableau tbody tr:hover td {
+  background: var(--sira-fond-alt);
+}
+.sira-tableau tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+/* ---------- Onglets ---------- */
+
+.sira-onglets__liste {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: var(--sira-esp-1);
+  padding: var(--sira-esp-1);
+  background: var(--sira-gris-50);
+  border: 0;
+  border-radius: var(--sira-rayon);
+}
+.sira-onglets__onglet {
+  padding: 0.5rem 1.1rem;
+  font-weight: 600;
+  color: var(--sira-texte-secondaire);
+  background: transparent;
+  border: 0;
+  border-radius: var(--sira-rayon);
+}
+.sira-onglets__onglet:hover {
+  color: var(--sira-texte-fort);
+}
+.sira-onglets__onglet[aria-selected='true'] {
+  color: var(--sira-action);
+  background: var(--sira-fond);
+  border: 0;
+  box-shadow: var(--sira-ombre);
+}
+
+/* ---------- Synthèse (clé : valeur) ---------- */
+
+.sira-synthese {
+  padding: var(--sira-esp-2) var(--sira-esp-6);
+  background: var(--sira-fond);
+  border: 1px solid var(--sira-bordure);
+  border-radius: var(--sira-rayon-carte);
+  box-shadow: var(--sira-ombre);
+}
+.sira-synthese__ligne:last-child {
+  border-bottom: 0;
+}
+.sira-synthese__cle {
+  color: var(--sira-texte-secondaire);
+}
+
+/* ---------- États vides, squelette, code, minuteur ---------- */
+
+.sira-etat-vide {
+  padding: var(--sira-esp-8);
+  text-align: center;
+  background: var(--sira-fond);
+  border: 1px dashed var(--sira-gris-200);
+  border-radius: var(--sira-rayon-carte);
+}
+.sira-etat-vide > .sira-icone {
+  box-sizing: content-box;
+  padding: 0.9rem;
+  color: var(--sira-action);
+  background: var(--sira-theme-teinte);
+  border-radius: 50%;
+}
+.sira-squelette {
+  display: grid;
+  gap: var(--sira-esp-3);
+}
+.sira-squelette .p-skeleton {
+  max-width: 100%;
+}
+.sira-code__chiffres {
+  font-family: var(--sira-police);
+  font-weight: 800;
+  letter-spacing: 0.25em;
+  color: var(--sira-action);
+}
+
+/* ---------- Fenêtre de dialogue ---------- */
+
+.sira-dialogue {
+  /* La remise à zéro de Tailwind retire le centrage du navigateur : on le rétablit. */
+  margin: auto;
+  border: 0;
+  border-radius: var(--sira-rayon-cadre);
+  box-shadow: var(--sira-ombre-forte);
+}
+.sira-dialogue::backdrop {
+  background: rgb(10 47 69 / 45%);
+  backdrop-filter: blur(3px);
+}
+
+/* ---------- Demande d'accès (écran d'accord) ---------- */
+
+.sira-demande__demandeur {
+  padding: var(--sira-esp-6);
+  color: var(--sira-sur-action);
+  background: var(--sira-action);
+  border-radius: var(--sira-rayon-carte);
+}
+.sira-demande__demandeur p,
+.sira-demande__demandeur .sira-demande__nom,
+.sira-demande__demandeur .sira-demande__enregistre {
+  color: inherit;
+}
+.sira-demande__demandeur > .sira-icone {
+  box-sizing: content-box;
+  padding: 0.7rem;
+  color: var(--sira-action);
+  background: var(--sira-blanc);
+  border-radius: var(--sira-rayon);
+}
+.sira-demande__information {
+  padding: var(--sira-esp-4);
+  background: var(--sira-fond);
+  border: 1px solid var(--sira-bordure);
+  border-radius: var(--sira-rayon-carte);
+}
+.sira-demande__forme {
+  display: inline-flex;
+  padding: 0.2rem 0.7rem;
+  font-weight: 700;
+  color: var(--sira-action);
+  background: var(--sira-theme-teinte);
+  border-radius: var(--sira-rayon);
+}
+
+/* ---------- Statistiques (cartes chiffrées) ---------- */
+
+.sira-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: var(--sira-esp-4);
+  margin-block: var(--sira-esp-6);
+}
+.sira-stat {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sira-esp-2);
+  padding: var(--sira-esp-6);
+  color: var(--sira-texte);
+  text-decoration: none;
+  background: var(--sira-fond);
+  border: 1px solid var(--sira-bordure);
+  border-radius: var(--sira-rayon-carte);
+  box-shadow: var(--sira-ombre);
+}
+.sira-stat:hover {
+  color: var(--sira-texte);
+  border-color: var(--sira-bleu-200);
+}
+.sira-stat__libelle {
+  font-weight: 700;
+  color: var(--sira-texte-fort);
+}
+.sira-stat__valeur {
+  font-size: 2.75rem;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: var(--sira-texte-fort);
+}
+.sira-stat__note {
+  font-size: var(--sira-texte-xs);
+  color: var(--sira-texte-secondaire);
+}
+.sira-stat__fleche {
+  position: absolute;
+  top: var(--sira-esp-4);
+  right: var(--sira-esp-4);
+  display: inline-grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  color: var(--sira-texte-fort);
+  border: 1px solid var(--sira-gris-200);
+  border-radius: 50%;
+}
+.sira-stat--forte {
+  color: var(--sira-sur-action);
+  background: var(--sira-action);
+  border-color: transparent;
+}
+.sira-stat--forte .sira-stat__libelle,
+.sira-stat--forte .sira-stat__valeur,
+.sira-stat--forte .sira-stat__note {
+  color: var(--sira-blanc);
+}
+.sira-stat--forte .sira-stat__fleche {
+  color: var(--sira-bleu-800);
+  background: var(--sira-blanc);
+  border-color: var(--sira-blanc);
+}
+
+/* ---------- En-tête de page (titre et actions) ---------- */
+
+.sira-titre-page {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--sira-esp-4);
+  margin-bottom: var(--sira-esp-6);
+}
+.sira-titre-page h1 {
+  margin: 0;
+}
+.sira-titre-page p {
+  margin: var(--sira-esp-1) 0 0;
+  color: var(--sira-texte-secondaire);
+}
+
+/* ---------- Tableau : recherche, filtres, pagination ---------- */
+
+sira-tableau {
+  overflow: visible;
+}
+.sira-tableau__outils {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sira-esp-2) var(--sira-esp-3);
+  padding: var(--sira-esp-3) var(--sira-esp-4);
+  border-bottom: 1px solid var(--sira-bordure);
+}
+.sira-tableau__recherche {
+  display: flex;
+  flex: 1 1 16rem;
+  align-items: center;
+  gap: var(--sira-esp-2);
+  min-height: 3rem;
+  padding: 0 var(--sira-esp-4);
+  color: var(--sira-texte-indice);
+  background: var(--sira-fond-champ);
+  border: 2px solid transparent;
+  border-radius: var(--sira-rayon);
+}
+.sira-tableau__recherche:focus-within {
+  color: var(--sira-action);
+  background: var(--sira-fond);
+  border-color: var(--sira-action);
+}
+.sira-tableau__saisie {
+  flex: 1;
+  min-width: 0;
+  padding: 0.5rem 0;
+  font: inherit;
+  color: var(--sira-texte);
+  background: transparent;
+  border: 0;
+  outline: none;
+}
+.sira-tableau__filtre {
+  min-width: 11rem;
+}
+.sira-tableau__filtre .p-select {
+  width: 100%;
+  border-radius: var(--sira-rayon);
+}
+.sira-tableau__effacer {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sira-esp-1);
+  min-height: 2.5rem;
+  padding: 0 var(--sira-esp-3);
+  font: inherit;
+  font-weight: 600;
+  color: var(--sira-action);
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+  border-radius: var(--sira-rayon);
+}
+.sira-tableau__effacer:hover {
+  background: var(--sira-theme-teinte);
+}
+.sira-tableau__effacer .sira-icone {
+  width: 1rem;
+  height: 1rem;
+}
+.sira-tableau__compte {
+  margin: 0 0 0 auto;
+  font-size: var(--sira-texte-xs);
+  font-weight: 600;
+  color: var(--sira-texte-secondaire);
+}
+sira-tableau .p-datatable-header {
+  padding: var(--sira-esp-3) var(--sira-esp-4) 0;
+  background: transparent;
+  border: 0;
+}
+.sira-tableau__legende {
+  font-weight: 750;
+  color: var(--sira-texte-fort);
+}
+sira-tableau .p-datatable-table-container {
+  overflow-x: auto;
+}
+.sira-tableau__vide {
+  padding: var(--sira-esp-6) var(--sira-esp-4);
+  text-align: center;
+  color: var(--sira-texte-secondaire);
+}
+sira-tableau .p-paginator {
+  justify-content: flex-end;
+  padding: var(--sira-esp-2) var(--sira-esp-4);
+  background: transparent;
+  border-top: 1px solid var(--sira-bordure);
+  border-radius: 0;
+}
+sira-tableau .p-paginator-page,
+sira-tableau .p-paginator-first,
+sira-tableau .p-paginator-prev,
+sira-tableau .p-paginator-next,
+sira-tableau .p-paginator-last {
+  border-radius: var(--sira-rayon);
+}
+
+/* ---------- PrimeNG : pas d'ombre, coins légers ---------- */
+
+.p-select-overlay,
+.p-dialog,
+.p-popover {
+  border: 1px solid var(--sira-bordure);
+  border-radius: var(--sira-rayon-carte);
+  box-shadow: none;
+}
+.p-tag,
+.p-message {
+  border-radius: var(--sira-rayon);
+}
+
+/* ---------- Chargement plein cadre ---------- */
+
+.sira-chargement {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: var(--sira-esp-4);
+  min-height: 100vh;
+  background: var(--sira-fond-page);
+}
+.sira-chargement__signe {
+  width: 9rem;
+  height: auto;
+}
+.sira-chargement__accent {
+  color: var(--sira-accent);
+}
+.sira-chargement__barre {
+  position: relative;
+  width: 8rem;
+  height: 4px;
+  overflow: hidden;
+  background: var(--sira-bleu-100);
+  border-radius: 2px;
+}
+.sira-chargement__barre::after {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 40%;
+  background: var(--sira-action);
+  border-radius: 2px;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .sira-chargement__barre::after {
+    animation: sira-chargement 1.1s ease-in-out infinite;
+  }
+}
+@keyframes sira-chargement {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(250%);
+  }
+}
+.sira-application--laterale:has(> sira-chargement) {
+  display: block;
+  padding: 0;
+}
+
+/* ---------- Libellés flottants (PrimeNG FloatLabel) ---------- */
+
+.sira-champ__flottant {
+  display: block;
+  width: 100%;
+  margin-bottom: var(--sira-esp-1);
+}
+.sira-champ__flottant .sira-saisie.p-inputtext {
+  min-height: 3.6rem;
+}
+/* Libellé gris dans le champ, qui remonte en petit et en bleu (0,75 rem, gras) comme sur globalstage. */
+.sira-champ__flottant label {
+  font-size: 1rem;
+  font-weight: 400;
+  color: var(--sira-texte-indice);
+}
+.sira-champ__flottant:has(.sira-saisie:focus) label,
+.sira-champ__flottant:has(.p-filled) label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--sira-action);
+}
+.sira-champ--erreur .sira-champ__flottant label {
+  color: var(--sira-erreur);
+}
+
+/* Un bouton posé sur un lien garde ses couleurs : la règle générale des liens (base.css), hors
+   couche, passerait sinon devant celles de PrimeNG. */
+a.sira-bouton.p-button,
+a.sira-bouton.p-button:hover {
+  text-decoration: none;
+}
+.sira-bouton.p-button:not(.p-button-outlined, .p-button-text),
+.sira-bouton.p-button:not(.p-button-outlined, .p-button-text):hover {
+  color: var(--sira-sur-action);
+}
+.sira-bouton.p-button-outlined,
+.sira-bouton.p-button-outlined:hover,
+.sira-bouton.p-button-text,
+.sira-bouton.p-button-text:hover {
+  color: var(--sira-action);
+}

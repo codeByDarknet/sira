@@ -1,0 +1,34 @@
+# Description du registre simulé : ses champs (ordre d’affichage, type, ce qu’un agent peut
+# corriger) et les documents qu’il délivre. Lue par registres/serveur au démarrage.
+# Types : TEXTE, DATE (AAAA-MM-JJ), NOMBRE, BOOLEEN, CHOIX.
+sira:
+  registre:
+    code: nationalite
+    nom: Nationalité
+    organisme: Service de la nationalité 
+    champs:
+      - { nom: identifiant_unique, libelle: Identifiant unique, type: TEXTE }
+      - { nom: nom, libelle: Nom, type: TEXTE }
+      - { nom: prenoms, libelle: Prénoms, type: TEXTE }
+      - { nom: date_naissance, libelle: Date de naissance, type: DATE }
+      - nom: nationalite
+        libelle: Nationalité
+        type: CHOIX
+        modifiable: true
+        choix: { BF: Burkinabè, CI: Ivoirienne, GH: Ghanéenne, ML: Malienne, NE: Nigérienne, TG: Togolaise }
+      - nom: mode_acquisition
+        libelle: Mode d’acquisition
+        type: CHOIX
+        modifiable: true
+        facultatif: true
+        choix: { FILIATION: Par filiation, NAISSANCE: Par la naissance au Burkina Faso, MARIAGE: Par mariage, NATURALISATION: Par naturalisation }
+      - { nom: numero_certificat, libelle: Numéro du certificat de nationalité, type: TEXTE, facultatif: true }
+      - { nom: date_certificat, libelle: Date du certificat de nationalité, type: DATE, modifiable: true, facultatif: true }
+    documents:
+      certificat-nationalite:
+        titre: Certificat de nationalité burkinabè
+        champs: [numero_certificat, nom, prenoms, date_naissance, nationalite, mode_acquisition,
+                 date_certificat]
+      attestation-nationalite:
+        titre: Attestation de nationalité burkinabè
+        champs: [nom, prenoms, date_naissance, nationalite]

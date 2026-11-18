@@ -1,0 +1,101 @@
+{
+  "realm": "sira-citoyens",
+  "users": [
+    {
+      "username": "990048217350",
+      "enabled": true,
+      "firstName": "Wendkuni Aïcha",
+      "lastName": "KABORÉ",
+      "email": "990048217350@telephone.sira.example",
+      "emailVerified": true,
+      "attributes": {
+        "iue": [
+          "990048217350"
+        ]
+      },
+      "realmRoles": [
+        "default-roles-sira-citoyens"
+      ]
+    },
+    {
+      "username": "990017734062",
+      "enabled": true,
+      "firstName": "Bakary Désiré",
+      "lastName": "SANOU",
+      "email": "990017734062@telephone.sira.example",
+      "emailVerified": true,
+      "attributes": {
+        "iue": [
+          "990017734062"
+        ]
+      },
+      "realmRoles": [
+        "default-roles-sira-citoyens"
+      ]
+    },
+    {
+      "username": "990063390218",
+      "enabled": true,
+      "firstName": "Pingdwendé Rasmata",
+      "lastName": "ZONGO",
+      "email": "990063390218@telephone.sira.example",
+      "emailVerified": true,
+      "attributes": {
+        "iue": [
+          "990063390218"
+        ]
+      },
+      "realmRoles": [
+        "default-roles-sira-citoyens"
+      ]
+    },
+    {
+      "username": "990029915477",
+      "enabled": true,
+      "firstName": "Dieudonné Yirbar",
+      "lastName": "SOMÉ",
+      "email": "990029915477@telephone.sira.example",
+      "emailVerified": true,
+      "attributes": {
+        "iue": [
+          "990029915477"
+        ]
+      },
+      "realmRoles": [
+        "default-roles-sira-citoyens"
+      ]
+    },
+    {
+      "username": "990085502641",
+      "enabled": true,
+      "firstName": "Mariam Sita",
+      "lastName": "COULIBALY",
+      "email": "990085502641@telephone.sira.example",
+      "emailVerified": true,
+      "attributes": {
+        "iue": [
+          "990085502641"
+        ]
+      },
+      "realmRoles": [
+        "default-roles-sira-citoyens"
+      ]
+    },
+    {
+      "username": "990051176839",
+      "enabled": true,
+      "firstName": "Hamidou Boureima",
+      "lastName": "DICKO",
+      "email": "990051176839@telephone.sira.example",
+      "emailVerified": true,
+      "attributes": {
+        "iue": [
+          "990051176839"
+        ]
+      },
+      "realmRoles": [
+        "default-roles-sira-citoyens"
+      ]
+    }
+  ]
+}

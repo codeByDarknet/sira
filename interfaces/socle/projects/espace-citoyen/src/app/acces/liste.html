@@ -1,0 +1,70 @@
+<h1>Mes accès</h1>
+
+@if (retire(); as service) {
+  <sira-alerte type="succes" ephemere [titre]="'L’accès de ' + service + ' est retiré'" />
+}
+
+<sira-onglets libelle="Vos accès" [onglets]="onglets" [(actif)]="onglet">
+  <ng-template siraPanneau="en-cours">
+    @if (problemeEnCours(); as message) {
+      <sira-alerte type="erreur" titre="Vos accès n’ont pas pu être chargés">
+        <p>{{ message }}</p>
+        <button siraBouton variante="secondaire" type="button" (click)="enCours.reload()">
+          Réessayer
+        </button>
+      </sira-alerte>
+    } @else if (enCours.value(); as liste) {
+      @if (liste.total === 0) {
+        <sira-etat-vide titre="Aucun accès en cours" icone="shield-check" />
+      } @else {
+        <ul class="ec-liste">
+          @for (autorisation of liste.elements; track autorisation.id) {
+            <li>
+              <ec-carte-acces [autorisation]="autorisation" (retire)="apresRetrait($event)" />
+            </li>
+          }
+        </ul>
+        @if (liste.total > liste.taille) {
+          <p-paginator
+            [first]="(liste.page - 1) * liste.taille"
+            [rows]="liste.taille"
+            [totalRecords]="liste.total"
+            [showCurrentPageReport]="true"
+            currentPageReportTemplate="{first} à {last} sur {totalRecords}"
+            (onPageChange)="page.set(($event.page ?? 0) + 1)"
+          />
+        }
+      }
+    } @else {
+      <sira-squelette [lignes]="5" libelle="Chargement de vos accès" />
+    }
+  </ng-template>
+
+  <ng-template siraPanneau="termines">
+    @if (problemeTermines(); as message) {
+      <sira-alerte type="erreur" titre="Vos accès terminés n’ont pas pu être chargés">
+        <p>{{ message }}</p>
+        <button siraBouton variante="secondaire" type="button" (click)="termines.reload()">
+          Réessayer
+        </button>
+      </sira-alerte>
+    } @else if (termines.value(); as liste) {
+      @if (liste.elements.length === 0) {
+        <sira-etat-vide titre="Aucun accès terminé" />
+      } @else {
+        <ul class="ec-liste">
+          @for (autorisation of liste.elements; track autorisation.id) {
+            <li><ec-carte-acces [autorisation]="autorisation" /></li>
+          }
+        </ul>
+        @if (liste.tronque) {
+          <p class="sira-secondaire sira-marge-haut">
+            Les {{ maximum }} plus récents. Les autres sont dans l’historique.
+          </p>
+        }
+      }
+    } @else {
+      <sira-squelette [lignes]="5" libelle="Chargement de vos accès terminés" />
+    }
+  </ng-template>
+</sira-onglets>

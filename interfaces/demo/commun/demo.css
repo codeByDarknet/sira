@@ -1,0 +1,1097 @@
+/* Styles propres à la démonstration. Tout ce qui peut servir au socle va dans @sira/ui. */
+
+/* ======================================================================
+ * Site d'une démarche (portail-service) : page claire, titre fort,
+ * pilules, bande bleue.
+ * ====================================================================== */
+
+ps-racine .sira-page {
+  padding-top: var(--sira-esp-8);
+}
+ps-racine {
+  background: var(--sira-fond);
+}
+
+/* L'accueil sort de la colonne de lecture : chaque section a sa propre largeur. */
+.ps-accueil {
+  display: block;
+  /* Annule la marge du conteneur : la bande bleue va d'un bord à l'autre. */
+  margin-inline: calc(-1 * clamp(var(--sira-esp-4), 3vw, var(--sira-esp-12)));
+}
+.ps-accueil > div > * {
+  width: 100%;
+  padding-inline: clamp(var(--sira-esp-4), 3vw, var(--sira-esp-12));
+}
+
+/* --- Héros --- */
+.ps-heros {
+  display: grid;
+  align-items: center;
+  gap: var(--sira-esp-12);
+  padding-block: var(--sira-esp-8) var(--sira-esp-16);
+}
+@media (min-width: 60rem) {
+  .ps-heros {
+    grid-template-columns: 1.1fr 0.9fr;
+  }
+}
+.ps-surtitre {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sira-esp-2);
+  margin: 0 0 var(--sira-esp-4);
+  padding: 0.35rem 0.9rem;
+  font-size: var(--sira-texte-xs);
+  font-weight: 700;
+  color: var(--sira-action);
+  background: var(--sira-theme-teinte);
+  border-radius: var(--sira-rayon);
+}
+.ps-surtitre .sira-icone {
+  width: 1rem;
+  height: 1rem;
+}
+.ps-heros__titre {
+  margin: 0;
+  font-size: clamp(2.25rem, 4.5vw, 3.75rem);
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -0.035em;
+  color: var(--sira-gris-900);
+}
+.ps-heros__trait {
+  width: min(16rem, 60%);
+  height: 0.9rem;
+  margin: var(--sira-esp-2) 0 0;
+  color: var(--sira-or);
+}
+.ps-heros__trait svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.ps-heros__chapeau {
+  max-width: 34rem;
+  margin: var(--sira-esp-6) 0 0;
+  font-size: var(--sira-texte-m);
+  color: var(--sira-texte-secondaire);
+}
+.ps-heros__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sira-esp-4) var(--sira-esp-6);
+  margin-top: var(--sira-esp-8);
+}
+.ps-heros__actions .sira-bouton.p-button {
+  padding: 0.9rem 1.8rem;
+  color: var(--sira-blanc);
+  background: var(--sira-gris-900);
+  border-color: var(--sira-gris-900);
+}
+.ps-heros__actions .sira-bouton.p-button:hover {
+  background: var(--sira-action);
+  border-color: var(--sira-action);
+}
+.ps-lien-fleche {
+  font-weight: 700;
+  color: var(--sira-texte-fort);
+  text-underline-offset: 0.25em;
+}
+
+/* Téléphone d'illustration */
+.ps-heros__visuel {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 30rem;
+}
+.ps-heros__visuel::before {
+  content: '';
+  position: absolute;
+  width: 24rem;
+  height: 24rem;
+  background: transparent;
+  border-radius: 50%;
+}
+.ps-mini-telephone {
+  position: relative;
+  width: 15.5rem;
+  padding: 0.6rem;
+  background: #0f172a;
+  border-radius: 2.6rem;
+  box-shadow: 0 0 0 2px #334155;
+}
+.ps-mini-telephone__ilot {
+  position: absolute;
+  top: 1.1rem;
+  left: 50%;
+  z-index: 1;
+  width: 5rem;
+  height: 1.3rem;
+  background: #0f172a;
+  border-radius: var(--sira-rayon);
+  transform: translateX(-50%);
+}
+.ps-mini-telephone__ecran {
+  min-height: 27rem;
+  padding: 2.8rem 1.1rem 1.2rem;
+  background: #eef4ff;
+  border-radius: 2.1rem;
+}
+.ps-mini-telephone__app {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--sira-action);
+}
+.ps-mini-telephone__titre {
+  margin: 0.3rem 0 1rem;
+  font-size: 1.15rem;
+  font-weight: 800;
+  line-height: 1.2;
+  color: var(--sira-gris-900);
+}
+.ps-mini-telephone__liste {
+  display: grid;
+  gap: 0.55rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ps-mini-telephone__liste li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0.6rem 0.7rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--sira-gris-700);
+  background: var(--sira-blanc);
+  border: 1px solid var(--sira-gris-100);
+  border-radius: 0.9rem;
+}
+.ps-mini-telephone__coche {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 1.1rem;
+  height: 1.1rem;
+  font-size: 0.65rem;
+  color: var(--sira-blanc);
+  background: var(--sira-succes);
+  border-radius: 50%;
+}
+.ps-mini-telephone__bouton {
+  margin: 1.1rem 0 0;
+  padding: 0.7rem;
+  font-size: 0.85rem;
+  font-weight: 800;
+  text-align: center;
+  color: var(--sira-blanc);
+  background: var(--sira-action);
+  border-radius: var(--sira-rayon);
+}
+.ps-bulle {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.65rem 1rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--sira-gris-900);
+  background: var(--sira-blanc);
+  border-radius: var(--sira-rayon);
+  box-shadow: var(--sira-ombre);
+}
+.ps-bulle--haut {
+  top: 18%;
+  right: 2%;
+}
+.ps-bulle--bas {
+  bottom: 14%;
+  left: 2%;
+}
+.ps-bulle__point {
+  width: 0.55rem;
+  height: 0.55rem;
+  background: var(--sira-succes);
+  border-radius: 50%;
+}
+
+/* --- Bande bleue --- */
+.ps-accueil > div > .ps-bande {
+  max-width: none;
+  padding-inline: 0;
+  background: var(--sira-action);
+}
+.ps-bande__contenu {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  padding: var(--sira-esp-8) clamp(var(--sira-esp-4), 3vw, var(--sira-esp-12));
+}
+@media (min-width: 48rem) {
+  .ps-bande__contenu {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+.ps-chiffre {
+  display: flex;
+  align-items: center;
+  gap: var(--sira-esp-3);
+  margin: 0;
+  padding: var(--sira-esp-2) var(--sira-esp-4);
+  color: var(--sira-blanc);
+}
+@media (min-width: 48rem) {
+  .ps-chiffre + .ps-chiffre {
+    border-left: 1px solid rgb(255 255 255 / 25%);
+  }
+}
+.ps-chiffre__valeur {
+  font-size: 2.5rem;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+.ps-chiffre__libelle {
+  max-width: 8rem;
+  font-size: var(--sira-texte-xs);
+  line-height: 1.3;
+  color: rgb(255 255 255 / 80%);
+}
+
+/* --- Sections --- */
+.ps-section {
+  padding-block: var(--sira-esp-16) 0;
+}
+.ps-section--deux {
+  display: grid;
+  align-items: start;
+  gap: var(--sira-esp-8);
+}
+@media (min-width: 60rem) {
+  .ps-section--deux {
+    grid-template-columns: 1.4fr 1fr;
+  }
+}
+.ps-section__titre {
+  margin: 0 0 var(--sira-esp-2);
+  font-size: clamp(1.75rem, 3vw, 2.25rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+.ps-verifs {
+  display: grid;
+  gap: var(--sira-esp-3);
+  margin: var(--sira-esp-6) 0 0;
+  padding: 0;
+  list-style: none;
+}
+@media (min-width: 40rem) {
+  .ps-verifs {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+.ps-verif {
+  display: flex;
+  align-items: center;
+  gap: var(--sira-esp-3);
+  margin: 0;
+  padding: var(--sira-esp-4);
+  background: var(--sira-fond);
+  border: 1px solid var(--sira-bordure);
+  border-radius: var(--sira-rayon-carte);
+  box-shadow: var(--sira-ombre);
+}
+.ps-verif__icone {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 2.75rem;
+  height: 2.75rem;
+  color: var(--sira-action);
+  background: var(--sira-theme-teinte);
+  border-radius: var(--sira-rayon);
+}
+.ps-verif__texte {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.3;
+}
+.ps-verif__libelle {
+  font-weight: 700;
+  color: var(--sira-texte-fort);
+}
+.ps-verif__source {
+  font-size: var(--sira-texte-xs);
+  color: var(--sira-texte-secondaire);
+}
+.ps-pieces {
+  display: grid;
+  gap: var(--sira-esp-3);
+  margin: var(--sira-esp-2) 0 0;
+  padding: 0;
+  list-style: none;
+}
+.ps-pieces li {
+  display: flex;
+  align-items: center;
+  gap: var(--sira-esp-3);
+  margin: 0;
+  padding: var(--sira-esp-3) var(--sira-esp-4);
+  font-weight: 600;
+  text-decoration: line-through;
+  text-decoration-color: rgb(255 255 255 / 55%);
+  background: rgb(255 255 255 / 12%);
+  border-radius: var(--sira-rayon);
+}
+.ps-temps {
+  display: grid;
+  gap: var(--sira-esp-4);
+  margin: var(--sira-esp-6) 0 var(--sira-esp-8);
+  padding: 0;
+  list-style: none;
+  counter-reset: none;
+}
+@media (min-width: 48rem) {
+  .ps-temps {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+.ps-temps__etape {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sira-esp-1);
+  margin: 0;
+  padding: var(--sira-esp-6);
+  background: var(--sira-fond-alt);
+  border: 1px solid var(--sira-bordure);
+  border-radius: var(--sira-rayon-carte);
+}
+.ps-temps__numero {
+  display: inline-grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  margin-bottom: var(--sira-esp-3);
+  font-weight: 800;
+  color: var(--sira-blanc);
+  background: var(--sira-gris-900);
+  border-radius: 50%;
+}
+.ps-temps__titre {
+  font-size: var(--sira-titre-s);
+  font-weight: 800;
+  color: var(--sira-texte-fort);
+}
+.ps-temps__detail {
+  color: var(--sira-texte-secondaire);
+}
+
+/* Source d'une information (registre) */
+.ps-source {
+  display: inline-flex;
+  margin-left: var(--sira-esp-2);
+  padding: 0.1rem 0.6rem;
+  font-size: var(--sira-texte-xs);
+  font-weight: 700;
+  color: var(--sira-action);
+  background: var(--sira-theme-teinte);
+  border-radius: var(--sira-rayon);
+}
+
+/* --- Aperçu d'une pièce PDF --- */
+.ps-apercu {
+  display: grid;
+  gap: var(--sira-esp-4);
+  justify-items: center;
+}
+.ps-apercu__outils {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sira-esp-2);
+  font-weight: 600;
+  color: var(--sira-texte-secondaire);
+}
+.ps-apercu__pages {
+  display: grid;
+  gap: var(--sira-esp-4);
+  width: 100%;
+  max-height: 70vh;
+  padding: var(--sira-esp-4);
+  overflow: auto;
+  background: var(--sira-gris-100);
+  border-radius: var(--sira-rayon-carte);
+}
+.ps-apercu__pages canvas {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin-inline: auto;
+  background: var(--sira-blanc);
+  border-radius: 6px;
+  box-shadow: var(--sira-ombre);
+}
+.sira-dialogue-pdf.p-dialog {
+  width: min(56rem, 96vw);
+  border-radius: var(--sira-rayon-cadre);
+}
+.sira-dialogue-pdf .p-dialog-title {
+  font-weight: 800;
+  color: var(--sira-texte-fort);
+}
+
+/* ======================================================================
+ * Téléphone simulé : un vrai téléphone, posé au centre de la page.
+ * ====================================================================== */
+
+te-racine {
+  background: var(--sira-fond-page);
+}
+.te-scene {
+  display: grid;
+  align-items: center;
+  justify-items: center;
+  gap: var(--sira-esp-8);
+}
+@media (min-width: 64rem) {
+  .te-scene {
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: start;
+  }
+}
+.te-explication {
+  max-width: 22rem;
+  align-self: center;
+}
+.te-explication h1 {
+  font-size: clamp(1.75rem, 3vw, 2.5rem);
+  line-height: 1.1;
+}
+.te-choix {
+  width: 100%;
+  max-width: 22rem;
+  align-self: center;
+}
+
+.te-telephone {
+  position: relative;
+  width: 23rem;
+  max-width: 100%;
+  padding: 0.75rem;
+  background: #111827;
+  border-radius: 3.4rem;
+  box-shadow:
+    0 0 0 2px #475569,
+    0 0 0 6px #0b1220;
+}
+/* Boutons latéraux */
+.te-telephone::before,
+.te-telephone::after {
+  content: '';
+  position: absolute;
+  width: 4px;
+  background: #334155;
+  border-radius: 2px;
+}
+.te-telephone::before {
+  top: 7rem;
+  left: -8px;
+  height: 3.5rem;
+  box-shadow: 0 4.5rem 0 #334155;
+}
+.te-telephone::after {
+  top: 9rem;
+  right: -8px;
+  height: 5rem;
+}
+.te-ecran {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 46rem;
+  max-height: 80vh;
+  overflow: hidden;
+  background: #f2f4f8;
+  border-radius: 2.75rem;
+}
+.te-ilot {
+  position: absolute;
+  top: 0.7rem;
+  left: 50%;
+  z-index: 3;
+  width: 7.5rem;
+  height: 2rem;
+  background: #000;
+  border-radius: var(--sira-rayon);
+  transform: translateX(-50%);
+}
+.te-statut {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.9rem 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--sira-gris-900);
+  background: var(--sira-blanc);
+}
+.te-statut__icones {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+.te-statut__icones .sira-icone {
+  width: 1rem;
+  height: 1rem;
+}
+.te-barre-app {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 1rem 0.9rem;
+  background: var(--sira-blanc);
+  border-bottom: 1px solid var(--sira-gris-100);
+}
+.te-barre-app__avatar {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 2.5rem;
+  height: 2.5rem;
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: var(--sira-blanc);
+  background: var(--sira-action);
+  border-radius: 50%;
+}
+.te-barre-app__nom {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+.te-barre-app__nom strong {
+  color: var(--sira-gris-900);
+}
+.te-barre-app__nom span {
+  font-size: 0.75rem;
+  color: var(--sira-texte-secondaire);
+}
+.te-fil {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem;
+  overflow-y: auto;
+}
+.te-jour {
+  align-self: center;
+  margin: 0.25rem 0;
+  padding: 0.2rem 0.7rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--sira-texte-secondaire);
+  background: var(--sira-gris-100);
+  border-radius: var(--sira-rayon);
+}
+.te-bulle {
+  max-width: 85%;
+  margin: 0;
+  padding: 0.75rem 0.95rem;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  color: var(--sira-gris-900);
+  background: var(--sira-blanc);
+  border-radius: 1.25rem 1.25rem 1.25rem 0.35rem;
+}
+.te-bulle__heure {
+  display: block;
+  margin-top: 0.3rem;
+  font-size: 0.7rem;
+  color: var(--sira-gris-400);
+  text-align: right;
+}
+.te-code {
+  align-self: stretch;
+  padding: 1.1rem;
+  text-align: center;
+  color: var(--sira-blanc);
+  background: var(--sira-action);
+  border-radius: 1.4rem;
+  box-shadow: var(--sira-ombre-forte);
+}
+.te-code__libelle {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgb(255 255 255 / 75%);
+}
+.te-code__chiffres {
+  margin: 0.4rem 0 0.2rem;
+  font-size: 2.4rem;
+  font-weight: 800;
+  letter-spacing: 0.3em;
+  font-variant-numeric: tabular-nums;
+}
+.te-code__heure {
+  margin: 0 0 0.8rem;
+  font-size: 0.75rem;
+  color: rgb(255 255 255 / 70%);
+}
+.te-code .sira-bouton.p-button {
+  color: var(--sira-bleu-800);
+  background: var(--sira-blanc);
+  border-color: var(--sira-blanc);
+}
+.te-vide {
+  margin: auto;
+  padding: 2rem 1rem;
+  text-align: center;
+  color: var(--sira-texte-secondaire);
+}
+.te-vide .sira-icone {
+  box-sizing: content-box;
+  width: 1.75rem;
+  height: 1.75rem;
+  margin-bottom: 0.75rem;
+  padding: 1rem;
+  color: var(--sira-action);
+  background: var(--sira-blanc);
+  border-radius: 50%;
+}
+.te-saisie {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.7rem 1rem 1.6rem;
+  background: var(--sira-blanc);
+  border-top: 1px solid var(--sira-gris-100);
+}
+.te-saisie__champ {
+  flex: 1;
+  padding: 0.6rem 1rem;
+  font-size: 0.85rem;
+  color: var(--sira-gris-400);
+  background: var(--sira-gris-50);
+  border-radius: var(--sira-rayon);
+}
+.te-saisie__envoi {
+  display: inline-grid;
+  place-items: center;
+  width: 2.3rem;
+  height: 2.3rem;
+  color: var(--sira-blanc);
+  background: var(--sira-action);
+  border-radius: 50%;
+}
+.te-saisie__envoi .sira-icone {
+  width: 1rem;
+  height: 1rem;
+}
+.te-indicateur {
+  position: absolute;
+  bottom: 0.5rem;
+  left: 50%;
+  width: 8rem;
+  height: 0.3rem;
+  background: var(--sira-gris-900);
+  border-radius: var(--sira-rayon);
+  transform: translateX(-50%);
+}
+
+/* ---------- Formulaires sur deux colonnes (registre, demande d'accès) ---------- */
+
+.ra-formulaire {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--sira-esp-3) var(--sira-esp-4);
+  align-items: start;
+}
+.ra-formulaire > fieldset,
+.ra-formulaire__boutons,
+.ra-formulaire__plein {
+  grid-column: 1 / -1;
+}
+.ra-formulaire__boutons {
+  display: flex;
+  width: 100%;
+  justify-content: flex-end;
+  margin-top: var(--sira-esp-2);
+}
+@media (max-width: 720px) {
+  .ra-formulaire {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ---------- Documents d'une personne, en cartes ---------- */
+
+.ra-documents {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  gap: var(--sira-esp-3);
+}
+.ra-document {
+  display: flex;
+  align-items: center;
+  gap: var(--sira-esp-3);
+  padding: var(--sira-esp-3);
+  border: 1px solid var(--sira-bordure);
+  border-radius: 12px;
+  background: var(--sira-fond);
+}
+.ra-document__icone {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--sira-theme-primaire) 12%, transparent);
+  color: var(--sira-theme-primaire);
+}
+.ra-document__textes {
+  flex: 1;
+  min-width: 0;
+}
+.ra-document__titre {
+  display: block;
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+.ra-document__note {
+  display: block;
+  font-size: 0.82rem;
+  color: var(--sira-texte-secondaire);
+}
+.sira-dialogue:has(.ra-piece) {
+  width: min(44rem, calc(100vw - 2rem));
+  max-width: none;
+}
+
+/* ---------- Pannes : cartes compactes, une seule couleur d'accent ---------- */
+
+.ra-modes {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+  gap: var(--sira-esp-3);
+}
+.ra-mode {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sira-esp-2);
+  padding: var(--sira-esp-3);
+  border: 1px solid var(--sira-bordure);
+  border-radius: 12px;
+  background: var(--sira-fond);
+}
+.ra-mode--actif {
+  border-color: var(--sira-theme-primaire);
+  background: color-mix(in srgb, var(--sira-theme-primaire) 5%, var(--sira-fond));
+}
+.ra-mode__entete {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sira-esp-2);
+}
+.ra-mode__titre {
+  margin: 0;
+  font-size: 1rem;
+}
+.ra-mode p {
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--sira-texte-secondaire);
+}
+.ra-mode .sira-bouton {
+  align-self: flex-start;
+  margin-top: auto;
+}
+.ra-etat {
+  display: flex;
+  align-items: center;
+  gap: var(--sira-esp-3);
+  padding: var(--sira-esp-3);
+  margin-bottom: var(--sira-esp-4);
+  border: 1px solid var(--sira-bordure);
+  border-radius: 12px;
+}
+.ra-etat__pastille {
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 50%;
+  background: var(--sira-succes, #1f8a4c);
+}
+.ra-etat--perturbe .ra-etat__pastille {
+  background: var(--sira-attention, #c77700);
+}
+.ra-etat strong {
+  display: block;
+}
+.ra-etat span {
+  font-size: 0.85rem;
+  color: var(--sira-texte-secondaire);
+}
+
+/* Aperçu d'un document : la page telle que le PDF l'imprime */
+.ra-piece {
+  padding: var(--sira-esp-4);
+  border: 1px solid var(--sira-bordure);
+  border-radius: 8px;
+  background: #fff;
+  color: #1d2733;
+}
+.ra-piece__entete {
+  text-align: center;
+  padding-bottom: var(--sira-esp-3);
+  border-bottom: 2px solid var(--sira-theme-primaire);
+}
+.ra-piece__entete p {
+  margin: 0;
+}
+.ra-piece__pays {
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+.ra-piece__devise {
+  font-size: 0.8rem;
+  font-style: italic;
+}
+.ra-piece__organisme {
+  margin-top: var(--sira-esp-2) !important;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+.ra-piece__titre {
+  margin: var(--sira-esp-4) 0 var(--sira-esp-3);
+  text-align: center;
+  font-size: 1.15rem;
+  text-transform: uppercase;
+}
+.ra-piece__lignes {
+  margin: 0;
+}
+.ra-piece__lignes div {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+  gap: var(--sira-esp-3);
+  padding: 0.45rem 0;
+  border-bottom: 1px solid #e6e9ee;
+}
+.ra-piece__lignes dt {
+  font-size: 0.85rem;
+  color: #5b6573;
+}
+.ra-piece__lignes dd {
+  margin: 0;
+  font-weight: 700;
+}
+.ra-piece__mention {
+  margin: var(--sira-esp-4) 0 0;
+  font-size: 0.78rem;
+  color: #5b6573;
+  text-align: center;
+}
+
+/* ---------- Rôles : droits cochés par rubrique ---------- */
+
+.ra-droits {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.ra-droits legend {
+  margin-bottom: var(--sira-esp-2);
+  font-weight: 700;
+}
+.ra-droits__groupe {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.25rem var(--sira-esp-3);
+  padding: var(--sira-esp-3) 0;
+  border-top: 1px solid var(--sira-bordure);
+}
+.ra-droits__titre {
+  grid-column: 1 / -1;
+  font-weight: 700;
+}
+@media (max-width: 720px) {
+  .ra-droits__groupe {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.sira-dialogue:has(.ra-droits),
+.sira-dialogue:has(#form-utilisateur) {
+  width: min(44rem, calc(100vw - 2rem));
+  max-width: none;
+}
+
+.ps-apercu__espace {
+  flex: 1;
+}
+.ps-apercu__image {
+  display: block;
+  max-width: 100%;
+  margin: 0 auto;
+  border-radius: 8px;
+}
+
+/* Pièces choisies à l'ajout d'une personne */
+.ra-pieces-attente {
+  display: grid;
+  gap: var(--sira-esp-2);
+  margin: 0;
+  padding: var(--sira-esp-3) 0 0;
+  border: 0;
+  border-top: 1px solid var(--sira-bordure);
+}
+.ra-pieces-attente legend {
+  font-weight: 700;
+}
+.ra-pieces-attente > .sira-bouton {
+  justify-self: start;
+}
+.ra-mode .ra-mode__sira {
+  font-size: 0.85rem;
+}
+
+/* ---------- Accueil d'une démarche (vitrine) ---------- */
+.ps-accueil__etat {
+  padding-top: 3rem;
+}
+.ps-pieces-vitrine {
+  margin: 1.5rem 0;
+  padding: 1.4rem;
+  background: #fff;
+  border-radius: 18px;
+}
+
+/* ---------- Téléphone : habillage de la vitrine Sira ---------- */
+te-racine.sira-application,
+.sira-application:has(.te-scene) {
+  background: #0c2433;
+}
+.sira-application:has(.te-scene) .sira-entete {
+  color: #fff;
+  background: #0c2433;
+  border-bottom: 1px solid #24506a;
+}
+.sira-application:has(.te-scene) .sira-entete * {
+  color: inherit;
+}
+.te-scene {
+  padding: 2rem 0 3rem;
+}
+.te-explication h1 {
+  color: #fff;
+}
+.te-explication .sira-chapeau {
+  color: #fff;
+}
+.te-explication .sira-secondaire {
+  color: #c9dbe6;
+}
+.te-explication::before {
+  content: 'Téléphone du citoyen';
+  display: inline-block;
+  margin-bottom: 1rem;
+  padding: 0.35rem 0.9rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #25aae2;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+}
+.te-telephone {
+  background: #071820;
+  box-shadow: none;
+  border: 2px solid #24506a;
+}
+.te-code {
+  box-shadow: none;
+}
+.te-code .sira-bouton.p-button {
+  color: #0c2433;
+  background: #fff;
+  border-color: #fff;
+}
+.te-code .sira-bouton.p-button:hover {
+  color: #0c2433;
+  background: #eaf7fd;
+}
+.te-choix .sira-carte {
+  background: #14364a;
+  border-color: #24506a;
+  border-radius: 18px;
+  color: #fff;
+}
+.te-choix .sira-carte__titre,
+.te-choix .sira-carte strong,
+.te-choix .sira-carte h2,
+.te-choix .sira-carte h3 {
+  color: #fff;
+}
+.te-choix .sira-carte .sira-secondaire,
+.te-choix .sira-carte p {
+  color: #c9dbe6;
+}
+@media (max-width: 40rem) {
+  .te-telephone {
+    width: 100%;
+    border-radius: 2.4rem;
+  }
+}
+
+/* ---------- Autres informations d'un document (libellé, type, valeur) ---------- */
+.ra-infos {
+  display: grid;
+  gap: var(--sira-esp-3);
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.ra-infos legend {
+  margin-bottom: var(--sira-esp-2);
+  font-weight: 700;
+}
+.ra-infos__aide {
+  margin: 0;
+  font-size: 0.88rem;
+}
+.ra-infos__ligne {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 0.8fr) minmax(0, 1.3fr) auto;
+  gap: var(--sira-esp-3);
+  align-items: end;
+}
+.ra-infos__ligne .sira-champ {
+  margin-bottom: 0;
+}
+.ra-infos__ligne > .sira-action {
+  margin-bottom: 0.4rem;
+}
+.ra-infos > .sira-bouton {
+  justify-self: start;
+}
+.ra-info-libre {
+  display: block;
+  font-size: 0.9rem;
+}
+@media (max-width: 720px) {
+  .ra-infos__ligne {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+}

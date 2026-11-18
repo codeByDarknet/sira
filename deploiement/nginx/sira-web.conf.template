@@ -1,0 +1,88 @@
+# Gabarit commun à toutes les interfaces web. Variables remplacées au démarrage :
+#   API_AMONT  adresse du serveur de cette interface, par exemple http://serveur-citoyen:8080
+#              (vide : l'interface n'a pas de serveur et /api/ répond 404) ;
+#   RESOLVEUR  serveur DNS utilisé pour retrouver l'amont (celui de Docker par défaut) ;
+#   TAILLE_MAX_CORPS  borne des corps de requête (1m par défaut ; 2m pour les portails de service,
+#              qui reçoivent une pièce PDF de 2 Mio au plus).
+
+server {
+  listen 8080 default_server;
+  server_name _;
+  root /usr/share/sira/html;
+
+  client_max_body_size ${TAILLE_MAX_CORPS};
+
+  # L'amont est résolu à chaque requête : nginx démarre même si le serveur n'est pas encore là.
+  resolver ${RESOLVEUR} valid=10s ipv6=off;
+
+  include /etc/nginx/sira/en-tetes.conf;
+  # Par défaut (page d'entrée, icônes) : toujours revalider, pour qu'une nouvelle version soit vue.
+  add_header Cache-Control "no-cache" always;
+
+  location = /sante {
+    access_log off;
+    default_type text/plain;
+    return 200 "ok\n";
+  }
+
+  # Seul chemin relayé, vers le seul serveur de cette interface, préfixe /api compris.
+  location /api/ {
+    set $amont "${API_AMONT}";
+    if ($amont = "") {
+      return 404;
+    }
+    proxy_pass $amont;
+    proxy_http_version 1.1;
+    proxy_set_header Host $http_host;
+    proxy_set_header Connection "";
+    # Les en-têtes X-Forwarded-* posés par le proxy d'entrée sont transmis tels quels.
+    proxy_connect_timeout 5s;
+    proxy_read_timeout 60s;
+    # Un add_header dans ce bloc masquerait ceux du serveur : on les reprend tous.
+    proxy_hide_header X-Content-Type-Options;
+    proxy_hide_header X-Frame-Options;
+    proxy_hide_header Cache-Control;
+    include /etc/nginx/sira/en-tetes.conf;
+    add_header Cache-Control "no-store" always;
+  }
+
+  # Configuration d'exécution, écrite au démarrage à partir des variables CONFIG_*.
+  location = /config.json {
+    alias /tmp/sira/config.json;
+    default_type application/json;
+    include /etc/nginx/sira/en-tetes.conf;
+    add_header Cache-Control "no-store" always;
+  }
+
+  # Fichiers dont le nom porte l'empreinte du contenu : ils ne changent jamais.
+  location ~ "-[A-Z0-9]{8}\.(js|css|woff2)$" {
+    try_files $uri =404;
+    include /etc/nginx/sira/en-tetes.conf;
+    add_header Cache-Control "public, max-age=31536000, immutable";
+  }
+
+  # Modules JavaScript hors build (worker de pdf.js) : sans ce type, le navigateur refuse le
+  # worker (X-Content-Type-Options: nosniff).
+  location ~ \.mjs$ {
+    types { }
+    default_type application/javascript;
+    try_files $uri =404;
+    include /etc/nginx/sira/en-tetes.conf;
+    add_header Cache-Control "no-cache" always;
+  }
+
+  location /assets/ {
+    try_files $uri =404;
+  }
+
+  # Les adresses d'écran sont gérées par l'application : elles reçoivent la page d'entrée.
+  # La page d'entrée reçoit un nonce neuf à chaque requête ($request_id : 128 bits aléatoires),
+  # repris dans l'en-tête CSP et posé sur l'élément racine pour PrimeNG.
+  location / {
+    try_files $uri /index.html;
+    sub_filter_once off;
+    sub_filter_types text/html;
+    sub_filter '__SIRA_NONCE__' '$request_id';
+    include /etc/nginx/sira/en-tetes-page.conf;
+  }
+}

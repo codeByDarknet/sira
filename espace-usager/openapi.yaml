@@ -1,0 +1,1219 @@
+openapi: 3.1.0
+info:
+  title: Sira — Espace citoyen (serveur)
+  version: 0.1.0
+  summary: Session OIDC du citoyen et relais fermé vers les routes /v1/citoyen de la passerelle.
+  description: |
+    Le serveur `sira-espace-citoyen` est derrière le nginx de l'interface, qui ne relaie que `/api/`.
+    Le navigateur n'y a qu'un cookie de session : les jetons du royaume `sira-citoyens` restent sur le
+    serveur, qui les présente à la passerelle avec son certificat `urn:sira:socle:espace-citoyen`.
+
+    - `/api/<suite>` est relayée vers `/v1/citoyen/<suite>` si, et seulement si, elle figure dans la liste
+      blanche (`RoutesCitoyen`). Les corps et statuts de la passerelle sont rendus tels quels : leurs
+      schémas sont ceux de `consentement-minimisation/openapi.yaml` et `journal/openapi.yaml`.
+    - Tout le reste répond `404` sans atteindre la passerelle.
+    - Sans session, toute route protégée répond `401` en JSON, jamais une redirection.
+
+    Erreurs RFC 9457 en `application/problem+json`.
+  license: {name: Licence du dépôt Sira}
+servers:
+- {url: 'http://citoyen.sira.localhost:8600', description: Démonstration locale (derrière le nginx de l'interface)}
+tags:
+- {name: Session, description: Connexion OIDC (royaume `sira-citoyens`) et session.}
+- {name: Relais, description: Routes du citoyen relayées vers la passerelle.}
+paths:
+  /api/resume:
+    get:
+      tags: [Relais]
+      operationId: lireResume
+      summary: Les compteurs de l'accueil
+      description: Relayée telle quelle vers `GET /v1/citoyen/resume` de la passerelle (`consentement-minimisation/openapi.yaml`),
+        avec le certificat du serveur et le jeton du citoyen. Statuts et corps de la passerelle sont rendus sans
+        retouche.
+      x-sira-source: relais
+      security:
+      - sessionCitoyen: []
+      responses:
+        '200':
+          description: Compteurs du citoyen du jeton.
+          content:
+            application/json:
+              schema: {$ref: ../consentement-minimisation/openapi.yaml#/components/schemas/Resume}
+              example: {demandes_en_attente: 1, autorisations_actives: 2, consultations_30_jours: 7}
+        '400':
+          description: 'Paramètres refusés par le relais (plus de 12, nom hors `[a-z][a-z0-9_]{0,31}`, valeur de
+            plus de 200 caractères : `urn:sira:erreur:requete-invalide`), ou requête refusée par la passerelle.'
+          content:
+            application/problem+json:
+              schema: {$ref: ../consentement-minimisation/openapi.yaml#/components/schemas/Probleme}
+        '401':
+          description: |-
+            Passerelle : jeton absent ou refusé (`urn:sira:erreur:non-authentifie`).
+
+            Relais : Pas de session, jeton non renouvelable, ou jeton refusé par la passerelle (`urn:sira:erreur:non-authentifie`) ; la session est alors fermée et l'interface reconnecte.
+          content:
+            application/problem+json:
+              schema: {$ref: ../consentement-minimisation/openapi.yaml#/components/schemas/Probleme}
+              example: {type: 'urn:sira:erreur:non-authentifie', title: Authentification requise, status: 401}
+        '403':
+          description: |-
+            Passerelle : certificat d'un autre membre, ou jeton sans identifiant unique (`urn:sira:erreur:acces-refuse`).
+
+            Relais : Jeton CSRF absent ou faux pour une écriture, ou accès refusé par la passerelle (`urn:sira:erreur:acces-refuse`).
+          content:
+            application/problem+json:
+              schema: {$ref: ../consentement-minimisation/openapi.yaml#/components/schemas/Probleme}
+              example: {type: 'urn:sira:erreur:acces-refuse', title: Accès refusé, status: 403}
+        '404':
+          description: Route hors de la liste blanche, identifiant difforme (`urn:sira:erreur:introuvable`), ou
+            objet introuvable pour la passerelle.
+          content:
+            application/problem+json:
+              schema: {$ref: ../consentement-minimisation/openapi.yaml#/components/schemas/Probleme}
+              example: {type: 'urn:sira:erreur:introuvable', title: Ressource introuvable, status: 404}
+        '415':
+          description: Corps envoyé dans un autre format que JSON (`urn:sira:erreur:format-non-pris-en-charge`).
+          content:
+            application/problem+json:
+              schema: {$ref: ../consentement-minimisation/openapi.yaml#/components/schemas/Probleme}
+              example: {type: 'urn:sira:erreur:format-non-pris-en-charge', title: Format non pris en charge, status: 415}
+        '502':
+          description: 'Réponse inattendue de la passerelle (redirection, autre format que JSON, plus de la taille
+            admise) : rien n''est transmis (`urn:sira:erreur:reponse-passerelle-invalide`).'
+          content:
+            application/problem+json:
+              schema: {$ref: ../consentement-minimisation/openapi.yaml#/components/schemas/Probleme}
+              example: {type: 'urn:sira:erreur:reponse-passerelle-invalide', title: Réponse inattendue de la passerelle,
+                status: 502}
+        '503':
+          description: Passerelle injoignable (`urn:sira:erreur:indisponible`).
+          content:
+            application/problem+json:
+              schema: {$ref: ../consentement-minimisation/openapi.yaml#/components/schemas/Probleme}
+              example: {type: 'urn:sira:erreur:indisponible', title: Service momentanément indisponible, status: 503}
+  /api/demandes:
+    get:
+      tags: [Relais]
+      operationId: listerMesDemandes
+      summary: Les demandes du citoyen, les plus récentes d'abord
+      description: Relayée telle quelle vers `GET /v1/citoyen/demandes` de la passerelle (`consentement-minimisation/openapi.yaml`),
+        avec le certificat du serveur et le jeton du citoyen. Statuts et corps de la passerelle sont rendus sans
+        retouche.
+      x-sira-source: relais
+      security:
+      - sessionCitoyen: []
+      parameters:
+      - name: etat
+        in: query
+        schema: {type: string, pattern: '^[A-Z_]{0,32}$'}
+      - name: page
+        in: query
+        schema: {type: integer, minimum: 1, maximum: 1000000, default: 1}
+      - name: taille
+        in: query
+        schema: {type: integer, minimum: 1, maximum: 100, default: 20}
+      responses:
+        '200':
+          description: Page de demandes.
+          content:
+            application/json:
+              schema: {$ref: ../consentement-minimisation/openapi.yaml#/components/schemas/PageDeDemandes}
+              example:
+                elements:
+                - id: 8d2f4b61-3c7e-4a90-b5d1-0e9f6a2c7b14
+                  etat: EN_ATTENTE_ACCORD
+                  canal: CODE
+                  creee_le: '2026-11-16T09:30:00Z'
+                  expire_le: '2026-11-16T09:45:00Z'
+                  code_verification_exige: true
+                  service: {code: concours, nom: Concours directs 2026, organisme: Ministère de la Fonction publique}
+                  demarche: {code: concours-direct, libelle: Inscription à un concours direct, finalite: Vérifier
+                      que vous remplissez les conditions du concours., duree_autorisation_jours: 30}
+                  jeux:
+                  - code: etat-civil.majeur
+                    libelle: Vous êtes majeur
+                    niveau: STATUT
+                    registre: {code: etat-civil, nom: État civil}
+                    detail: 'Réponse : oui ou non'
+                page: 1
+                taille: 20
+                total: 1
+        '400':
+          description: |-
+            Passerelle : paramètre ou corps refusé (`urn:sira:erreur:requete-invalide`, code `VALIDATION` et liste `erreurs` pour un corps).
+
+            Relais : Paramètres refusés par le relais (plus de 12, nom hors `[a-z][a-z0-9_]{0,31}`, valeur de plus de 200 caractères : `urn:sira:erreur:requete-invalide`), ou requête refusée par la passerelle.
+          content:
+            application/problem+json:
+              schema: {$ref: ../consentement-minimisation/openapi.yaml#/components/schemas/Probleme}
+              example:
+                type: urn:sira:erreur:requete-invalide
+                title: Requête invalide
+                status: 400
+                code: VALIDATION
+                erreurs:
+                - {champ: code_court, message: Le format de ce champ n'est pas admis.}
+        '401':
+          description: |-
+            Passerelle : jeton absent ou refusé (`urn:sira:erreur:non-authentifie`).
+
+            Relais : Pas de session, jeton non renouvelable, ou jeton refusé par la passerelle (`urn:sira:erreur:non-authentifie`) ; la session est alors fermée et l'interface reconnecte.
+          content:
+            application/problem+json:
+              schema: {$ref: ../consentement-minimisation/openapi.yaml#/components/schemas/Probleme}
+              example: {type: 'urn:sira:erreur:non-authentifie', title: Authentification requise, status: 401}
+        '403':
+          description: |-
+            Passerelle : certificat d'un autre membre, ou jeton sans identifiant unique (`urn:sira:erreur:acces-refuse`).
+
+            Relais : Jeton CSRF absent ou faux pour une écriture, ou accès refusé par la passerelle (`urn:sira:erreur:acces-refuse`).
+          content:
+            application/problem+json:
+              schema: {$ref: ../consentement-minimisation/openapi.yaml#/components/schemas/Probleme}
+              example: {type: 'urn:sira:erreur:acces-refuse', title: Accès refusé, status: 403}
+        '404':
+          description: Route hors de la liste blanche, identifiant difforme (`urn:sira:erreur:introuvable`), ou
+            objet introuvable pour la passerelle.
+          content:
+            application/problem+json:
+              schema: {$ref: ../consentement-minimisation/openapi.yaml#/components/schemas/Probleme}
+              example: {type: 'urn:sira:erreur:introuvable', title: Ressource introuvable, status: 404}
+        '415':
+          description: Corps envoyé dans un autre format que JSON (`urn:sira:erreur:format-non-pris-en-charge`).
+          content:
+            application/problem+json:
+              schema: {$ref: ../consentement-minimisation/openapi.yaml#/components/schemas/Probleme}
+              example: {type: 'urn:sira:erreur:format-non-pris-en-charge', title: Format non pris en charge, status: 415}
+        '502':
+          description: 'Réponse inattendue de la passerelle (redirection, autre format que JSON, plus de la taille
+            admise) : rien n''est transmis (`urn:sira:erreur:reponse-passerelle-invalide`).'
+          content:
+            application/problem+json:
+              schema: {$ref: ../consentement-minimisation/openapi.yaml#/components/schemas/Probleme}
+              example: {type: 'urn:sira:erreur:reponse-passerelle-invalide', title: Réponse inattendue de la passerelle,
+                status: 502}
+        '503':
+          description: Passerelle injoignable (`urn:sira:erreur:indisponible`).
+          content:
+            application/problem+json:
+              schema: {$ref: ../consentement-minimisation/openapi.yaml#/components/schemas/Probleme}
+              example: {type: 'urn:sira:erreur:indisponible', title: Service momentanément indisponible, status: 503}
+  /api/demandes/rattachement:
+    post:
+      tags: [Relais]
+      operationId: rattacherParCodeCourt
+      summary: Rattacher à soi une demande du canal CODE par son code court
+      description: Relayée telle quelle vers `POST /v1/citoyen/demandes/rattachement` de la passerelle (`consentement-minimisation/openapi.yaml`),
+        avec le certificat du serveur et le jeton du citoyen. Statuts et corps de la passerelle sont rendus sans
+        retouche.
+      x-sira-source: relais
+      security:
+      - sessionCitoyen: []
+        jetonCsrf: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: ../consentement-minimisation/openapi.yaml#/components/schemas/Rattachement}
+            example: {code_court: KLPM-4821}
+      responses:
+        '200':
+          description: La demande vue par le citoyen.
+          content:
+            application/json:
+              schema: {$ref: ../consentement-minimisation/openapi.yaml#/components/schemas/DemandeCitoyen}
+              example:
+                id: 8d2f4b61-3c7e-4a90-b5d1-0e9f6a2c7b14
+                etat: EN_ATTENTE_ACCORD
+                canal: CODE
+                creee_le: '2026-11-16T09:30:00Z'
+                expire_le: '2026-11-16T09:45:00Z'
+                code_verification_exige: true
+                service: {code: concours, nom: Concours directs 2026, organisme: Ministère de la Fonction publique}
+                demarche: {code: concours-direct, libelle: Inscription à un concours direct, finalite: Vérifier
+                    que vous remplissez les conditions du concours., duree_autorisation_jours: 30}
+                jeux:
+                - code: etat-civil.majeur
+                  libelle: Vous êtes majeur
+                  niveau: STATUT
+                  registre: {code: etat-civil, nom: État civil}
+                  detail: 'Réponse : oui ou non'
+        '400':
+          description: |-
+            Passerelle : paramètre ou corps refusé (`urn:sira:erreur:requete-invalide`, code `VALIDATION` et liste `erreurs` pour un corps).
+
+            Relais : Paramètres refusés par le relais (plus de 12, nom hors `[a-z][a-z0-9_]{0,31}`, valeur de plus de 200 caractères : `urn:sira:erreur:requete-invalide`), ou requête refusée par la passerelle.
+          content:
+            application/problem+json:
+              schema: {$ref: ../consentement-minimisation/openapi.yaml#/components/schemas/Probleme}
+              example:
+                type: urn:sira:erreur:requete-invalide
+                title: Requête invalide
+                status: 400
+                code: VALIDATION
+                erreurs:
+                - {champ: code_court, message: Le format de ce champ n'est pas admis.}
+        '401':
+          description: |-
+            Passerelle : jeton absent ou refusé (`urn:sira:erreur:non-authentifie`).
+
+            Relais : Pas de session, jeton non renouvelable, ou jeton refusé par la passerelle (`urn:sira:erreur:non-authentifie`) ; la session est alors fermée et l'interface reconnecte.
+          content:
+            application/problem+json:
+              schema: {$ref: ../consentement-minimisation/openapi.yaml#/components/schemas/Probleme}
+              example: {type: 'urn:sira:erreur:non-authentifie', title: Authentification requise, status: 401}
+        '403':
+          description: |-
+            Passerelle : certificat d'un autre membre, ou jeton sans identifiant unique (`urn:sira:erreur:acces-refuse`).
+
+            Relais : Jeton CSRF absent ou faux pour une écriture, ou accès refusé par la passerelle (`urn:sira:erreur:acces-refuse`).
+          content:
+            application/problem+json:
+              schema: {$ref: ../consentement-minimisation/openapi.yaml#/components/schemas/Probleme}
+              example: {type: 'urn:sira:erreur:acces-refuse', title: Accès refusé, status: 403}
+        '404':
+          description: |-
+            Passerelle : code inconnu, expiré ou déjà utilisé (`urn:sira:erreur:code-invalide`, code `CODE_INVALIDE`).
+
+            Relais : Route hors de la liste blanche, identifiant difforme (`urn:sira:erreur:introuvable`), ou objet introuvable pour la passerelle.
+          content:
+            application/problem+json:
+              schema: {$ref: ../consentement-minimisation/openapi.yaml#/components/schemas/Probleme}
+        '413':
+          description: Corps au-delà de `sira.http.taille-corps-max` (`urn:sira:erreur:corps-trop-volumineux`).
+          content:
+            application/problem+json:
+              schema: {$ref: ../consentement-minimisation/openapi.yaml#/components/schemas/Probleme}
+              example: {type: 'urn:sira:erreur:corps-trop-volumineux', title: Corps trop volumineux, status: 413}
+        '415':
+          description: Corps envoyé dans un autre format que JSON (`urn:sira:erreur:format-non-pris-en-charge`).
+          content:
+            application/problem+json:
+              schema: {$ref: ../consentement-minimisation/openapi.yaml#/components/schemas/Probleme}
+              example: {type: 'urn:sira:erreur:format-non-pris-en-charge', title: Format non pris en charge, status: 415}
+        '429':
+          description: Trop d'essais de code (`urn:sira:erreur:trop-de-requetes`, code `TROP_DE_REQUETES`).
+          content:
+            application/problem+json:
+              schema: {$ref: ../consentement-minimisation/openapi.yaml#/components/schemas/Probleme}
+        '502':
+          description: 'Réponse inattendue de la passerelle (redirection, autre format que JSON, plus de la taille
+            admise) : rien n''est transmis (`urn:sira:erreur:reponse-passerelle-invalide`).'
+          content:
+            application/problem+json:
+              schema: {$ref: ../consentement-minimisation/openapi.yaml#/components/schemas/Probleme}
+              example: {type: 'urn:sira:erreur:reponse-passerelle-invalide', title: Réponse inattendue de la passerelle,
+                status: 502}
+        '503':
+          description: Passerelle injoignable (`urn:sira:erreur:indisponible`).
+          content:
+            application/problem+json:
+              schema: {$ref: ../consentement-minimisation/openapi.yaml#/components/schemas/Probleme}
+              example: {type: 'urn:sira:erreur:indisponible', title: Service momentanément indisponible, status: 503}
+  /api/demandes/{id}:
+    get:
+      tags: [Relais]
+      operationId: lireMaDemande
+      summary: Le détail d'une demande, pour l'écran d'accord
+      description: Relayée telle quelle vers `GET /v1/citoyen/demandes/{id}` de la passerelle (`consentement-minimisation/openapi.yaml`),
+        avec le certificat du serveur et le jeton du citoyen. Statuts et corps de la passerelle sont rendus sans
+        retouche.
+      x-sira-source: relais
+      security:
+      - sessionCitoyen: []
+      parameters:
+      - {$ref: '#/components/parameters/Id'}
+      responses:
+        '200':
+          description: La demande vue par le citoyen.
+          content:
+            application/json:
+              schema: {$ref: ../consentement-minimisation/openapi.yaml#/components/schemas/DemandeCitoyen}
+              example:
+                id: 8d2f4b61-3c7e-4a90-b5d1-0e9f6a2c7b14
+                etat: EN_ATTENTE_ACCORD
+                canal: CODE
+                creee_le: '2026-11-16T09:30:00Z'
+                expire_le: '2026-11-16T09:45:00Z'
+                code_verification_exige: true
+                service: {code: concours, nom: Concours directs 2026, organisme: Ministère de la Fonction publique}
+                demarche: {code: concours-direct, libelle: Inscription à un concours direct, finalite: Vérifier
+                    que vous remplissez les conditions du concours., duree_autorisation_jours: 30}
+                jeux:
+                - code: etat-civil.majeur
+                  libelle: Vous êtes majeur
+                  niveau: STATUT
+                  registre: {code: etat-civil, nom: État civil}
+                  detail: 'Réponse : oui ou non'
+        '400':
+          description: 'Paramètres refusés par le relais (plus de 12, nom hors `[a-z][a-z0-9_]{0,31}`, valeur de
+            plus de 200 caractères : `urn:sira:erreur:requete-invalide`), ou requête refusée par la passerelle.'
+          content:
+            application/problem+json:
+              schema: {$ref: ../consentement-minimisation/openapi.yaml#/components/schemas/Probleme}
+        '401':
+          description: |-
+            Passerelle : jeton absent ou refusé (`urn:sira:erreur:non-authentifie`).
+
+            Relais : Pas de session, jeton non renouvelable, ou jeton refusé par la passerelle (`urn:sira:erreur:non-authentifie`) ; la session est alors fermée et l'interface reconnecte.
+          content:
+            application/problem+json:
+              schema: {$ref: ../consentement-minimisation/openapi.yaml#/components/schemas/Probleme}
+              example: {type: 'urn:sira:erreur:non-authentifie', title: Authentification requise, status: 401}
+        '403':
+          description: |-
+            Passerelle : certificat d'un autre membre, ou jeton sans identifiant unique (`urn:sira:erreur:acces-refuse`).
+
+            Relais : Jeton CSRF absent ou faux pour une écriture, ou accès refusé par la passerelle (`urn:sira:erreur:acces-refuse`).
+          content:
+            application/problem+json:
+              schema: {$ref: ../consentement-minimisation/openapi.yaml#/components/schemas/Probleme}
+              example: {type: 'urn:sira:erreur:acces-refuse', title: Accès refusé, status: 403}
+        '404':
+          description: |-
+            Passerelle : demande absente, ou celle d'un autre (`urn:sira:erreur:demande-introuvable`, code `DEMANDE_INTROUVABLE`).
+
+            Relais : Route hors de la liste blanche, identifiant difforme (`urn:sira:erreur:introuvable`), ou objet introuvable pour la passerelle.
+          content:
+            application/problem+json:
+              schema: {$ref: ../consentement-minimisation/openapi.yaml#/components/schemas/Probleme}
+              example: {type: 'urn:sira:erreur:demande-introuvable', title: Demande introuvable, status: 404, detail: Cette
+                  demande n'existe pas ou n'existe plus., code: DEMANDE_INTROUVABLE}
+        '415':
+          description: Corps envoyé dans un autre format que JSON (`urn:sira:erreur:format-non-pris-en-charge`).
+          content:
+            application/problem+json:
+              schema: {$ref: ../consentement-minimisation/openapi.yaml#/components/schemas/Probleme}
+              example: {type: 'urn:sira:erreur:format-non-pris-en-charge', title: Format non pris en charge, status: 415}
+        '502':
+          description: 'Réponse inattendue de la passerelle (redirection, autre format que JSON, plus de la taille
+            admise) : rien n''est transmis (`urn:sira:erreur:reponse-passerelle-invalide`).'
+          content:
+            application/problem+json:
+              schema: {$ref: ../consentement-minimisation/openapi.yaml#/components/schemas/Probleme}
+              example: {type: 'urn:sira:erreur:reponse-passerelle-invalide', title: Réponse inattendue de la passerelle,
+                status: 502}
+        '503':
+          description: Passerelle injoignable (`urn:sira:erreur:indisponible`).
+          content:
+            application/problem+json:
+              schema: {$ref: ../consentement-minimisation/openapi.yaml#/components/schemas/Probleme}
+              example: {type: 'urn:sira:erreur:indisponible', title: Service momentanément indisponible, status: 503}
+  /api/demandes/{id}/rattachement:
+    post:
+      tags: [Relais]
+      operationId: rattacherParIdentifiant
+      summary: Rattacher la demande ouverte par son lien (`url_accord`, QR code)
+      description: Relayée telle quelle vers `POST /v1/citoyen/demandes/{id}/rattachement` de la passerelle (`consentement-minimisation/openapi.yaml`),
+        avec le certificat du serveur et le jeton du citoyen. Statuts et corps de la passerelle sont rendus sans
+        retouche.
+      x-sira-source: relais
+      security:
+      - sessionCitoyen: []
+        jetonCsrf: []
+      parameters:
+      - {$ref: '#/components/parameters/Id'}
+      responses:
+        '200':
+          description: La demande vue par le citoyen.
+          content:
+            application/json:
+              schema: {$ref: ../consentement-minimisation/openapi.yaml#/components/schemas/DemandeCitoyen}
+              example:
+                id: 8d2f4b61-3c7e-4a90-b5d1-0e9f6a2c7b14
+                etat: EN_ATTENTE_ACCORD
+                canal: CODE
+                creee_le: '2026-11-16T09:30:00Z'
+                expire_le: '2026-11-16T09:45:00Z'
+                code_verification_exige: true
+                service: {code: concours, nom: Concours directs 2026, organisme: Ministère de la Fonction publique}
+                demarche: {code: concours-direct, libelle: Inscription à un concours direct, finalite: Vérifier
+                    que vous remplissez les conditions du concours., duree_autorisation_jours: 30}
+                jeux:
+                - code: etat-civil.majeur
+                  libelle: Vous êtes majeur
+                  niveau: STATUT
+                  registre: {code: etat-civil, nom: État civil}
+                  detail: 'Réponse : oui ou non'
+        '400':
+          description: 'Paramètres refusés par le relais (plus de 12, nom hors `[a-z][a-z0-9_]{0,31}`, valeur de
+            plus de 200 caractères : `urn:sira:erreur:requete-invalide`), ou requête refusée par la passerelle.'
+          content:
+            application/problem+json:
+              schema: {$ref: ../consentement-minimisation/openapi.yaml#/components/schemas/Probleme}
+        '401':
+          description: |-
+            Passerelle : jeton absent ou refusé (`urn:sira:erreur:non-authentifie`).
+
+            Relais : Pas de session, jeton non renouvelable, ou jeton refusé par la passerelle (`urn:sira:erreur:non-authentifie`) ; la session est alors fermée et l'interface reconnecte.
+          content:
+            application/problem+json:
+              schema: {$ref: ../consentement-minimisation/openapi.yaml#/components/schemas/Probleme}
+              example: {type: 'urn:sira:erreur:non-authentifie', title: Authentification requise, status: 401}
+        '403':
+          description: |-
+            Passerelle : certificat d'un autre membre, ou jeton sans identifiant unique (`urn:sira:erreur:acces-refuse`).
+
+            Relais : Jeton CSRF absent ou faux pour une écriture, ou accès refusé par la passerelle (`urn:sira:erreur:acces-refuse`).
+          content:
+            application/problem+json:
+              schema: {$ref: ../consentement-minimisation/openapi.yaml#/components/schemas/Probleme}
+              example: {type: 'urn:sira:erreur:acces-refuse', title: Accès refusé, status: 403}
+        '404':
+          description: |-
+            Passerelle : demande absente, ou celle d'un autre (`urn:sira:erreur:demande-introuvable`, code `DEMANDE_INTROUVABLE`).
+
+            Relais : Route hors de la liste blanche, identifiant difforme (`urn:sira:erreur:introuvable`), ou objet introuvable pour la passerelle.
+          content:
+            application/problem+json:
+              schema: {$ref: ../consentement-minimisation/openapi.yaml#/components/schemas/Probleme}
+              example: {type: 'urn:sira:erreur:demande-introuvable', title: Demande introuvable, status: 404, detail: Cette
+                  demande n'existe pas ou n'existe plus., code: DEMANDE_INTROUVABLE}
+        '415':
+          description: Corps envoyé dans un autre format que JSON (`urn:sira:erreur:format-non-pris-en-charge`).
+          content:
+            application/problem+json:
+              schema: {$ref: ../consentement-minimisation/openapi.yaml#/components/schemas/Probleme}
+              example: {type: 'urn:sira:erreur:format-non-pris-en-charge', title: Format non pris en charge, status: 415}
+        '502':
+          description: 'Réponse inattendue de la passerelle (redirection, autre format que JSON, plus de la taille
+            admise) : rien n''est transmis (`urn:sira:erreur:reponse-passerelle-invalide`).'
+          content:
+            application/problem+json:
+              schema: {$ref: ../consentement-minimisation/openapi.yaml#/components/schemas/Probleme}
+              example: {type: 'urn:sira:erreur:reponse-passerelle-invalide', title: Réponse inattendue de la passerelle,
+                status: 502}
+        '503':
+          description: Passerelle injoignable (`urn:sira:erreur:indisponible`).
+          content:
+            application/problem+json:
+              schema: {$ref: ../consentement-minimisation/openapi.yaml#/components/schemas/Probleme}
+              example: {type: 'urn:sira:erreur:indisponible', title: Service momentanément indisponible, status: 503}
+  /api/demandes/{id}/decision:
+    post:
+      tags: [Relais]
+      operationId: decider
+      summary: Accepter ou refuser une demande
+      description: Relayée telle quelle vers `POST /v1/citoyen/demandes/{id}/decision` de la passerelle (`consentement-minimisation/openapi.yaml`),
+        avec le certificat du serveur et le jeton du citoyen. Statuts et corps de la passerelle sont rendus sans
+        retouche.
+      x-sira-source: relais
+      security:
+      - sessionCitoyen: []
+        jetonCsrf: []
+      parameters:
+      - {$ref: '#/components/parameters/Id'}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: ../consentement-minimisation/openapi.yaml#/components/schemas/Decision}
+            example: {decision: ACCEPTER, code_verification: '492113'}
+      responses:
+        '200':
+          description: Décision enregistrée.
+          content:
+            application/json:
+              schema: {$ref: ../consentement-minimisation/openapi.yaml#/components/schemas/DecisionEnregistree}
+              example: {etat: EN_COURS, retour_url: null}
+        '400':
+          description: |-
+            Passerelle : paramètre ou corps refusé (`urn:sira:erreur:requete-invalide`, code `VALIDATION` et liste `erreurs` pour un corps).
+
+            Relais : Paramètres refusés par le relais (plus de 12, nom hors `[a-z][a-z0-9_]{0,31}`, valeur de plus de 200 caractères : `urn:sira:erreur:requete-invalide`), ou requête refusée par la passerelle.
+          content:
+            application/problem+json:
+              schema: {$ref: ../consentement-minimisation/openapi.yaml#/components/schemas/Probleme}
+              example:
+                type: urn:sira:erreur:requete-invalide
+                title: Requête invalide
+                status: 400
+                code: VALIDATION
+                erreurs:
+                - {champ: code_court, message: Le format de ce champ n'est pas admis.}
+        '401':
+          description: |-
+            Passerelle : jeton absent ou refusé (`urn:sira:erreur:non-authentifie`).
+
+            Relais : Pas de session, jeton non renouvelable, ou jeton refusé par la passerelle (`urn:sira:erreur:non-authentifie`) ; la session est alors fermée et l'interface reconnecte.
+          content:
+            application/problem+json:
+              schema: {$ref: ../consentement-minimisation/openapi.yaml#/components/schemas/Probleme}
+              example: {type: 'urn:sira:erreur:non-authentifie', title: Authentification requise, status: 401}
+        '403':
+          description: |-
+            Passerelle : certificat ou jeton refusé (`acces-refuse`), ou habilitation suspendue depuis la demande
+            (`urn:sira:erreur:habilitation-absente`, code `HABILITATION_ABSENTE`).
+
+            Relais : Jeton CSRF absent ou faux pour une écriture, ou accès refusé par la passerelle (`urn:sira:erreur:acces-refuse`).
+          content:
+            application/problem+json:
+              schema: {$ref: ../consentement-minimisation/openapi.yaml#/components/schemas/Probleme}
+        '404':
+          description: |-
+            Passerelle : demande absente, ou celle d'un autre (`urn:sira:erreur:demande-introuvable`, code `DEMANDE_INTROUVABLE`).
+
+            Relais : Route hors de la liste blanche, identifiant difforme (`urn:sira:erreur:introuvable`), ou objet introuvable pour la passerelle.
+          content:
+            application/problem+json:
+              schema: {$ref: ../consentement-minimisation/openapi.yaml#/components/schemas/Probleme}
+              example: {type: 'urn:sira:erreur:demande-introuvable', title: Demande introuvable, status: 404, detail: Cette
+                  demande n'existe pas ou n'existe plus., code: DEMANDE_INTROUVABLE}
+        '409':
+          description: Décision déjà prise (`urn:sira:erreur:decision-deja-prise`, code `DECISION_DEJA_PRISE`).
+          content:
+            application/problem+json:
+              schema: {$ref: ../consentement-minimisation/openapi.yaml#/components/schemas/Probleme}
+        '410':
+          description: Délai de réponse dépassé (`urn:sira:erreur:demande-expiree`, code `DEMANDE_EXPIREE`).
+          content:
+            application/problem+json:
+              schema: {$ref: ../consentement-minimisation/openapi.yaml#/components/schemas/Probleme}
+        '413':
+          description: Corps au-delà de `sira.http.taille-corps-max` (`urn:sira:erreur:corps-trop-volumineux`).
+          content:
+            application/problem+json:
+              schema: {$ref: ../consentement-minimisation/openapi.yaml#/components/schemas/Probleme}
+              example: {type: 'urn:sira:erreur:corps-trop-volumineux', title: Corps trop volumineux, status: 413}
+        '415':
+          description: Corps envoyé dans un autre format que JSON (`urn:sira:erreur:format-non-pris-en-charge`).
+          content:
+            application/problem+json:
+              schema: {$ref: ../consentement-minimisation/openapi.yaml#/components/schemas/Probleme}
+              example: {type: 'urn:sira:erreur:format-non-pris-en-charge', title: Format non pris en charge, status: 415}
+        '422':
+          description: Code de vérification absent ou faux (`urn:sira:erreur:code-invalide`, code `CODE_INVALIDE`).
+          content:
+            application/problem+json:
+              schema: {$ref: ../consentement-minimisation/openapi.yaml#/components/schemas/Probleme}
+              example: {type: 'urn:sira:erreur:code-invalide', title: Code invalide, status: 422, detail: Ce n'est
+                  pas le code affiché par le service. Vérifiez que vous répondez à la demande que vous avez faite
+                  vous-même., code: CODE_INVALIDE}
+        '429':
+          description: Trop d'essais de code (`urn:sira:erreur:trop-de-requetes`, code `TROP_DE_REQUETES`).
+          content:
+            application/problem+json:
+              schema: {$ref: ../consentement-minimisation/openapi.yaml#/components/schemas/Probleme}
+        '502':
+          description: 'Réponse inattendue de la passerelle (redirection, autre format que JSON, plus de la taille
+            admise) : rien n''est transmis (`urn:sira:erreur:reponse-passerelle-invalide`).'
+          content:
+            application/problem+json:
+              schema: {$ref: ../consentement-minimisation/openapi.yaml#/components/schemas/Probleme}
+              example: {type: 'urn:sira:erreur:reponse-passerelle-invalide', title: Réponse inattendue de la passerelle,
+                status: 502}
+        '503':
+          description: Passerelle injoignable (`urn:sira:erreur:indisponible`).
+          content:
+            application/problem+json:
+              schema: {$ref: ../consentement-minimisation/openapi.yaml#/components/schemas/Probleme}
+              example: {type: 'urn:sira:erreur:indisponible', title: Service momentanément indisponible, status: 503}
+  /api/autorisations:
+    get:
+      tags: [Relais]
+      operationId: listerMesAutorisations
+      summary: Les services qui ont, ou ont eu, accès
+      description: Relayée telle quelle vers `GET /v1/citoyen/autorisations` de la passerelle (`consentement-minimisation/openapi.yaml`),
+        avec le certificat du serveur et le jeton du citoyen. Statuts et corps de la passerelle sont rendus sans
+        retouche.
+      x-sira-source: relais
+      security:
+      - sessionCitoyen: []
+      parameters:
+      - name: etat
+        in: query
+        schema:
+          type: string
+          enum: ['', ACTIVE, RETIREE, EXPIREE]
+      - name: page
+        in: query
+        schema: {type: integer, minimum: 1, maximum: 1000000, default: 1}
+      - name: taille
+        in: query
+        schema: {type: integer, minimum: 1, maximum: 100, default: 20}
+      responses:
+        '200':
+          description: Page d'autorisations.
+          content:
+            application/json:
+              schema: {$ref: ../consentement-minimisation/openapi.yaml#/components/schemas/PageDAutorisations}
+              example:
+                elements:
+                - id: 1e5a9c03-6b2d-4f71-8a4e-c3d0b7f92e56
+                  etat: ACTIVE
+                  accordee_le: '2026-11-16T09:33:12Z'
+                  expire_le: '2026-12-16T09:33:12Z'
+                  retiree_le: null
+                  service: {code: concours, nom: Concours directs 2026, organisme: Ministère de la Fonction publique}
+                  demarche: {code: concours-direct, libelle: Inscription à un concours direct, finalite: Vérifier
+                      que vous remplissez les conditions du concours.}
+                  jeux:
+                  - code: etat-civil.majeur
+                    libelle: Vous êtes majeur
+                    niveau: STATUT
+                    registre: {code: etat-civil, nom: État civil}
+                    detail: 'Réponse : oui ou non'
+                  consultations: 1
+                  derniere_consultation_le: '2026-11-16T09:33:14Z'
+                page: 1
+                taille: 20
+                total: 1
+        '400':
+          description: |-
+            Passerelle : paramètre ou corps refusé (`urn:sira:erreur:requete-invalide`, code `VALIDATION` et liste `erreurs` pour un corps).
+
+            Relais : Paramètres refusés par le relais (plus de 12, nom hors `[a-z][a-z0-9_]{0,31}`, valeur de plus de 200 caractères : `urn:sira:erreur:requete-invalide`), ou requête refusée par la passerelle.
+          content:
+            application/problem+json:
+              schema: {$ref: ../consentement-minimisation/openapi.yaml#/components/schemas/Probleme}
+              example:
+                type: urn:sira:erreur:requete-invalide
+                title: Requête invalide
+                status: 400
+                code: VALIDATION
+                erreurs:
+                - {champ: code_court, message: Le format de ce champ n'est pas admis.}
+        '401':
+          description: |-
+            Passerelle : jeton absent ou refusé (`urn:sira:erreur:non-authentifie`).
+
+            Relais : Pas de session, jeton non renouvelable, ou jeton refusé par la passerelle (`urn:sira:erreur:non-authentifie`) ; la session est alors fermée et l'interface reconnecte.
+          content:
+            application/problem+json:
+              schema: {$ref: ../consentement-minimisation/openapi.yaml#/components/schemas/Probleme}
+              example: {type: 'urn:sira:erreur:non-authentifie', title: Authentification requise, status: 401}
+        '403':
+          description: |-
+            Passerelle : certificat d'un autre membre, ou jeton sans identifiant unique (`urn:sira:erreur:acces-refuse`).
+
+            Relais : Jeton CSRF absent ou faux pour une écriture, ou accès refusé par la passerelle (`urn:sira:erreur:acces-refuse`).
+          content:
+            application/problem+json:
+              schema: {$ref: ../consentement-minimisation/openapi.yaml#/components/schemas/Probleme}
+              example: {type: 'urn:sira:erreur:acces-refuse', title: Accès refusé, status: 403}
+        '404':
+          description: Route hors de la liste blanche, identifiant difforme (`urn:sira:erreur:introuvable`), ou
+            objet introuvable pour la passerelle.
+          content:
+            application/problem+json:
+              schema: {$ref: ../consentement-minimisation/openapi.yaml#/components/schemas/Probleme}
+              example: {type: 'urn:sira:erreur:introuvable', title: Ressource introuvable, status: 404}
+        '415':
+          description: Corps envoyé dans un autre format que JSON (`urn:sira:erreur:format-non-pris-en-charge`).
+          content:
+            application/problem+json:
+              schema: {$ref: ../consentement-minimisation/openapi.yaml#/components/schemas/Probleme}
+              example: {type: 'urn:sira:erreur:format-non-pris-en-charge', title: Format non pris en charge, status: 415}
+        '502':
+          description: 'Réponse inattendue de la passerelle (redirection, autre format que JSON, plus de la taille
+            admise) : rien n''est transmis (`urn:sira:erreur:reponse-passerelle-invalide`).'
+          content:
+            application/problem+json:
+              schema: {$ref: ../consentement-minimisation/openapi.yaml#/components/schemas/Probleme}
+              example: {type: 'urn:sira:erreur:reponse-passerelle-invalide', title: Réponse inattendue de la passerelle,
+                status: 502}
+        '503':
+          description: Passerelle injoignable (`urn:sira:erreur:indisponible`).
+          content:
+            application/problem+json:
+              schema: {$ref: ../consentement-minimisation/openapi.yaml#/components/schemas/Probleme}
+              example: {type: 'urn:sira:erreur:indisponible', title: Service momentanément indisponible, status: 503}
+  /api/autorisations/{id}:
+    get:
+      tags: [Relais]
+      operationId: lireMonAutorisation
+      summary: Le détail d'une autorisation
+      description: Relayée telle quelle vers `GET /v1/citoyen/autorisations/{id}` de la passerelle (`consentement-minimisation/openapi.yaml`),
+        avec le certificat du serveur et le jeton du citoyen. Statuts et corps de la passerelle sont rendus sans
+        retouche.
+      x-sira-source: relais
+      security:
+      - sessionCitoyen: []
+      parameters:
+      - {$ref: '#/components/parameters/Id'}
+      responses:
+        '200':
+          description: L'autorisation.
+          content:
+            application/json:
+              schema: {$ref: ../consentement-minimisation/openapi.yaml#/components/schemas/AutorisationCitoyen}
+              example:
+                id: 1e5a9c03-6b2d-4f71-8a4e-c3d0b7f92e56
+                etat: ACTIVE
+                accordee_le: '2026-11-16T09:33:12Z'
+                expire_le: '2026-12-16T09:33:12Z'
+                retiree_le: null
+                service: {code: concours, nom: Concours directs 2026, organisme: Ministère de la Fonction publique}
+                demarche: {code: concours-direct, libelle: Inscription à un concours direct, finalite: Vérifier
+                    que vous remplissez les conditions du concours.}
+                jeux:
+                - code: etat-civil.majeur
+                  libelle: Vous êtes majeur
+                  niveau: STATUT
+                  registre: {code: etat-civil, nom: État civil}
+                  detail: 'Réponse : oui ou non'
+                consultations: 1
+                derniere_consultation_le: '2026-11-16T09:33:14Z'
+        '400':
+          description: 'Paramètres refusés par le relais (plus de 12, nom hors `[a-z][a-z0-9_]{0,31}`, valeur de
+            plus de 200 caractères : `urn:sira:erreur:requete-invalide`), ou requête refusée par la passerelle.'
+          content:
+            application/problem+json:
+              schema: {$ref: ../consentement-minimisation/openapi.yaml#/components/schemas/Probleme}
+        '401':
+          description: |-
+            Passerelle : jeton absent ou refusé (`urn:sira:erreur:non-authentifie`).
+
+            Relais : Pas de session, jeton non renouvelable, ou jeton refusé par la passerelle (`urn:sira:erreur:non-authentifie`) ; la session est alors fermée et l'interface reconnecte.
+          content:
+            application/problem+json:
+              schema: {$ref: ../consentement-minimisation/openapi.yaml#/components/schemas/Probleme}
+              example: {type: 'urn:sira:erreur:non-authentifie', title: Authentification requise, status: 401}
+        '403':
+          description: |-
+            Passerelle : certificat d'un autre membre, ou jeton sans identifiant unique (`urn:sira:erreur:acces-refuse`).
+
+            Relais : Jeton CSRF absent ou faux pour une écriture, ou accès refusé par la passerelle (`urn:sira:erreur:acces-refuse`).
+          content:
+            application/problem+json:
+              schema: {$ref: ../consentement-minimisation/openapi.yaml#/components/schemas/Probleme}
+              example: {type: 'urn:sira:erreur:acces-refuse', title: Accès refusé, status: 403}
+        '404':
+          description: |-
+            Passerelle : absente, ou celle d'un autre citoyen (`urn:sira:erreur:introuvable`).
+
+            Relais : Route hors de la liste blanche, identifiant difforme (`urn:sira:erreur:introuvable`), ou objet introuvable pour la passerelle.
+          content:
+            application/problem+json:
+              schema: {$ref: ../consentement-minimisation/openapi.yaml#/components/schemas/Probleme}
+        '415':
+          description: Corps envoyé dans un autre format que JSON (`urn:sira:erreur:format-non-pris-en-charge`).
+          content:
+            application/problem+json:
+              schema: {$ref: ../consentement-minimisation/openapi.yaml#/components/schemas/Probleme}
+              example: {type: 'urn:sira:erreur:format-non-pris-en-charge', title: Format non pris en charge, status: 415}
+        '502':
+          description: 'Réponse inattendue de la passerelle (redirection, autre format que JSON, plus de la taille
+            admise) : rien n''est transmis (`urn:sira:erreur:reponse-passerelle-invalide`).'
+          content:
+            application/problem+json:
+              schema: {$ref: ../consentement-minimisation/openapi.yaml#/components/schemas/Probleme}
+              example: {type: 'urn:sira:erreur:reponse-passerelle-invalide', title: Réponse inattendue de la passerelle,
+                status: 502}
+        '503':
+          description: Passerelle injoignable (`urn:sira:erreur:indisponible`).
+          content:
+            application/problem+json:
+              schema: {$ref: ../consentement-minimisation/openapi.yaml#/components/schemas/Probleme}
+              example: {type: 'urn:sira:erreur:indisponible', title: Service momentanément indisponible, status: 503}
+    delete:
+      tags: [Relais]
+      operationId: retirerMonAutorisation
+      summary: Retirer l'accès
+      description: Relayée telle quelle vers `DELETE /v1/citoyen/autorisations/{id}` de la passerelle (`consentement-minimisation/openapi.yaml`),
+        avec le certificat du serveur et le jeton du citoyen. Statuts et corps de la passerelle sont rendus sans
+        retouche.
+      x-sira-source: relais
+      security:
+      - sessionCitoyen: []
+        jetonCsrf: []
+      parameters:
+      - {$ref: '#/components/parameters/Id'}
+      responses:
+        '204': {description: 'Accès retiré (journalisé, type `RETRAIT`).'}
+        '400':
+          description: 'Paramètres refusés par le relais (plus de 12, nom hors `[a-z][a-z0-9_]{0,31}`, valeur de
+            plus de 200 caractères : `urn:sira:erreur:requete-invalide`), ou requête refusée par la passerelle.'
+          content:
+            application/problem+json:
+              schema: {$ref: ../consentement-minimisation/openapi.yaml#/components/schemas/Probleme}
+        '401':
+          description: |-
+            Passerelle : jeton absent ou refusé (`urn:sira:erreur:non-authentifie`).
+
+            Relais : Pas de session, jeton non renouvelable, ou jeton refusé par la passerelle (`urn:sira:erreur:non-authentifie`) ; la session est alors fermée et l'interface reconnecte.
+          content:
+            application/problem+json:
+              schema: {$ref: ../consentement-minimisation/openapi.yaml#/components/schemas/Probleme}
+              example: {type: 'urn:sira:erreur:non-authentifie', title: Authentification requise, status: 401}
+        '403':
+          description: |-
+            Passerelle : certificat d'un autre membre, ou jeton sans identifiant unique (`urn:sira:erreur:acces-refuse`).
+
+            Relais : Jeton CSRF absent ou faux pour une écriture, ou accès refusé par la passerelle (`urn:sira:erreur:acces-refuse`).
+          content:
+            application/problem+json:
+              schema: {$ref: ../consentement-minimisation/openapi.yaml#/components/schemas/Probleme}
+              example: {type: 'urn:sira:erreur:acces-refuse', title: Accès refusé, status: 403}
+        '404':
+          description: |-
+            Passerelle : absente, ou celle d'un autre citoyen (`urn:sira:erreur:introuvable`).
+
+            Relais : Route hors de la liste blanche, identifiant difforme (`urn:sira:erreur:introuvable`), ou objet introuvable pour la passerelle.
+          content:
+            application/problem+json:
+              schema: {$ref: ../consentement-minimisation/openapi.yaml#/components/schemas/Probleme}
+        '415':
+          description: Corps envoyé dans un autre format que JSON (`urn:sira:erreur:format-non-pris-en-charge`).
+          content:
+            application/problem+json:
+              schema: {$ref: ../consentement-minimisation/openapi.yaml#/components/schemas/Probleme}
+              example: {type: 'urn:sira:erreur:format-non-pris-en-charge', title: Format non pris en charge, status: 415}
+        '502':
+          description: 'Réponse inattendue de la passerelle (redirection, autre format que JSON, plus de la taille
+            admise) : rien n''est transmis (`urn:sira:erreur:reponse-passerelle-invalide`).'
+          content:
+            application/problem+json:
+              schema: {$ref: ../consentement-minimisation/openapi.yaml#/components/schemas/Probleme}
+              example: {type: 'urn:sira:erreur:reponse-passerelle-invalide', title: Réponse inattendue de la passerelle,
+                status: 502}
+        '503':
+          description: Passerelle injoignable (`urn:sira:erreur:indisponible`).
+          content:
+            application/problem+json:
+              schema: {$ref: ../consentement-minimisation/openapi.yaml#/components/schemas/Probleme}
+              example: {type: 'urn:sira:erreur:indisponible', title: Service momentanément indisponible, status: 503}
+  /api/journal:
+    get:
+      tags: [Relais]
+      operationId: lireMonJournal
+      summary: Qui a consulté quoi, quand, pourquoi, avec quel résultat
+      description: Relayée telle quelle vers `GET /v1/citoyen/journal` de la passerelle (`journal/openapi.yaml`),
+        avec le certificat du serveur et le jeton du citoyen. Statuts et corps de la passerelle sont rendus sans
+        retouche.
+      x-sira-source: relais
+      security:
+      - sessionCitoyen: []
+      parameters:
+      - name: type
+        in: query
+        description: 'Filtre sur le type de ligne (vide ou absent : tous).'
+        schema: {type: string, maxLength: 32}
+      - name: service
+        in: query
+        description: Filtre sur le code du service.
+        schema: {type: string, maxLength: 64}
+      - name: page
+        in: query
+        schema: {type: integer, minimum: 1, maximum: 1000000, default: 1}
+      - name: taille
+        in: query
+        schema: {type: integer, minimum: 1, maximum: 100, default: 20}
+      responses:
+        '200':
+          description: Page de lignes.
+          content:
+            application/json:
+              schema: {$ref: ../journal/openapi.yaml#/components/schemas/PageDeLignes}
+              example:
+                elements:
+                - id: 0b7c2f1e-5a3d-4e8b-9c61-2d4f8a6e1b03
+                  numero: 1284
+                  horodatage: '2026-11-16T09:42:17.512Z'
+                  type: CONSULTATION
+                  resultat: REUSSI
+                  pseudonyme: null
+                  service: {code: concours, nom: Concours directs 2026}
+                  registre: {code: etat-civil, nom: État civil}
+                  jeu: {code: etat-civil.majeur, libelle: Vous êtes majeur, niveau: STATUT}
+                  niveau: STATUT
+                  demarche: {code: concours-direct, libelle: Inscription à un concours direct}
+                  finalite: Vérifier que vous remplissez les conditions du concours.
+                  canal: CODE
+                  id_echange: 6f1d0c9a-27b4-4a5e-8f3c-91e2b7d4a650
+                  detail: null
+                  acteur: null
+                  objet: null
+                  signalee: false
+                page: 1
+                taille: 20
+                total: 1
+        '400':
+          description: |-
+            Passerelle : paramètre ou corps refusé (`urn:sira:erreur:requete-invalide`, code `VALIDATION` et liste `erreurs` pour un corps).
+
+            Relais : Paramètres refusés par le relais (plus de 12, nom hors `[a-z][a-z0-9_]{0,31}`, valeur de plus de 200 caractères : `urn:sira:erreur:requete-invalide`), ou requête refusée par la passerelle.
+          content:
+            application/problem+json:
+              schema: {$ref: ../journal/openapi.yaml#/components/schemas/Probleme}
+              example:
+                type: urn:sira:erreur:requete-invalide
+                title: Requête invalide
+                status: 400
+                code: VALIDATION
+                erreurs:
+                - {champ: motif, message: La longueur de ce champ n'est pas admise.}
+        '401':
+          description: |-
+            Passerelle : jeton absent ou refusé (`urn:sira:erreur:non-authentifie`).
+
+            Relais : Pas de session, jeton non renouvelable, ou jeton refusé par la passerelle (`urn:sira:erreur:non-authentifie`) ; la session est alors fermée et l'interface reconnecte.
+          content:
+            application/problem+json:
+              schema: {$ref: ../journal/openapi.yaml#/components/schemas/Probleme}
+              example: {type: 'urn:sira:erreur:non-authentifie', title: Authentification requise, status: 401}
+        '403':
+          description: |-
+            Passerelle : certificat d'un autre membre, ou rôle insuffisant (`urn:sira:erreur:acces-refuse`).
+
+            Relais : Jeton CSRF absent ou faux pour une écriture, ou accès refusé par la passerelle (`urn:sira:erreur:acces-refuse`).
+          content:
+            application/problem+json:
+              schema: {$ref: ../journal/openapi.yaml#/components/schemas/Probleme}
+              example: {type: 'urn:sira:erreur:acces-refuse', title: Accès refusé, status: 403}
+        '404':
+          description: Route hors de la liste blanche, identifiant difforme (`urn:sira:erreur:introuvable`), ou
+            objet introuvable pour la passerelle.
+          content:
+            application/problem+json:
+              schema: {$ref: ../consentement-minimisation/openapi.yaml#/components/schemas/Probleme}
+              example: {type: 'urn:sira:erreur:introuvable', title: Ressource introuvable, status: 404}
+        '415':
+          description: Corps envoyé dans un autre format que JSON (`urn:sira:erreur:format-non-pris-en-charge`).
+          content:
+            application/problem+json:
+              schema: {$ref: ../consentement-minimisation/openapi.yaml#/components/schemas/Probleme}
+              example: {type: 'urn:sira:erreur:format-non-pris-en-charge', title: Format non pris en charge, status: 415}
+        '502':
+          description: 'Réponse inattendue de la passerelle (redirection, autre format que JSON, plus de la taille
+            admise) : rien n''est transmis (`urn:sira:erreur:reponse-passerelle-invalide`).'
+          content:
+            application/problem+json:
+              schema: {$ref: ../consentement-minimisation/openapi.yaml#/components/schemas/Probleme}
+              example: {type: 'urn:sira:erreur:reponse-passerelle-invalide', title: Réponse inattendue de la passerelle,
+                status: 502}
+        '503':
+          description: Passerelle injoignable (`urn:sira:erreur:indisponible`).
+          content:
+            application/problem+json:
+              schema: {$ref: ../consentement-minimisation/openapi.yaml#/components/schemas/Probleme}
+              example: {type: 'urn:sira:erreur:indisponible', title: Service momentanément indisponible, status: 503}
+  /api/journal/{id}/signalement:
+    post:
+      tags: [Relais]
+      operationId: signalerUnAcces
+      summary: Contester un accès lu dans son historique
+      description: Relayée telle quelle vers `POST /v1/citoyen/journal/{id}/signalement` de la passerelle (`journal/openapi.yaml`),
+        avec le certificat du serveur et le jeton du citoyen. Statuts et corps de la passerelle sont rendus sans
+        retouche.
+      x-sira-source: relais
+      security:
+      - sessionCitoyen: []
+        jetonCsrf: []
+      parameters:
+      - {$ref: '#/components/parameters/Id'}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: ../journal/openapi.yaml#/components/schemas/MotifDeSignalement}
+            example: {motif: Je n'ai fait aucune démarche auprès de ce service ce jour-là.}
+      responses:
+        '201':
+          description: Signalement enregistré.
+          content:
+            application/json:
+              schema: {$ref: ../journal/openapi.yaml#/components/schemas/Recu}
+              example: {id: 4c8e2a17-9b3f-4d61-a0e5-7f2c9d1b8e44, cree_le: '2026-11-16T10:03:55.201Z'}
+        '400':
+          description: |-
+            Passerelle : paramètre ou corps refusé (`urn:sira:erreur:requete-invalide`, code `VALIDATION` et liste `erreurs` pour un corps).
+
+            Relais : Paramètres refusés par le relais (plus de 12, nom hors `[a-z][a-z0-9_]{0,31}`, valeur de plus de 200 caractères : `urn:sira:erreur:requete-invalide`), ou requête refusée par la passerelle.
+          content:
+            application/problem+json:
+              schema: {$ref: ../journal/openapi.yaml#/components/schemas/Probleme}
+              example:
+                type: urn:sira:erreur:requete-invalide
+                title: Requête invalide
+                status: 400
+                code: VALIDATION
+                erreurs:
+                - {champ: motif, message: La longueur de ce champ n'est pas admise.}
+        '401':
+          description: |-
+            Passerelle : jeton absent ou refusé (`urn:sira:erreur:non-authentifie`).
+
+            Relais : Pas de session, jeton non renouvelable, ou jeton refusé par la passerelle (`urn:sira:erreur:non-authentifie`) ; la session est alors fermée et l'interface reconnecte.
+          content:
+            application/problem+json:
+              schema: {$ref: ../journal/openapi.yaml#/components/schemas/Probleme}
+              example: {type: 'urn:sira:erreur:non-authentifie', title: Authentification requise, status: 401}
+        '403':
+          description: |-
+            Passerelle : certificat d'un autre membre, ou rôle insuffisant (`urn:sira:erreur:acces-refuse`).
+
+            Relais : Jeton CSRF absent ou faux pour une écriture, ou accès refusé par la passerelle (`urn:sira:erreur:acces-refuse`).
+          content:
+            application/problem+json:
+              schema: {$ref: ../journal/openapi.yaml#/components/schemas/Probleme}
+              example: {type: 'urn:sira:erreur:acces-refuse', title: Accès refusé, status: 403}
+        '404':
+          description: |-
+            Passerelle : cette ligne n'existe pas ou n'est pas une ligne de ce citoyen (`urn:sira:erreur:introuvable`).
+
+            Relais : Route hors de la liste blanche, identifiant difforme (`urn:sira:erreur:introuvable`), ou objet introuvable pour la passerelle.
+          content:
+            application/problem+json:
+              schema: {$ref: ../journal/openapi.yaml#/components/schemas/Probleme}
+        '409':
+          description: Ligne déjà signalée (`urn:sira:erreur:conflit`, code `CONFLIT`).
+          content:
+            application/problem+json:
+              schema: {$ref: ../journal/openapi.yaml#/components/schemas/Probleme}
+              example: {type: 'urn:sira:erreur:conflit', title: Conflit avec l'état actuel, status: 409, detail: Vous
+                  avez déjà signalé cet accès., code: CONFLIT}
+        '413':
+          description: Corps au-delà de `sira.http.taille-corps-max` (`urn:sira:erreur:corps-trop-volumineux`).
+          content:
+            application/problem+json:
+              schema: {$ref: ../journal/openapi.yaml#/components/schemas/Probleme}
+              example: {type: 'urn:sira:erreur:corps-trop-volumineux', title: Corps trop volumineux, status: 413}
+        '415':
+          description: Corps envoyé dans un autre format que JSON (`urn:sira:erreur:format-non-pris-en-charge`).
+          content:
+            application/problem+json:
+              schema: {$ref: ../consentement-minimisation/openapi.yaml#/components/schemas/Probleme}
+              example: {type: 'urn:sira:erreur:format-non-pris-en-charge', title: Format non pris en charge, status: 415}
+        '502':
+          description: 'Réponse inattendue de la passerelle (redirection, autre format que JSON, plus de la taille
+            admise) : rien n''est transmis (`urn:sira:erreur:reponse-passerelle-invalide`).'
+          content:
+            application/problem+json:
+              schema: {$ref: ../consentement-minimisation/openapi.yaml#/components/schemas/Probleme}
+              example: {type: 'urn:sira:erreur:reponse-passerelle-invalide', title: Réponse inattendue de la passerelle,
+                status: 502}
+        '503':
+          description: Passerelle injoignable (`urn:sira:erreur:indisponible`).
+          content:
+            application/problem+json:
+              schema: {$ref: ../consentement-minimisation/openapi.yaml#/components/schemas/Probleme}
+              example: {type: 'urn:sira:erreur:indisponible', title: Service momentanément indisponible, status: 503}
+  /api/session:
+    get:
+      tags: [Session]
+      operationId: lireSession
+      x-sira-source: commun
+      summary: Qui est connecté
+      description: Appelée au chargement de l'interface ; pose aussi le cookie `XSRF-TOKEN` (lisible par le script)
+        à renvoyer dans l'en-tête `X-XSRF-TOKEN` à chaque écriture.
+      security:
+      - sessionCitoyen: []
+      responses:
+        '200':
+          description: Le citoyen connecté.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Session'}
+              example:
+                nom: Awa Ouédraogo
+                roles: []
+        '401':
+          description: Pas de session (`urn:sira:erreur:non-authentifie`).
+          content:
+            application/problem+json:
+              schema: {$ref: ../consentement-minimisation/openapi.yaml#/components/schemas/Probleme}
+              example: {type: 'urn:sira:erreur:non-authentifie', title: Authentification requise, status: 401}
+  /api/auth/connexion/sira:
+    get:
+      tags: [Session]
+      operationId: seConnecter
+      x-sira-source: securite
+      summary: Partir vers le fournisseur d'identité
+      description: 'Code d''autorisation avec PKCE, royaume `sira-citoyens`. Les jetons restent sur le serveur :
+        le navigateur ne reçoit que le cookie de session.'
+      security: []
+      parameters:
+      - name: retour
+        in: query
+        required: false
+        description: Page de l'interface où revenir après la connexion. Seul un chemin local est retenu (commence
+          par `/`, pas par `//`, sans `\` ni caractère de contrôle, 512 caractères au plus) ; sinon `/`.
+        schema: {type: string, maxLength: 512}
+        example: /accord/8d2f4b61-3c7e-4a90-b5d1-0e9f6a2c7b14
+      responses:
+        '302':
+          description: Redirection vers le point d'autorisation du fournisseur d'identité.
+          headers:
+            Location:
+              schema: {type: string, format: uri}
+  /api/auth/retour:
+    get:
+      tags: [Session]
+      operationId: revenirDuFournisseur
+      x-sira-source: securite
+      summary: Retour du fournisseur d'identité
+      security: []
+      parameters:
+      - name: code
+        in: query
+        schema: {type: string}
+      - name: state
+        in: query
+        schema: {type: string}
+      responses:
+        '302':
+          description: 'Session ouverte : redirection vers l''adresse publique suivie du chemin `retour` mémorisé
+            (ou `/`). Échec : redirection vers `/?erreur=connexion`.'
+          headers:
+            Location:
+              schema: {type: string, format: uri}
+              example: http://citoyen.sira.localhost:8600/
+  /api/auth/deconnexion:
+    post:
+      tags: [Session]
+      operationId: seDeconnecter
+      x-sira-source: securite
+      summary: Fermer la session
+      description: Ferme la session locale et rend l'adresse de fin de session du fournisseur, que le navigateur
+        suit.
+      security:
+      - sessionCitoyen: []
+        jetonCsrf: []
+      responses:
+        '200':
+          description: Session fermée.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [url]
+                additionalProperties: false
+                properties:
+                  url: {type: string, format: uri}
+              example: {url: 'http://identite.sira.localhost:8600/realms/sira-citoyens/protocol/openid-connect/logout?client_id=espace-citoyen&post_logout_redirect_uri=http%3A%2F%2Fcitoyen.sira.localhost%3A8600%2F'}
+        '401':
+          description: Pas de session (`urn:sira:erreur:non-authentifie`).
+          content:
+            application/problem+json:
+              schema: {$ref: ../consentement-minimisation/openapi.yaml#/components/schemas/Probleme}
+              example: {type: 'urn:sira:erreur:non-authentifie', title: Authentification requise, status: 401}
+        '403':
+          description: Jeton CSRF absent ou faux (`urn:sira:erreur:acces-refuse`).
+          content:
+            application/problem+json:
+              schema: {$ref: ../consentement-minimisation/openapi.yaml#/components/schemas/Probleme}
+              example: {type: 'urn:sira:erreur:acces-refuse', title: Accès refusé, status: 403}
+components:
+  securitySchemes:
+    sessionCitoyen: {type: apiKey, in: cookie, name: SIRA_CITOYEN, description: Cookie de session ouvert par `/api/auth/connexion/sira`.}
+    jetonCsrf: {type: apiKey, in: header, name: X-XSRF-TOKEN, description: 'Valeur du cookie `XSRF-TOKEN`, exigée
+        pour toute écriture.'}
+  parameters:
+    Id:
+      name: id
+      in: path
+      required: true
+      description: UUID (demande, autorisation, ligne). Le relais laisse aussi passer un numéro de 1 à 19 chiffres
+        ; toute autre forme répond `404` sans atteindre la passerelle.
+      schema: {type: string, pattern: '^([0-9a-fA-F]{8}(-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}|[0-9]{1,19})$'}
+  schemas:
+    Session:
+      type: object
+      required: [nom, roles]
+      additionalProperties: false
+      properties:
+        nom: {type: [string, 'null'], description: 'Nom complet, sinon identifiant de connexion ; null si le jeton ne porte ni l''un ni l''autre.'}
+        roles:
+          type: array
+          items: {type: string}

@@ -1,0 +1,35 @@
+spring:
+  application:
+    name: passerelle
+  config:
+    # Chaque fichier du répertoire des secrets devient une propriété : base.motdepasse…
+    import: optional:configtree:/run/sira/secrets/
+  threads:
+    virtual:
+      enabled: true
+  datasource:
+    url: jdbc:postgresql://socle-db:5432/passerelle?sslmode=verify-full&sslrootcert=/run/sira/pki/ca.crt
+    username: passerelle
+    password: ${base.motdepasse:}
+  flyway:
+    # La base appartient au rôle de la passerelle : il n'y a rien à nettoyer, jamais.
+    clean-disabled: true
+
+server:
+  shutdown: graceful
+
+sira:
+  http:
+    # Contrat §6 : un connecteur a 3 secondes pour répondre.
+    delai-lecture: 3s
+  passerelle:
+    identite:
+      audience: sira-passerelle
+      citoyens:
+        emetteur: http://identite.sira.localhost:8600/realms/sira-citoyens
+        cles: https://keycloak:8443/realms/sira-citoyens/protocol/openid-connect/certs
+      socle:
+        emetteur: http://identite.sira.localhost:8600/realms/sira-socle
+        cles: https://keycloak:8443/realms/sira-socle/protocol/openid-connect/certs
+    espace-citoyen-url: http://citoyen.sira.localhost:8600
+    pseudonymisation-cle: /run/sira/secrets/pseudonymisation.cle

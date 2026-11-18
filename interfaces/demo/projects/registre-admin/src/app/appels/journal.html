@@ -1,0 +1,67 @@
+<div class="sira-titre-page">
+  <div>
+    <h1>Appels reçus</h1>
+    <p>Chaque demande de Sira : quand, quoi, et ce que le registre a répondu.</p>
+  </div>
+  <button
+    siraBouton
+    variante="secondaire"
+    type="button"
+    [enCours]="resultat.isLoading()"
+    (click)="actualiser()"
+  >
+    <sira-icone nom="refresh-cw" />
+    Actualiser
+  </button>
+</div>
+
+<div aria-live="polite">
+  @if (probleme(); as message) {
+    <sira-alerte type="erreur" titre="Les appels n’ont pas pu être chargés">
+      <p>{{ message }}</p>
+      <button siraBouton variante="secondaire" type="button" (click)="resultat.reload()">
+        Réessayer
+      </button>
+    </sira-alerte>
+  } @else if (resultat.value(); as liste) {
+    @if (liste.total === 0) {
+      <sira-etat-vide titre="Aucun appel pour le moment" icone="inbox" />
+    } @else {
+      <sira-tableau
+        [legende]="liste.total === 1 ? '1 appel reçu' : liste.total + ' appels reçus'"
+        [colonnes]="colonnes"
+        [lignes]="liste.elements"
+        [total]="liste.total"
+        [pageCourante]="liste.page"
+        [parPage]="liste.taille"
+        (requete)="page.set($event.page)"
+        [outils]="false"
+      >
+        <ng-template siraCellule="horodatage" let-ligne>{{
+          ligne.horodatage | siraDate
+        }}</ng-template>
+        <ng-template siraCellule="type" let-ligne>{{
+          ligne.type === 'DOCUMENT' ? 'Document' : 'Fiche'
+        }}</ng-template>
+        <ng-template siraCellule="statut" let-ligne>
+          @if (ligne.statut === null) {
+            <sira-etiquette etat="attention">Sans réponse</sira-etiquette>
+          } @else if (ligne.statut < 300) {
+            <sira-etiquette etat="succes">Répondu</sira-etiquette>
+          } @else if (ligne.statut === 404) {
+            <sira-etiquette etat="info">Personne inconnue</sira-etiquette>
+          } @else {
+            <sira-etiquette etat="erreur">Erreur {{ ligne.statut }}</sira-etiquette>
+          }
+        </ng-template>
+        <ng-template siraCellule="duree_ms" let-ligne>{{ duree(ligne.duree_ms) }}</ng-template>
+        <ng-template siraCellule="mode" let-ligne>{{ etat(ligne) }}</ng-template>
+        <ng-template siraCellule="origine" let-ligne>
+          <span class="sira-chiffres">{{ ligne.origine }}</span>
+        </ng-template>
+      </sira-tableau>
+    }
+  } @else {
+    <sira-squelette [lignes]="5" libelle="Chargement des appels" />
+  }
+</div>

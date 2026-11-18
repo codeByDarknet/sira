@@ -1,0 +1,22 @@
+# Raccordement du connecteur de nationalité (docs/brancher-un-registre.md).
+
+adresse: http://registre-nationalite:8080
+
+fiche:
+  chemin: /v1/nationalite/personnes/{identifiant}
+
+document:
+  chemin: /interne/personnes/{identifiant}/documents/{type}
+
+authentification:
+  type: AUCUNE
+
+# « * » parcourt la liste : « nationalite » vaut la liste des codes, et la question
+# « nationalite EGAL BF » est vraie si l'un d'eux est BF.
+correspondance:
+  nom: /nom
+  prenoms: /prenoms
+  nationalite: /nationalites/*/code
+  mode_acquisition: /nationalites/0/mode_acquisition
+  numero_certificat: /nationalites/0/certificat/numero
+  date_certificat: /nationalites/0/certificat/date

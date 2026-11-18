@@ -1,0 +1,133 @@
+/* Styles propres à la console. Tout ce qui peut servir ailleurs va dans @sira/ui. */
+
+/* Plusieurs valeurs courtes dans une même cellule : une par ligne. */
+.co-ligne {
+  display: block;
+}
+
+/* Identifiants techniques (codes, adresses, empreintes) : chasse fixe, coupure permise. */
+.co-technique {
+  font-family: var(--sira-police-mono);
+  font-size: var(--sira-texte-xs);
+  overflow-wrap: anywhere;
+}
+
+/* Filtres d'une liste : côte à côte dès que la place le permet. */
+.co-filtres {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0 var(--sira-esp-4);
+}
+.co-filtres > sira-champ {
+  flex: 1 1 12rem;
+  max-width: 18rem;
+}
+
+/* Chiffre clé du tableau de bord. */
+.co-chiffre {
+  margin: 0;
+  font-size: var(--sira-titre-l);
+  font-weight: var(--sira-graisse-forte);
+  line-height: var(--sira-interligne-titre);
+  font-variant-numeric: tabular-nums;
+}
+.co-chiffre__libelle {
+  margin: 0;
+  color: var(--sira-texte-secondaire);
+}
+
+.co-section {
+  margin-top: var(--sira-esp-12);
+}
+
+/* Repères d'un registre : libellé discret, valeur en dessous. */
+.co-reperes {
+  display: grid;
+  gap: var(--sira-esp-2);
+  margin: 0;
+}
+.co-reperes dt {
+  font-size: var(--sira-texte-xs);
+  color: var(--sira-texte-secondaire);
+}
+.co-reperes dd {
+  margin: 0;
+}
+
+/* Sous-titre d'un groupe de cases à cocher (questions d'un même registre). */
+.co-groupe-choix {
+  margin: var(--sira-esp-4) 0 0;
+  font-weight: var(--sira-graisse-forte);
+}
+
+/* Chiffres du jour : une liste de définitions posée en grille. */
+.co-chiffres {
+  margin: 0;
+}
+.co-chiffres dd {
+  margin: 0;
+}
+
+/* Explication repliée, fermée par défaut. */
+.co-repli summary {
+  cursor: pointer;
+}
+.co-repli > p {
+  margin-top: var(--sira-esp-2);
+}
+
+/* Documents délivrés par un registre (fiche du registre). */
+.co-documents {
+  margin: 0.25rem 0 0.5rem;
+  padding-left: 1.1rem;
+  display: grid;
+  gap: 0.3rem;
+}
+.co-documents .co-technique {
+  margin-left: 0.4rem;
+  color: var(--sira-secondaire, #666);
+  font-size: 0.85em;
+}
+
+/* Informations partagées par un registre : cartes côte à côte. */
+.co-partage {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+  gap: var(--sira-esp-3);
+}
+.co-partage__carte {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 1rem 1.1rem;
+  background: var(--sira-fond, #fff);
+  border-radius: 12px;
+}
+.co-partage__type {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--sira-action, #25aae2);
+}
+.co-partage__nom {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+.co-partage__texte {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--sira-texte-secondaire, #666);
+}
+.co-partage__code {
+  margin: auto 0 0;
+  padding-top: 0.35rem;
+  font-size: 0.8rem;
+  color: var(--sira-texte-secondaire, #666);
+}

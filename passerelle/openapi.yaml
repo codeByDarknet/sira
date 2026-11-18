@@ -1,0 +1,1804 @@
+openapi: 3.1.0
+info:
+  title: Sira — Passerelle
+  version: 0.1.0
+  summary: Le point d'entrée unique des services et de l'administration du socle.
+  description: |-
+    Routes des **services** (`/v1/demandes`, `/v1/demarches`), reconnus à leur seul certificat, et de l'**administration** du référentiel (`/v1/admin/**`), appelée par la console avec un jeton du royaume `sira-socle`.
+
+    Servies par le même processus mais décrites ailleurs : `/v1/citoyen/**` (`consentement-minimisation/openapi.yaml`), le journal et les signalements (`journal/openapi.yaml`), `GET /v1/admin/etat` (`resilience/openapi.yaml`).
+
+    Conventions : JSON en `snake_case` (les champs `null` sont rendus), dates ISO 8601 UTC, identifiants UUID, listes paginées (`page` de 1 à 1 000 000, `taille` de 1 à 100), erreurs RFC 9457 en `application/problem+json` avec un `code` stable ; une saisie refusée rend `400`, code `VALIDATION`, et la liste `erreurs` par champ (jamais la valeur reçue). Une erreur interne rend `500` avec une `reference` à citer.
+  license: {name: Licence du dépôt Sira}
+servers:
+- {url: 'https://passerelle:8443', description: Passerelle (mTLS obligatoire)}
+tags:
+- {name: Services, description: 'Identité `urn:sira:service:<code>` ; le service est celui du certificat, aucun
+    paramètre ne le nomme.'}
+- {name: Administration, description: 'Identité `urn:sira:socle:console` et jeton du royaume `sira-socle`. Lecture
+    : `instructeur`, `autorite`, `auditeur`. Préparer : `instructeur`. Décider (approbation, rejet, suspension,
+    adresses de retour, adresse d''un registre) : `autorite`.'}
+paths:
+  /v1/demandes:
+    post:
+      tags: [Services]
+      operationId: creerDemande
+      summary: Demander l'accord du citoyen
+      description: |-
+        Le service est celui du certificat. Selon le canal :
+
+        - `REDIRECTION` : `retour_url` obligatoire et déclarée pour le service ; `identifiant_unique` facultatif, pas de `pseudonyme`.
+        - `CODE` : pas de `retour_url` ; `identifiant_unique` facultatif, pas de `pseudonyme` ; la réponse porte `code_court` et `code_verification`, à afficher.
+        - `NOTIFICATION` : `identifiant_unique` ou `pseudonyme` (un seul), pas de `retour_url`.
+
+        Sur `REDIRECTION` et `CODE`, `identifiant_unique` est celui que l'usager a saisi chez le service : seule cette personne pourra ouvrir, accepter ou refuser la demande ; pour toute autre, elle n'existe pas. La réponse est la même que l'identifiant désigne quelqu'un ou non, et le reste du canal ne change pas.
+
+        Rejouée avec la même `Idempotency-Key` et le même contenu, la requête rend la demande déjà créée, sans ses codes. Avec un autre contenu : `409`. Si une autorisation active couvre déjà la démarche, la demande est acceptée d'office.
+      security:
+      - certificatMembre: []
+      parameters:
+      - name: Idempotency-Key
+        in: header
+        required: true
+        schema: {type: string, pattern: '^([A-Za-z0-9_.:-]{8,128})$'}
+        example: concours-2026-0001
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/NouvelleDemande'}
+            example:
+              demarche: concours-direct
+              canal: CODE
+              certificat_chiffrement: |
+                -----BEGIN CERTIFICATE-----
+                MIIB...(certificat de chiffrement du service, abrégé)...
+                -----END CERTIFICATE-----
+      responses:
+        '201':
+          description: Demande créée (ou rejouée).
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/DemandeCreee'}
+              example:
+                id: 8d2f4b61-3c7e-4a90-b5d1-0e9f6a2c7b14
+                etat: EN_ATTENTE_ACCORD
+                url_accord: http://citoyen.sira.localhost:8600/accord/8d2f4b61-3c7e-4a90-b5d1-0e9f6a2c7b14
+                code_court: KLPM-4821
+                code_verification: '492113'
+                expire_le: '2026-11-16T09:45:00Z'
+                jeux:
+                - {code: etat-civil.majeur, libelle: Vous êtes majeur, niveau: STATUT, registre: etat-civil}
+        '400': {$ref: '#/components/responses/RequeteInvalide'}
+        '401': {$ref: '#/components/responses/NonAuthentifie'}
+        '403':
+          description: Certificat qui n'est pas celui d'un service (`acces-refuse`), ou aucune habilitation approuvée
+            pour cette démarche (`urn:sira:erreur:habilitation-absente`, code `HABILITATION_ABSENTE`).
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/Probleme'}
+        '404':
+          description: Pseudonyme qui ne désigne personne pour ce service (`urn:sira:erreur:citoyen-inconnu`, code
+            `CITOYEN_INCONNU`).
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/Probleme'}
+        '409':
+          description: '`Idempotency-Key` déjà utilisée avec un autre contenu (`urn:sira:erreur:conflit`, code `CONFLIT`).'
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/Probleme'}
+        '413': {$ref: '#/components/responses/CorpsTropVolumineux'}
+  /v1/demandes/{id}:
+    parameters:
+    - {$ref: '#/components/parameters/IdDemande'}
+    get:
+      tags: [Services]
+      operationId: lireDemande
+      summary: État de la demande et attestations
+      description: 'Canal `REDIRECTION` : sans `code_retour`, le service ne lit que l''état (ni attestation ni pseudonyme).
+        Les attestations sont des JWE chiffrés pour le service.'
+      security:
+      - certificatMembre: []
+      parameters:
+      - name: code_retour
+        in: query
+        schema: {type: string, pattern: '^([A-Za-z0-9_-]{16,128})$'}
+      responses:
+        '200':
+          description: État.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/EtatDeLaDemande'}
+              example:
+                id: 8d2f4b61-3c7e-4a90-b5d1-0e9f6a2c7b14
+                etat: COMPLETE
+                pseudonyme: pseudo-concours-7Qm2
+                elements:
+                - {jeu: etat-civil.majeur, etat: OBTENU, attestation: eyJhbGciOiJFQ0RILUVTIiwiZW5jIjoiQTI1NkdDTSJ9..aXYtZGVtbw.Y2hpZmZyZS1kZW1v.dGFnLWRlbW8}
+        '400': {$ref: '#/components/responses/RequeteInvalide'}
+        '401': {$ref: '#/components/responses/NonAuthentifie'}
+        '403':
+          description: Certificat refusé (`acces-refuse`), ou `code_retour` faux (`urn:sira:erreur:code-invalide`,
+            code `CODE_INVALIDE`).
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/Probleme'}
+        '404': {$ref: '#/components/responses/DemandeIntrouvable'}
+    delete:
+      tags: [Services]
+      operationId: annulerDemande
+      summary: Annuler une demande non terminée
+      description: Ce qui restait à obtenir ne le sera pas. Annuler une demande déjà annulée ne change rien (`204`).
+      security:
+      - certificatMembre: []
+      responses:
+        '204': {description: Annulée (journalisé).}
+        '400': {$ref: '#/components/responses/RequeteInvalide'}
+        '401': {$ref: '#/components/responses/NonAuthentifie'}
+        '403': {$ref: '#/components/responses/AccesRefuse'}
+        '404': {$ref: '#/components/responses/DemandeIntrouvable'}
+        '409':
+          description: 'Demande terminée : elle ne s''annule plus (`urn:sira:erreur:conflit`, code `CONFLIT`).'
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/Probleme'}
+  /v1/demarches/{code}:
+    get:
+      tags: [Services]
+      operationId: decrireDemarche
+      summary: Les jeux auxquels le service est habilité pour une démarche
+      security:
+      - certificatMembre: []
+      parameters:
+      - name: code
+        in: path
+        required: true
+        schema: {type: string, pattern: '^([a-z0-9]([a-z0-9-]{0,62}[a-z0-9])?)$'}
+      responses:
+        '200':
+          description: La démarche.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/DemarcheDecrite'}
+              example:
+                code: concours-direct
+                libelle: Inscription à un concours direct
+                jeux:
+                - {code: etat-civil.majeur, libelle: Vous êtes majeur, niveau: STATUT, registre: etat-civil}
+        '400': {$ref: '#/components/responses/RequeteInvalide'}
+        '401': {$ref: '#/components/responses/NonAuthentifie'}
+        '403':
+          description: Aucune habilitation approuvée, que la démarche existe ou non (`urn:sira:erreur:habilitation-absente`,
+            code `HABILITATION_ABSENTE`).
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/Probleme'}
+  /v1/admin/demarches:
+    get:
+      operationId: listerDemarches
+      summary: Lister (demarches)
+      parameters:
+      - {$ref: '#/components/parameters/Page'}
+      - {$ref: '#/components/parameters/Taille'}
+      tags: [Administration]
+      security:
+      - certificatMembre: []
+        jetonSocle: []
+      description: 'Rôles : `instructeur`, `autorite` ou `auditeur`.'
+      responses:
+        '200':
+          description: Page.
+          content:
+            application/json:
+              schema:
+                allOf:
+                - {$ref: '#/components/schemas/PageCommune'}
+                - type: object
+                  properties:
+                    elements:
+                      type: array
+                      items: {$ref: '#/components/schemas/DemarcheLu'}
+              example:
+                elements:
+                - {code: concours-direct, libelle: Inscription à un concours direct, finalite: Vérifier que le candidat
+                    remplit les conditions du concours., base_legale: Arrêté fictif n° 2026-001 portant organisation
+                    des concours directs, service: concours, duree_autorisation_jours: 30, actif: true}
+                page: 1
+                taille: 20
+                total: 1
+        '400': {$ref: '#/components/responses/RequeteInvalide'}
+        '401': {$ref: '#/components/responses/NonAuthentifie'}
+        '403': {$ref: '#/components/responses/AccesRefuse'}
+    post:
+      operationId: creerDemarche
+      summary: Créer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/Demarche'}
+            example: {code: concours-direct, libelle: Inscription à un concours direct, finalite: Vérifier que le
+                candidat remplit les conditions du concours., base_legale: Arrêté fictif n° 2026-001 portant organisation
+                des concours directs, service: concours, duree_autorisation_jours: 30, actif: true}
+      tags: [Administration]
+      security:
+      - certificatMembre: []
+        jetonSocle: []
+      description: 'Rôles : `instructeur`.'
+      responses:
+        '201':
+          description: Créé (journalisé).
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/DemarcheLu'}
+              example: {code: concours-direct, libelle: Inscription à un concours direct, finalite: Vérifier que
+                  le candidat remplit les conditions du concours., base_legale: Arrêté fictif n° 2026-001 portant
+                  organisation des concours directs, service: concours, duree_autorisation_jours: 30, actif: true}
+        '400': {$ref: '#/components/responses/RequeteInvalide'}
+        '401': {$ref: '#/components/responses/NonAuthentifie'}
+        '403': {$ref: '#/components/responses/AccesRefuse'}
+        '409':
+          description: Ce code est déjà utilisé (`urn:sira:erreur:conflit`, code `CONFLIT`).
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/Probleme'}
+        '413': {$ref: '#/components/responses/CorpsTropVolumineux'}
+  /v1/admin/demarches/{code}:
+    parameters:
+    - {$ref: '#/components/parameters/Code'}
+    get:
+      operationId: lireDemarche
+      summary: Lire
+      tags: [Administration]
+      security:
+      - certificatMembre: []
+        jetonSocle: []
+      description: 'Rôles : `instructeur`, `autorite` ou `auditeur`.'
+      responses:
+        '200':
+          description: L'objet.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/DemarcheLu'}
+              example: {code: concours-direct, libelle: Inscription à un concours direct, finalite: Vérifier que
+                  le candidat remplit les conditions du concours., base_legale: Arrêté fictif n° 2026-001 portant
+                  organisation des concours directs, service: concours, duree_autorisation_jours: 30, actif: true}
+        '400': {$ref: '#/components/responses/RequeteInvalide'}
+        '401': {$ref: '#/components/responses/NonAuthentifie'}
+        '403': {$ref: '#/components/responses/AccesRefuse'}
+        '404': {$ref: '#/components/responses/Introuvable'}
+    put:
+      operationId: modifierDemarche
+      summary: Remplacer
+      description: |-
+        Le code ne se modifie pas (`400`, code `VALIDATION`).
+
+        Rôles : `instructeur`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/Demarche'}
+            example: {code: concours-direct, libelle: Inscription à un concours direct, finalite: Vérifier que le
+                candidat remplit les conditions du concours., base_legale: Arrêté fictif n° 2026-001 portant organisation
+                des concours directs, service: concours, duree_autorisation_jours: 30, actif: true}
+      tags: [Administration]
+      security:
+      - certificatMembre: []
+        jetonSocle: []
+      responses:
+        '200':
+          description: L'objet remplacé (journalisé).
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/DemarcheLu'}
+              example: {code: concours-direct, libelle: Inscription à un concours direct, finalite: Vérifier que
+                  le candidat remplit les conditions du concours., base_legale: Arrêté fictif n° 2026-001 portant
+                  organisation des concours directs, service: concours, duree_autorisation_jours: 30, actif: true}
+        '400': {$ref: '#/components/responses/RequeteInvalide'}
+        '401': {$ref: '#/components/responses/NonAuthentifie'}
+        '403': {$ref: '#/components/responses/AccesRefuse'}
+        '404': {$ref: '#/components/responses/Introuvable'}
+        '409': {$ref: '#/components/responses/Conflit'}
+        '413': {$ref: '#/components/responses/CorpsTropVolumineux'}
+    delete:
+      operationId: desactiverDemarche
+      summary: Désactiver
+      description: |-
+        L'objet reste lisible, avec `actif` à faux.
+
+        Rôles : `instructeur`.
+      tags: [Administration]
+      security:
+      - certificatMembre: []
+        jetonSocle: []
+      responses:
+        '204': {description: Désactivé (journalisé).}
+        '400': {$ref: '#/components/responses/RequeteInvalide'}
+        '401': {$ref: '#/components/responses/NonAuthentifie'}
+        '403': {$ref: '#/components/responses/AccesRefuse'}
+        '404': {$ref: '#/components/responses/Introuvable'}
+  /v1/admin/jeux:
+    get:
+      operationId: listerJeus
+      summary: Lister (jeux)
+      parameters:
+      - name: registre
+        in: query
+        schema: {type: string, maxLength: 64}
+      - name: niveau
+        in: query
+        schema:
+          type: string
+          enum: ['', STATUT, CHAMPS, DOCUMENT]
+      - {$ref: '#/components/parameters/Page'}
+      - {$ref: '#/components/parameters/Taille'}
+      tags: [Administration]
+      security:
+      - certificatMembre: []
+        jetonSocle: []
+      description: 'Rôles : `instructeur`, `autorite` ou `auditeur`.'
+      responses:
+        '200':
+          description: Page.
+          content:
+            application/json:
+              schema:
+                allOf:
+                - {$ref: '#/components/schemas/PageCommune'}
+                - type: object
+                  properties:
+                    elements:
+                      type: array
+                      items: {$ref: '#/components/schemas/JeuLu'}
+              example:
+                elements:
+                - code: etat-civil.majeur
+                  registre: etat-civil
+                  niveau: STATUT
+                  libelle: Vous êtes majeur
+                  description: Répond oui si la personne a 18 ans ou plus.
+                  validite: P90D
+                  regle: {champ: date_naissance, operateur: AGE_AU_MOINS, valeur: 18}
+                  champs: null
+                  document: null
+                  actif: true
+                page: 1
+                taille: 20
+                total: 1
+        '400': {$ref: '#/components/responses/RequeteInvalide'}
+        '401': {$ref: '#/components/responses/NonAuthentifie'}
+        '403': {$ref: '#/components/responses/AccesRefuse'}
+    post:
+      operationId: creerJeu
+      summary: Créer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/Jeu'}
+            example:
+              code: etat-civil.majeur
+              registre: etat-civil
+              niveau: STATUT
+              libelle: Vous êtes majeur
+              description: Répond oui si la personne a 18 ans ou plus.
+              validite: P90D
+              regle: {champ: date_naissance, operateur: AGE_AU_MOINS, valeur: 18}
+              champs: null
+              document: null
+              actif: true
+      tags: [Administration]
+      security:
+      - certificatMembre: []
+        jetonSocle: []
+      description: 'Rôles : `instructeur`.'
+      responses:
+        '201':
+          description: Créé (journalisé).
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/JeuLu'}
+              example:
+                code: etat-civil.majeur
+                registre: etat-civil
+                niveau: STATUT
+                libelle: Vous êtes majeur
+                description: Répond oui si la personne a 18 ans ou plus.
+                validite: P90D
+                regle: {champ: date_naissance, operateur: AGE_AU_MOINS, valeur: 18}
+                champs: null
+                document: null
+                actif: true
+        '400': {$ref: '#/components/responses/RequeteInvalide'}
+        '401': {$ref: '#/components/responses/NonAuthentifie'}
+        '403': {$ref: '#/components/responses/AccesRefuse'}
+        '409':
+          description: Ce code est déjà utilisé (`urn:sira:erreur:conflit`, code `CONFLIT`).
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/Probleme'}
+        '413': {$ref: '#/components/responses/CorpsTropVolumineux'}
+  /v1/admin/jeux/{code}:
+    parameters:
+    - {$ref: '#/components/parameters/Code'}
+    get:
+      operationId: lireJeu
+      summary: Lire
+      tags: [Administration]
+      security:
+      - certificatMembre: []
+        jetonSocle: []
+      description: 'Rôles : `instructeur`, `autorite` ou `auditeur`.'
+      responses:
+        '200':
+          description: L'objet.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/JeuLu'}
+              example:
+                code: etat-civil.majeur
+                registre: etat-civil
+                niveau: STATUT
+                libelle: Vous êtes majeur
+                description: Répond oui si la personne a 18 ans ou plus.
+                validite: P90D
+                regle: {champ: date_naissance, operateur: AGE_AU_MOINS, valeur: 18}
+                champs: null
+                document: null
+                actif: true
+        '400': {$ref: '#/components/responses/RequeteInvalide'}
+        '401': {$ref: '#/components/responses/NonAuthentifie'}
+        '403': {$ref: '#/components/responses/AccesRefuse'}
+        '404': {$ref: '#/components/responses/Introuvable'}
+    put:
+      operationId: modifierJeu
+      summary: Remplacer
+      description: |-
+        Le code ne se modifie pas (`400`, code `VALIDATION`).
+
+        Rôles : `instructeur`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/Jeu'}
+            example:
+              code: etat-civil.majeur
+              registre: etat-civil
+              niveau: STATUT
+              libelle: Vous êtes majeur
+              description: Répond oui si la personne a 18 ans ou plus.
+              validite: P90D
+              regle: {champ: date_naissance, operateur: AGE_AU_MOINS, valeur: 18}
+              champs: null
+              document: null
+              actif: true
+      tags: [Administration]
+      security:
+      - certificatMembre: []
+        jetonSocle: []
+      responses:
+        '200':
+          description: L'objet remplacé (journalisé).
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/JeuLu'}
+              example:
+                code: etat-civil.majeur
+                registre: etat-civil
+                niveau: STATUT
+                libelle: Vous êtes majeur
+                description: Répond oui si la personne a 18 ans ou plus.
+                validite: P90D
+                regle: {champ: date_naissance, operateur: AGE_AU_MOINS, valeur: 18}
+                champs: null
+                document: null
+                actif: true
+        '400': {$ref: '#/components/responses/RequeteInvalide'}
+        '401': {$ref: '#/components/responses/NonAuthentifie'}
+        '403': {$ref: '#/components/responses/AccesRefuse'}
+        '404': {$ref: '#/components/responses/Introuvable'}
+        '409':
+          description: 'Jeu couvert par une habilitation ou une autorisation : seul `actif` change encore (`urn:sira:erreur:conflit`).'
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/Probleme'}
+        '413': {$ref: '#/components/responses/CorpsTropVolumineux'}
+    delete:
+      operationId: desactiverJeu
+      summary: Désactiver
+      description: |-
+        L'objet reste lisible, avec `actif` à faux.
+
+        Rôles : `instructeur`.
+      tags: [Administration]
+      security:
+      - certificatMembre: []
+        jetonSocle: []
+      responses:
+        '204': {description: Désactivé (journalisé).}
+        '400': {$ref: '#/components/responses/RequeteInvalide'}
+        '401': {$ref: '#/components/responses/NonAuthentifie'}
+        '403': {$ref: '#/components/responses/AccesRefuse'}
+        '404': {$ref: '#/components/responses/Introuvable'}
+  /v1/admin/membres:
+    get:
+      operationId: listerMembres
+      summary: Lister (membres)
+      parameters:
+      - {$ref: '#/components/parameters/Page'}
+      - {$ref: '#/components/parameters/Taille'}
+      tags: [Administration]
+      security:
+      - certificatMembre: []
+        jetonSocle: []
+      description: 'Rôles : `instructeur`, `autorite` ou `auditeur`.'
+      responses:
+        '200':
+          description: Page.
+          content:
+            application/json:
+              schema:
+                allOf:
+                - {$ref: '#/components/schemas/PageCommune'}
+                - type: object
+                  properties:
+                    elements:
+                      type: array
+                      items: {$ref: '#/components/schemas/MembreDeclareLu'}
+              example:
+                elements:
+                - code: concours
+                  nom: Concours directs 2026
+                  organisme: Ministère de la Fonction publique
+                  roles: [SERVICE]
+                  retours_autorises: ['https://concours.sira.localhost/retour']
+                  actif: true
+                  identite: urn:sira:service:concours
+                page: 1
+                taille: 20
+                total: 1
+        '400': {$ref: '#/components/responses/RequeteInvalide'}
+        '401': {$ref: '#/components/responses/NonAuthentifie'}
+        '403': {$ref: '#/components/responses/AccesRefuse'}
+    post:
+      operationId: creerMembre
+      summary: Créer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/MembreDeclare'}
+            example:
+              code: concours
+              nom: Concours directs 2026
+              organisme: Ministère de la Fonction publique
+              roles: [SERVICE]
+              retours_autorises: ['https://concours.sira.localhost/retour']
+              actif: true
+      tags: [Administration]
+      security:
+      - certificatMembre: []
+        jetonSocle: []
+      description: 'Rôles : `instructeur`.'
+      responses:
+        '201':
+          description: Créé (journalisé).
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/MembreDeclareLu'}
+              example:
+                code: concours
+                nom: Concours directs 2026
+                organisme: Ministère de la Fonction publique
+                roles: [SERVICE]
+                retours_autorises: ['https://concours.sira.localhost/retour']
+                actif: true
+                identite: urn:sira:service:concours
+        '400': {$ref: '#/components/responses/RequeteInvalide'}
+        '401': {$ref: '#/components/responses/NonAuthentifie'}
+        '403': {$ref: '#/components/responses/AccesRefuse'}
+        '409':
+          description: Ce code est déjà utilisé (`urn:sira:erreur:conflit`, code `CONFLIT`).
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/Probleme'}
+        '413': {$ref: '#/components/responses/CorpsTropVolumineux'}
+  /v1/admin/membres/{code}:
+    parameters:
+    - {$ref: '#/components/parameters/Code'}
+    get:
+      operationId: lireMembre
+      summary: Lire
+      tags: [Administration]
+      security:
+      - certificatMembre: []
+        jetonSocle: []
+      description: 'Rôles : `instructeur`, `autorite` ou `auditeur`.'
+      responses:
+        '200':
+          description: L'objet.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/MembreDeclareLu'}
+              example:
+                code: concours
+                nom: Concours directs 2026
+                organisme: Ministère de la Fonction publique
+                roles: [SERVICE]
+                retours_autorises: ['https://concours.sira.localhost/retour']
+                actif: true
+                identite: urn:sira:service:concours
+        '400': {$ref: '#/components/responses/RequeteInvalide'}
+        '401': {$ref: '#/components/responses/NonAuthentifie'}
+        '403': {$ref: '#/components/responses/AccesRefuse'}
+        '404': {$ref: '#/components/responses/Introuvable'}
+    put:
+      operationId: modifierMembre
+      summary: Remplacer
+      description: |-
+        Le code ne se modifie pas (`400`, code `VALIDATION`).
+
+        Rôles : `instructeur`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/MembreDeclare'}
+            example:
+              code: concours
+              nom: Concours directs 2026
+              organisme: Ministère de la Fonction publique
+              roles: [SERVICE]
+              retours_autorises: ['https://concours.sira.localhost/retour']
+              actif: true
+      tags: [Administration]
+      security:
+      - certificatMembre: []
+        jetonSocle: []
+      responses:
+        '200':
+          description: L'objet remplacé (journalisé).
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/MembreDeclareLu'}
+              example:
+                code: concours
+                nom: Concours directs 2026
+                organisme: Ministère de la Fonction publique
+                roles: [SERVICE]
+                retours_autorises: ['https://concours.sira.localhost/retour']
+                actif: true
+                identite: urn:sira:service:concours
+        '400': {$ref: '#/components/responses/RequeteInvalide'}
+        '401': {$ref: '#/components/responses/NonAuthentifie'}
+        '403': {$ref: '#/components/responses/AccesRefuse'}
+        '404': {$ref: '#/components/responses/Introuvable'}
+        '409':
+          description: 'Changement des adresses de retour par simple remplacement (`urn:sira:erreur:conflit`) :
+            passez par `PUT …/retours`.'
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/Probleme'}
+        '413': {$ref: '#/components/responses/CorpsTropVolumineux'}
+    delete:
+      operationId: desactiverMembre
+      summary: Désactiver
+      description: |-
+        L'objet reste lisible, avec `actif` à faux.
+
+        Rôles : `instructeur`.
+      tags: [Administration]
+      security:
+      - certificatMembre: []
+        jetonSocle: []
+      responses:
+        '204': {description: Désactivé (journalisé).}
+        '400': {$ref: '#/components/responses/RequeteInvalide'}
+        '401': {$ref: '#/components/responses/NonAuthentifie'}
+        '403': {$ref: '#/components/responses/AccesRefuse'}
+        '404': {$ref: '#/components/responses/Introuvable'}
+  /v1/admin/registres:
+    get:
+      operationId: listerRegistres
+      summary: Lister (registres)
+      parameters:
+      - {$ref: '#/components/parameters/Page'}
+      - {$ref: '#/components/parameters/Taille'}
+      tags: [Administration]
+      security:
+      - certificatMembre: []
+        jetonSocle: []
+      description: 'Rôles : `instructeur`, `autorite` ou `auditeur`.'
+      responses:
+        '200':
+          description: Page.
+          content:
+            application/json:
+              schema:
+                allOf:
+                - {$ref: '#/components/schemas/PageCommune'}
+                - type: object
+                  properties:
+                    elements:
+                      type: array
+                      items: {$ref: '#/components/schemas/RegistreLu'}
+              example:
+                elements:
+                - {code: etat-civil, nom: État civil, membre: etat-civil, adresse: 'https://connecteur-etat-civil:8443',
+                  transport: DIRECT, actif: true}
+                page: 1
+                taille: 20
+                total: 1
+        '400': {$ref: '#/components/responses/RequeteInvalide'}
+        '401': {$ref: '#/components/responses/NonAuthentifie'}
+        '403': {$ref: '#/components/responses/AccesRefuse'}
+    post:
+      operationId: creerRegistre
+      summary: Créer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/Registre'}
+            example: {code: etat-civil, nom: État civil, membre: etat-civil, adresse: 'https://connecteur-etat-civil:8443',
+              transport: DIRECT, actif: true}
+      tags: [Administration]
+      security:
+      - certificatMembre: []
+        jetonSocle: []
+      description: 'Rôles : `instructeur`.'
+      responses:
+        '201':
+          description: Créé (journalisé).
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/RegistreLu'}
+              example: {code: etat-civil, nom: État civil, membre: etat-civil, adresse: 'https://connecteur-etat-civil:8443',
+                transport: DIRECT, actif: true}
+        '400': {$ref: '#/components/responses/RequeteInvalide'}
+        '401': {$ref: '#/components/responses/NonAuthentifie'}
+        '403': {$ref: '#/components/responses/AccesRefuse'}
+        '409':
+          description: Ce code est déjà utilisé (`urn:sira:erreur:conflit`, code `CONFLIT`).
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/Probleme'}
+        '413': {$ref: '#/components/responses/CorpsTropVolumineux'}
+  /v1/admin/registres/{code}:
+    parameters:
+    - {$ref: '#/components/parameters/Code'}
+    get:
+      operationId: lireRegistre
+      summary: Lire
+      tags: [Administration]
+      security:
+      - certificatMembre: []
+        jetonSocle: []
+      description: 'Rôles : `instructeur`, `autorite` ou `auditeur`.'
+      responses:
+        '200':
+          description: L'objet.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/RegistreLu'}
+              example: {code: etat-civil, nom: État civil, membre: etat-civil, adresse: 'https://connecteur-etat-civil:8443',
+                transport: DIRECT, actif: true}
+        '400': {$ref: '#/components/responses/RequeteInvalide'}
+        '401': {$ref: '#/components/responses/NonAuthentifie'}
+        '403': {$ref: '#/components/responses/AccesRefuse'}
+        '404': {$ref: '#/components/responses/Introuvable'}
+    put:
+      operationId: modifierRegistre
+      summary: Remplacer
+      description: |-
+        Le code ne se modifie pas (`400`, code `VALIDATION`).
+
+        Rôles : `instructeur`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/Registre'}
+            example: {code: etat-civil, nom: État civil, membre: etat-civil, adresse: 'https://connecteur-etat-civil:8443',
+              transport: DIRECT, actif: true}
+      tags: [Administration]
+      security:
+      - certificatMembre: []
+        jetonSocle: []
+      responses:
+        '200':
+          description: L'objet remplacé (journalisé).
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/RegistreLu'}
+              example: {code: etat-civil, nom: État civil, membre: etat-civil, adresse: 'https://connecteur-etat-civil:8443',
+                transport: DIRECT, actif: true}
+        '400': {$ref: '#/components/responses/RequeteInvalide'}
+        '401': {$ref: '#/components/responses/NonAuthentifie'}
+        '403': {$ref: '#/components/responses/AccesRefuse'}
+        '404': {$ref: '#/components/responses/Introuvable'}
+        '409':
+          description: 'Changement d''adresse par simple remplacement (`urn:sira:erreur:conflit`) : passez par `PUT
+            …/adresse`.'
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/Probleme'}
+        '413': {$ref: '#/components/responses/CorpsTropVolumineux'}
+    delete:
+      operationId: desactiverRegistre
+      summary: Désactiver
+      description: |-
+        L'objet reste lisible, avec `actif` à faux.
+
+        Rôles : `instructeur`.
+      tags: [Administration]
+      security:
+      - certificatMembre: []
+        jetonSocle: []
+      responses:
+        '204': {description: Désactivé (journalisé).}
+        '400': {$ref: '#/components/responses/RequeteInvalide'}
+        '401': {$ref: '#/components/responses/NonAuthentifie'}
+        '403': {$ref: '#/components/responses/AccesRefuse'}
+        '404': {$ref: '#/components/responses/Introuvable'}
+  /v1/admin/membres/{code}/retours:
+    parameters:
+    - {$ref: '#/components/parameters/Code'}
+    put:
+      operationId: changerRetours
+      summary: Décider des adresses de retour d'un service
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [retours_autorises]
+              properties:
+                retours_autorises:
+                  type: array
+                  maxItems: 20
+                  items: {type: string, minLength: 1, maxLength: 500}
+            example:
+              retours_autorises: ['https://concours.sira.localhost/retour']
+      tags: [Administration]
+      security:
+      - certificatMembre: []
+        jetonSocle: []
+      description: 'Rôles : `autorite`.'
+      responses:
+        '200':
+          description: Le membre (journalisé).
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/MembreDeclareLu'}
+              example:
+                code: concours
+                nom: Concours directs 2026
+                organisme: Ministère de la Fonction publique
+                roles: [SERVICE]
+                retours_autorises: ['https://concours.sira.localhost/retour']
+                actif: true
+                identite: urn:sira:service:concours
+        '400': {$ref: '#/components/responses/RequeteInvalide'}
+        '401': {$ref: '#/components/responses/NonAuthentifie'}
+        '403': {$ref: '#/components/responses/AccesRefuse'}
+        '404': {$ref: '#/components/responses/Introuvable'}
+        '413': {$ref: '#/components/responses/CorpsTropVolumineux'}
+  /v1/admin/registres/{code}/schema:
+    parameters:
+    - {$ref: '#/components/parameters/Code'}
+    get:
+      operationId: lireSchemaRegistre
+      summary: Ce que le registre expose
+      tags: [Administration]
+      security:
+      - certificatMembre: []
+        jetonSocle: []
+      description: |-
+        Lu à la demande chez le connecteur du registre (`GET /v1/schema`) : les champs que sa
+        politique locale expose, avec leur nature (texte, date, nombre, oui/non), leur niveau et les
+        questions admises, puis ses documents. Rien n'est conservé par la passerelle.
+
+        Rôles : `instructeur`, `autorite` ou `auditeur`.
+      responses:
+        '200':
+          description: Schéma du registre.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [champs, documents]
+                properties:
+                  champs:
+                    type: array
+                    items:
+                      type: object
+                      required: [chemin, libelle, type, niveau]
+                      properties:
+                        chemin: {type: string, example: date_naissance}
+                        libelle: {type: string, example: Date de naissance}
+                        type: {type: string, enum: [TEXTE, DATE, NOMBRE, BOOLEEN]}
+                        niveau: {type: string, enum: [STATUT, CHAMPS]}
+                        operateurs:
+                          type: [array, 'null']
+                          items: {$ref: '#/components/schemas/Operateur'}
+                        valeurs:
+                          type: [array, 'null']
+                          items: {}
+                  documents:
+                    type: array
+                    items:
+                      type: object
+                      required: [code, libelle]
+                      properties:
+                        code: {type: string, example: extrait-naissance}
+                        libelle: {type: string, example: Extrait d'acte de naissance}
+        '404': {$ref: '#/components/responses/Introuvable'}
+        '503':
+          description: Le connecteur du registre ne répond pas.
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/Probleme'}
+  /v1/admin/registres/{code}/adresse:
+    parameters:
+    - {$ref: '#/components/parameters/Code'}
+    put:
+      operationId: changerAdresse
+      summary: Décider de l'adresse du connecteur d'un registre
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [adresse]
+              properties:
+                adresse: {type: string, pattern: '^(https://[A-Za-z0-9]([A-Za-z0-9.-]{0,252}[A-Za-z0-9])?(:[0-9]{1,5})?)$'}
+            example: {adresse: 'https://connecteur-etat-civil:8443'}
+      tags: [Administration]
+      security:
+      - certificatMembre: []
+        jetonSocle: []
+      description: 'Rôles : `autorite`.'
+      responses:
+        '200':
+          description: Le registre (journalisé).
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/RegistreLu'}
+              example: {code: etat-civil, nom: État civil, membre: etat-civil, adresse: 'https://connecteur-etat-civil:8443',
+                transport: DIRECT, actif: true}
+        '400': {$ref: '#/components/responses/RequeteInvalide'}
+        '401': {$ref: '#/components/responses/NonAuthentifie'}
+        '403': {$ref: '#/components/responses/AccesRefuse'}
+        '404': {$ref: '#/components/responses/Introuvable'}
+        '413': {$ref: '#/components/responses/CorpsTropVolumineux'}
+  /v1/admin/jeux/essai:
+    post:
+      operationId: essayerJeu
+      summary: Essayer un jeu sur une personne fictive
+      description: |-
+        Le jeu n'est pas enregistré. La question part au registre comme une vraie ; seul le niveau demandé revient.
+
+        Rôles : `instructeur`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [jeu, identifiant_unique]
+              properties:
+                jeu: {$ref: '#/components/schemas/Jeu'}
+                identifiant_unique: {type: string, pattern: '^([A-Za-z0-9]{6,32})$'}
+            example:
+              jeu:
+                code: etat-civil.majeur
+                registre: etat-civil
+                niveau: STATUT
+                libelle: Vous êtes majeur
+                description: Répond oui si la personne a 18 ans ou plus.
+                validite: P90D
+                regle: {champ: date_naissance, operateur: AGE_AU_MOINS, valeur: 18}
+                champs: null
+                document: null
+                actif: true
+              identifiant_unique: '990000000001'
+      tags: [Administration]
+      security:
+      - certificatMembre: []
+        jetonSocle: []
+      responses:
+        '200':
+          description: Le contenu `resultat` de l'attestation.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [resultat]
+                additionalProperties: false
+                properties:
+                  resultat: {type: object}
+              example:
+                resultat: {valeur: true}
+        '400': {$ref: '#/components/responses/RequeteInvalide'}
+        '401': {$ref: '#/components/responses/NonAuthentifie'}
+        '403': {$ref: '#/components/responses/AccesRefuse'}
+        '409':
+          description: Le registre ne connaît pas cette personne, ou refuse cette question (`urn:sira:erreur:conflit`).
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/Probleme'}
+        '413': {$ref: '#/components/responses/CorpsTropVolumineux'}
+        '503':
+          description: Registre injoignable ou réponse illisible (`urn:sira:erreur:registre-indisponible`).
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/Probleme'}
+  /v1/admin/habilitations:
+    get:
+      operationId: listerHabilitations
+      summary: Lister les habilitations
+      parameters:
+      - name: etat
+        in: query
+        schema:
+          type: string
+          enum: ['', BROUILLON, SOUMISE, APPROUVEE, REJETEE, SUSPENDUE]
+      - {$ref: '#/components/parameters/Page'}
+      - {$ref: '#/components/parameters/Taille'}
+      tags: [Administration]
+      security:
+      - certificatMembre: []
+        jetonSocle: []
+      description: 'Rôles : `instructeur`, `autorite` ou `auditeur`.'
+      responses:
+        '200':
+          description: Page.
+          content:
+            application/json:
+              schema:
+                allOf:
+                - {$ref: '#/components/schemas/PageCommune'}
+                - type: object
+                  properties:
+                    elements:
+                      type: array
+                      items: {$ref: '#/components/schemas/Habilitation'}
+              example:
+                elements:
+                - id: 5b7e1c90-2f4a-4d38-9e61-a8c3f0d2b7e5
+                  service: concours
+                  demarche: concours-direct
+                  jeux: [etat-civil.majeur]
+                  etat: SOUMISE
+                  justification: Les conditions du concours exigent la majorité du candidat.
+                  motif: null
+                  instruite_par: instructeur.demo
+                  decidee_par: null
+                  decidee_le: null
+                  creee_le: '2026-11-16T08:12:40Z'
+                page: 1
+                taille: 20
+                total: 1
+        '400': {$ref: '#/components/responses/RequeteInvalide'}
+        '401': {$ref: '#/components/responses/NonAuthentifie'}
+        '403': {$ref: '#/components/responses/AccesRefuse'}
+    post:
+      operationId: creerHabilitation
+      summary: Préparer une habilitation (brouillon)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/SaisieHabilitation'}
+            example:
+              service: concours
+              demarche: concours-direct
+              jeux: [etat-civil.majeur]
+              justification: Les conditions du concours exigent la majorité du candidat.
+      tags: [Administration]
+      security:
+      - certificatMembre: []
+        jetonSocle: []
+      description: 'Rôles : `instructeur`.'
+      responses:
+        '201':
+          description: Brouillon créé.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Habilitation'}
+              example:
+                id: 5b7e1c90-2f4a-4d38-9e61-a8c3f0d2b7e5
+                service: concours
+                demarche: concours-direct
+                jeux: [etat-civil.majeur]
+                etat: BROUILLON
+                justification: Les conditions du concours exigent la majorité du candidat.
+                motif: null
+                instruite_par: instructeur.demo
+                decidee_par: null
+                decidee_le: null
+                creee_le: '2026-11-16T08:12:40Z'
+        '400': {$ref: '#/components/responses/RequeteInvalide'}
+        '401': {$ref: '#/components/responses/NonAuthentifie'}
+        '403': {$ref: '#/components/responses/AccesRefuse'}
+        '413': {$ref: '#/components/responses/CorpsTropVolumineux'}
+  /v1/admin/habilitations/{id}:
+    parameters:
+    - {$ref: '#/components/parameters/IdHabilitation'}
+    get:
+      operationId: lireHabilitation
+      summary: Lire une habilitation
+      tags: [Administration]
+      security:
+      - certificatMembre: []
+        jetonSocle: []
+      description: 'Rôles : `instructeur`, `autorite` ou `auditeur`.'
+      responses:
+        '200':
+          description: L'habilitation.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Habilitation'}
+              example:
+                id: 5b7e1c90-2f4a-4d38-9e61-a8c3f0d2b7e5
+                service: concours
+                demarche: concours-direct
+                jeux: [etat-civil.majeur]
+                etat: SOUMISE
+                justification: Les conditions du concours exigent la majorité du candidat.
+                motif: null
+                instruite_par: instructeur.demo
+                decidee_par: null
+                decidee_le: null
+                creee_le: '2026-11-16T08:12:40Z'
+        '400': {$ref: '#/components/responses/RequeteInvalide'}
+        '401': {$ref: '#/components/responses/NonAuthentifie'}
+        '403': {$ref: '#/components/responses/AccesRefuse'}
+        '404': {$ref: '#/components/responses/Introuvable'}
+    put:
+      operationId: modifierHabilitation
+      summary: Modifier un brouillon
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/SaisieHabilitation'}
+            example:
+              service: concours
+              demarche: concours-direct
+              jeux: [etat-civil.majeur]
+              justification: Les conditions du concours exigent la majorité du candidat.
+      tags: [Administration]
+      security:
+      - certificatMembre: []
+        jetonSocle: []
+      description: 'Rôles : `instructeur`.'
+      responses:
+        '200':
+          description: L'habilitation.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Habilitation'}
+              example:
+                id: 5b7e1c90-2f4a-4d38-9e61-a8c3f0d2b7e5
+                service: concours
+                demarche: concours-direct
+                jeux: [etat-civil.majeur]
+                etat: BROUILLON
+                justification: Les conditions du concours exigent la majorité du candidat.
+                motif: null
+                instruite_par: instructeur.demo
+                decidee_par: null
+                decidee_le: null
+                creee_le: '2026-11-16T08:12:40Z'
+        '400': {$ref: '#/components/responses/RequeteInvalide'}
+        '401': {$ref: '#/components/responses/NonAuthentifie'}
+        '403': {$ref: '#/components/responses/AccesRefuse'}
+        '404': {$ref: '#/components/responses/Introuvable'}
+        '409': {$ref: '#/components/responses/Conflit'}
+        '413': {$ref: '#/components/responses/CorpsTropVolumineux'}
+    delete:
+      operationId: retirerHabilitation
+      summary: Retirer une habilitation non décidée
+      description: |-
+        Une habilitation décidée ne se retire pas : suspendez-la (`409`).
+
+        Rôles : `instructeur`.
+      tags: [Administration]
+      security:
+      - certificatMembre: []
+        jetonSocle: []
+      responses:
+        '204': {description: Retirée (journalisé).}
+        '400': {$ref: '#/components/responses/RequeteInvalide'}
+        '401': {$ref: '#/components/responses/NonAuthentifie'}
+        '403': {$ref: '#/components/responses/AccesRefuse'}
+        '404': {$ref: '#/components/responses/Introuvable'}
+        '409': {$ref: '#/components/responses/Conflit'}
+  /v1/admin/habilitations/{id}/soumission:
+    parameters:
+    - {$ref: '#/components/parameters/IdHabilitation'}
+    post:
+      operationId: soumettreHabilitation
+      summary: Soumettre un brouillon à l'autorité
+      tags: [Administration]
+      security:
+      - certificatMembre: []
+        jetonSocle: []
+      description: 'Rôles : `instructeur`.'
+      responses:
+        '200':
+          description: L'habilitation (journalisé).
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Habilitation'}
+              example:
+                id: 5b7e1c90-2f4a-4d38-9e61-a8c3f0d2b7e5
+                service: concours
+                demarche: concours-direct
+                jeux: [etat-civil.majeur]
+                etat: SOUMISE
+                justification: Les conditions du concours exigent la majorité du candidat.
+                motif: null
+                instruite_par: instructeur.demo
+                decidee_par: null
+                decidee_le: null
+                creee_le: '2026-11-16T08:12:40Z'
+        '400': {$ref: '#/components/responses/RequeteInvalide'}
+        '401': {$ref: '#/components/responses/NonAuthentifie'}
+        '403': {$ref: '#/components/responses/AccesRefuse'}
+        '404': {$ref: '#/components/responses/Introuvable'}
+        '409': {$ref: '#/components/responses/Conflit'}
+  /v1/admin/habilitations/{id}/approbation:
+    parameters:
+    - {$ref: '#/components/parameters/IdHabilitation'}
+    post:
+      operationId: approuverHabilitation
+      summary: Approuver (habilitation soumise ou suspendue)
+      description: |-
+        Une seule habilitation en vigueur par service et démarche (`409`).
+
+        Rôles : `autorite`.
+      tags: [Administration]
+      security:
+      - certificatMembre: []
+        jetonSocle: []
+      responses:
+        '200':
+          description: L'habilitation (journalisé).
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Habilitation'}
+              example:
+                id: 5b7e1c90-2f4a-4d38-9e61-a8c3f0d2b7e5
+                service: concours
+                demarche: concours-direct
+                jeux: [etat-civil.majeur]
+                etat: SOUMISE
+                justification: Les conditions du concours exigent la majorité du candidat.
+                motif: null
+                instruite_par: instructeur.demo
+                decidee_par: null
+                decidee_le: null
+                creee_le: '2026-11-16T08:12:40Z'
+        '400': {$ref: '#/components/responses/RequeteInvalide'}
+        '401': {$ref: '#/components/responses/NonAuthentifie'}
+        '403':
+          description: Certificat ou rôle refusé (`acces-refuse`), ou décision par la personne qui a préparé l'habilitation
+            (`urn:sira:erreur:separation-des-roles`, code `SEPARATION_DES_ROLES`).
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/Probleme'}
+        '404': {$ref: '#/components/responses/Introuvable'}
+        '409': {$ref: '#/components/responses/Conflit'}
+  /v1/admin/habilitations/{id}/rejet:
+    parameters:
+    - {$ref: '#/components/parameters/IdHabilitation'}
+    post:
+      operationId: rejeterHabilitation
+      summary: Rejeter, avec un motif
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/Motif'}
+            example: {motif: Démarche suspendue par le ministère jusqu'à nouvel ordre.}
+      tags: [Administration]
+      security:
+      - certificatMembre: []
+        jetonSocle: []
+      description: 'Rôles : `autorite`.'
+      responses:
+        '200':
+          description: L'habilitation (journalisé).
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Habilitation'}
+              example:
+                id: 5b7e1c90-2f4a-4d38-9e61-a8c3f0d2b7e5
+                service: concours
+                demarche: concours-direct
+                jeux: [etat-civil.majeur]
+                etat: SOUMISE
+                justification: Les conditions du concours exigent la majorité du candidat.
+                motif: null
+                instruite_par: instructeur.demo
+                decidee_par: null
+                decidee_le: null
+                creee_le: '2026-11-16T08:12:40Z'
+        '400': {$ref: '#/components/responses/RequeteInvalide'}
+        '401': {$ref: '#/components/responses/NonAuthentifie'}
+        '403':
+          description: Certificat ou rôle refusé (`acces-refuse`), ou décision par la personne qui a préparé l'habilitation
+            (`urn:sira:erreur:separation-des-roles`, code `SEPARATION_DES_ROLES`).
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/Probleme'}
+        '404': {$ref: '#/components/responses/Introuvable'}
+        '409': {$ref: '#/components/responses/Conflit'}
+        '413': {$ref: '#/components/responses/CorpsTropVolumineux'}
+  /v1/admin/habilitations/{id}/suspension:
+    parameters:
+    - {$ref: '#/components/parameters/IdHabilitation'}
+    post:
+      operationId: suspendreHabilitation
+      summary: Suspendre, avec un motif
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/Motif'}
+            example: {motif: Démarche suspendue par le ministère jusqu'à nouvel ordre.}
+      tags: [Administration]
+      security:
+      - certificatMembre: []
+        jetonSocle: []
+      description: 'Rôles : `autorite`.'
+      responses:
+        '200':
+          description: L'habilitation (journalisé).
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Habilitation'}
+              example:
+                id: 5b7e1c90-2f4a-4d38-9e61-a8c3f0d2b7e5
+                service: concours
+                demarche: concours-direct
+                jeux: [etat-civil.majeur]
+                etat: SOUMISE
+                justification: Les conditions du concours exigent la majorité du candidat.
+                motif: null
+                instruite_par: instructeur.demo
+                decidee_par: null
+                decidee_le: null
+                creee_le: '2026-11-16T08:12:40Z'
+        '400': {$ref: '#/components/responses/RequeteInvalide'}
+        '401': {$ref: '#/components/responses/NonAuthentifie'}
+        '403':
+          description: Certificat ou rôle refusé (`acces-refuse`), ou décision par la personne qui a préparé l'habilitation
+            (`urn:sira:erreur:separation-des-roles`, code `SEPARATION_DES_ROLES`).
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/Probleme'}
+        '404': {$ref: '#/components/responses/Introuvable'}
+        '409': {$ref: '#/components/responses/Conflit'}
+        '413': {$ref: '#/components/responses/CorpsTropVolumineux'}
+  /v1/admin/statistiques:
+    get:
+      operationId: lireStatistiques
+      summary: Compteurs du jour (UTC) et pièces évitées depuis l'origine
+      tags: [Administration]
+      security:
+      - certificatMembre: []
+        jetonSocle: []
+      description: 'Rôles : `instructeur`, `autorite` ou `auditeur`.'
+      responses:
+        '200':
+          description: Compteurs.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Statistiques'}
+              example: {demandes_jour: 12, accords_jour: 9, refus_jour: 1, consultations_jour: 9, pieces_evitees_total: 214}
+        '401': {$ref: '#/components/responses/NonAuthentifie'}
+        '403': {$ref: '#/components/responses/AccesRefuse'}
+components:
+  securitySchemes:
+    certificatMembre: {type: mutualTLS, description: 'Certificat client émis par l''autorité Sira ; l''identité
+        est l''URI du SAN. `/v1/demandes/**` et `/v1/demarches/**` : `urn:sira:service:<code>`. `/v1/admin/**` :
+        `urn:sira:socle:console`. Toute autre identité reçoit `403`.'}
+    jetonSocle: {type: http, scheme: bearer, bearerFormat: JWT, description: 'Jeton du royaume `sira-socle`, lié
+        au certificat de la console ; les rôles du royaume donnent les droits.'}
+  parameters:
+    Page:
+      name: page
+      in: query
+      schema: {type: integer, minimum: 1, maximum: 1000000, default: 1}
+    Taille:
+      name: taille
+      in: query
+      schema: {type: integer, minimum: 1, maximum: 100, default: 20}
+    Code:
+      name: code
+      in: path
+      required: true
+      schema: {type: string, maxLength: 128}
+    IdDemande:
+      name: id
+      in: path
+      required: true
+      schema: {type: string, format: uuid}
+    IdHabilitation:
+      name: id
+      in: path
+      required: true
+      schema: {type: string, format: uuid}
+  responses:
+    RequeteInvalide:
+      description: Paramètre ou corps refusé (`urn:sira:erreur:requete-invalide`, code `VALIDATION` et liste `erreurs`
+        pour un corps).
+      content:
+        application/problem+json:
+          schema: {$ref: '#/components/schemas/Probleme'}
+          example:
+            type: urn:sira:erreur:requete-invalide
+            title: Requête invalide
+            status: 400
+            code: VALIDATION
+            erreurs:
+            - {champ: demarche, message: Le format de ce champ n'est pas admis.}
+    NonAuthentifie:
+      description: Certificat ou jeton absent ou refusé (`urn:sira:erreur:non-authentifie`).
+      content:
+        application/problem+json:
+          schema: {$ref: '#/components/schemas/Probleme'}
+          example: {type: 'urn:sira:erreur:non-authentifie', title: Authentification requise, status: 401}
+    AccesRefuse:
+      description: Certificat d'un autre membre, ou rôle insuffisant (`urn:sira:erreur:acces-refuse`).
+      content:
+        application/problem+json:
+          schema: {$ref: '#/components/schemas/Probleme'}
+          example: {type: 'urn:sira:erreur:acces-refuse', title: Accès refusé, status: 403}
+    Introuvable:
+      description: Objet absent (`urn:sira:erreur:introuvable`, code `INTROUVABLE`).
+      content:
+        application/problem+json:
+          schema: {$ref: '#/components/schemas/Probleme'}
+          example: {type: 'urn:sira:erreur:introuvable', title: Ressource introuvable, status: 404, code: INTROUVABLE}
+    DemandeIntrouvable:
+      description: Demande absente, ou celle d'un autre (`urn:sira:erreur:demande-introuvable`, code `DEMANDE_INTROUVABLE`).
+      content:
+        application/problem+json:
+          schema: {$ref: '#/components/schemas/Probleme'}
+          example: {type: 'urn:sira:erreur:demande-introuvable', title: Demande introuvable, status: 404, detail: Cette
+              demande n'existe pas ou n'existe plus., code: DEMANDE_INTROUVABLE}
+    Conflit:
+      description: Action qui ne convient pas à l'état actuel (`urn:sira:erreur:conflit`, code `CONFLIT`) ; `detail`
+        dit pourquoi.
+      content:
+        application/problem+json:
+          schema: {$ref: '#/components/schemas/Probleme'}
+          example: {type: 'urn:sira:erreur:conflit', title: Conflit avec l'état actuel, status: 409, detail: Seul
+              un brouillon peut être soumis., code: CONFLIT}
+    CorpsTropVolumineux:
+      description: Corps au-delà de la borne `sira.http.taille-corps-max` (256 Kio par défaut), refusé avant toute
+        lecture (`urn:sira:erreur:corps-trop-volumineux`).
+      content:
+        application/problem+json:
+          schema: {$ref: '#/components/schemas/Probleme'}
+          example: {type: 'urn:sira:erreur:corps-trop-volumineux', title: Corps trop volumineux, status: 413}
+  schemas:
+    Probleme:
+      type: object
+      description: Problème RFC 9457. `code` et `erreurs` ne sont présents que lorsqu'ils s'appliquent.
+      required: [type, title, status]
+      additionalProperties: false
+      properties:
+        type: {type: string, pattern: '^urn:sira:erreur:[a-z0-9-]+$'}
+        title: {type: string}
+        status: {type: integer, minimum: 400, maximum: 599}
+        detail:
+          type: [string, 'null']
+        instance:
+          type: [string, 'null']
+        code: {type: string, pattern: '^[A-Z0-9_]+$'}
+        erreurs:
+          type: array
+          items:
+            type: object
+            required: [champ]
+            additionalProperties: false
+            properties:
+              champ: {type: string}
+              message: {type: string}
+              regle: {type: string}
+        reference: {type: string, description: Référence à citer pour une erreur interne (500).}
+    PageCommune:
+      type: object
+      required: [elements, page, taille, total]
+      additionalProperties: false
+      properties:
+        elements: {type: array}
+        page: {type: integer, minimum: 1}
+        taille: {type: integer, minimum: 1, maximum: 100}
+        total: {type: integer, minimum: 0}
+    Niveau:
+      type: string
+      enum: [STATUT, CHAMPS, DOCUMENT]
+    Operateur:
+      type: string
+      enum: [EGAL, DIFFERENT, AU_MOINS, AU_PLUS, AGE_AU_MOINS, AGE_AU_PLUS, EXISTE, AUCUN, ENCORE_VALIDE]
+    RoleMembre:
+      type: string
+      enum: [SERVICE, REGISTRE]
+    EtatHabilitation:
+      type: string
+      enum: [BROUILLON, SOUMISE, APPROUVEE, REJETEE, SUSPENDUE]
+    Demarche:
+      type: object
+      required: [code, libelle, finalite, service, duree_autorisation_jours]
+      additionalProperties: false
+      properties:
+        code: {type: string, pattern: '^([a-z0-9]([a-z0-9-]{0,62}[a-z0-9])?)$'}
+        libelle: {type: string, minLength: 1, maxLength: 200}
+        finalite: {type: string, minLength: 1, maxLength: 500}
+        base_legale:
+          type: [string, 'null']
+          maxLength: 500
+        service: {type: string, pattern: '^([a-z0-9]([a-z0-9-]{0,62}[a-z0-9])?)$', description: Code du membre de
+            rôle SERVICE.}
+        duree_autorisation_jours: {type: integer, minimum: 0, maximum: 3650, description: '`0` : pour cette fois.'}
+        actif:
+          type: [boolean, 'null']
+          description: 'Absent : vrai.'
+    Regle:
+      type: object
+      required: [champ, operateur]
+      additionalProperties: false
+      properties:
+        champ: {type: string, pattern: '^([A-Za-z0-9_.]{1,128})$'}
+        operateur: {$ref: '#/components/schemas/Operateur'}
+        valeur: {description: Seuil ou valeur attendue ; absente pour les opérateurs qui n'en demandent pas.}
+    Jeu:
+      type: object
+      required: [code, registre, niveau, libelle, validite]
+      additionalProperties: false
+      properties:
+        code: {type: string, pattern: '^([a-z0-9][a-z0-9.-]{0,126}[a-z0-9])$'}
+        registre: {type: string, pattern: '^([a-z0-9]([a-z0-9-]{0,62}[a-z0-9])?)$'}
+        niveau: {$ref: '#/components/schemas/Niveau'}
+        libelle: {type: string, minLength: 1, maxLength: 200}
+        description:
+          type: [string, 'null']
+          maxLength: 1000
+        validite: {type: string, minLength: 1, maxLength: 32, description: 'Durée ISO 8601, d''un instant à 366
+            jours (ex. `P90D`).'}
+        regle:
+          oneOf:
+          - {type: 'null'}
+          - {$ref: '#/components/schemas/Regle'}
+          description: Niveau STATUT.
+        champs:
+          type: [array, 'null']
+          minItems: 1
+          maxItems: 20
+          items: {type: string, pattern: '^([A-Za-z0-9_.]{1,128})$'}
+          description: Niveau CHAMPS.
+        document:
+          type: [string, 'null']
+          pattern: ^([a-z0-9][a-z0-9-]{0,63})$
+          description: Niveau DOCUMENT.
+        actif:
+          type: [boolean, 'null']
+    MembreDeclare:
+      type: object
+      required: [code, nom, organisme, roles]
+      additionalProperties: false
+      properties:
+        code: {type: string, pattern: '^([a-z0-9]([a-z0-9-]{0,62}[a-z0-9])?)$'}
+        nom: {type: string, minLength: 1, maxLength: 200}
+        organisme: {type: string, minLength: 1, maxLength: 200}
+        roles:
+          type: array
+          minItems: 1
+          uniqueItems: true
+          items: {$ref: '#/components/schemas/RoleMembre'}
+        retours_autorises:
+          type: [array, 'null']
+          maxItems: 20
+          items: {type: string, minLength: 1, maxLength: 500}
+        actif:
+          type: [boolean, 'null']
+        identite:
+          type: [string, 'null']
+          readOnly: true
+          description: Identité portée par son certificat, déduite du code.
+    Registre:
+      type: object
+      required: [code, nom, membre, adresse, transport]
+      additionalProperties: false
+      properties:
+        code: {type: string, pattern: '^([a-z0-9]([a-z0-9-]{0,62}[a-z0-9])?)$'}
+        nom: {type: string, minLength: 1, maxLength: 200}
+        membre: {type: string, pattern: '^([a-z0-9]([a-z0-9-]{0,62}[a-z0-9])?)$', description: Code du membre de
+            rôle REGISTRE.}
+        adresse: {type: string, pattern: '^(https://[A-Za-z0-9]([A-Za-z0-9.-]{0,252}[A-Za-z0-9])?(:[0-9]{1,5})?)$',
+          description: Adresse du connecteur.}
+        transport:
+          type: string
+          enum: [DIRECT]
+        actif:
+          type: [boolean, 'null']
+    DemarcheLu:
+      allOf:
+      - {$ref: '#/components/schemas/Demarche'}
+      - type: object
+        required: [code, libelle, finalite, base_legale, service, duree_autorisation_jours, actif]
+      description: 'Tel que rendu : tous les champs sont présents, `null` compris.'
+    MembreDeclareLu:
+      allOf:
+      - {$ref: '#/components/schemas/MembreDeclare'}
+      - type: object
+        required: [code, nom, organisme, roles, retours_autorises, actif, identite]
+      description: 'Tel que rendu : tous les champs sont présents, `null` compris.'
+    RegistreLu:
+      allOf:
+      - {$ref: '#/components/schemas/Registre'}
+      - type: object
+        required: [code, nom, membre, adresse, transport, actif]
+      description: 'Tel que rendu : tous les champs sont présents, `null` compris.'
+    JeuLu:
+      allOf:
+      - {$ref: '#/components/schemas/Jeu'}
+      - type: object
+        required: [code, registre, niveau, libelle, description, validite, regle, champs, document, actif]
+      description: 'Tel que rendu : tous les champs sont présents, `null` compris.'
+    SaisieHabilitation:
+      type: object
+      required: [service, demarche, jeux, justification]
+      additionalProperties: false
+      properties:
+        service: {type: string, pattern: '^([a-z0-9]([a-z0-9-]{0,62}[a-z0-9])?)$'}
+        demarche: {type: string, pattern: '^([a-z0-9]([a-z0-9-]{0,62}[a-z0-9])?)$'}
+        jeux:
+          type: array
+          minItems: 1
+          maxItems: 50
+          items: {type: string, pattern: '^([a-z0-9][a-z0-9.-]{0,126}[a-z0-9])$'}
+        justification: {type: string, minLength: 1, maxLength: 2000}
+    Habilitation:
+      type: object
+      required: [id, service, demarche, jeux, etat, justification, motif, instruite_par, decidee_par, decidee_le,
+        creee_le]
+      additionalProperties: false
+      properties:
+        id: {type: string, format: uuid}
+        service: {type: string}
+        demarche: {type: string}
+        jeux:
+          type: array
+          items: {type: string}
+        etat: {$ref: '#/components/schemas/EtatHabilitation'}
+        justification:
+          type: [string, 'null']
+        motif:
+          type: [string, 'null']
+          description: Motif du rejet ou de la suspension.
+        instruite_par:
+          type: [string, 'null']
+        decidee_par:
+          type: [string, 'null']
+        decidee_le:
+          type: [string, 'null']
+          format: date-time
+        creee_le: {type: string, format: date-time}
+    Motif:
+      type: object
+      required: [motif]
+      additionalProperties: false
+      properties:
+        motif: {type: string, minLength: 1, maxLength: 1000}
+    NouvelleDemande:
+      type: object
+      required: [demarche, canal, certificat_chiffrement]
+      additionalProperties: false
+      properties:
+        demarche: {type: string, pattern: '^([a-z0-9]([a-z0-9-]{0,62}[a-z0-9])?)$'}
+        canal:
+          type: string
+          enum: [REDIRECTION, CODE, NOTIFICATION]
+        retour_url:
+          type: [string, 'null']
+          maxLength: 500
+          description: 'REDIRECTION : une adresse déclarée pour le service, à l''identique.'
+        identifiant_unique:
+          type: [string, 'null']
+          pattern: ^([A-Za-z0-9]{6,32})$
+          description: 'Désigne le citoyen. NOTIFICATION : lui ou `pseudonyme`. REDIRECTION et CODE : facultatif ; seule
+            cette personne pourra donner ou refuser l''accord.'
+        pseudonyme:
+          type: [string, 'null']
+          pattern: ^([A-Za-z0-9_=+/.-]{1,128})$
+          description: 'NOTIFICATION : le pseudonyme du citoyen chez ce service.'
+        certificat_chiffrement: {type: string, minLength: 1, maxLength: 32768, description: PEM du certificat de
+            chiffrement émis par l'autorité Sira à ce service ; un autre est refusé (`400`).}
+    JeuDemande:
+      type: object
+      required: [code, libelle, niveau, registre]
+      additionalProperties: false
+      properties:
+        code: {type: string}
+        libelle: {type: string}
+        niveau: {$ref: '#/components/schemas/Niveau'}
+        registre: {type: string}
+    EtatDemande:
+      type: string
+      enum: [EN_ATTENTE_ACCORD, REFUSEE, EXPIREE, ANNULEE, EN_COURS, PARTIELLE, COMPLETE]
+    DemandeCreee:
+      type: object
+      required: [id, etat, url_accord, code_court, code_verification, expire_le, jeux]
+      additionalProperties: false
+      properties:
+        id: {type: string, format: uuid}
+        etat: {$ref: '#/components/schemas/EtatDemande'}
+        url_accord: {type: string, description: Page d'accord de l'espace citoyen (lien ou QR code).}
+        code_court:
+          type: [string, 'null']
+          description: Canal CODE ; absent d'une requête rejouée.
+        code_verification:
+          type: [string, 'null']
+          description: À afficher par le service ; absent d'une requête rejouée.
+        expire_le: {type: string, format: date-time}
+        jeux:
+          type: array
+          items: {$ref: '#/components/schemas/JeuDemande'}
+    Element:
+      type: object
+      required: [jeu, etat]
+      additionalProperties: false
+      properties:
+        jeu: {type: string}
+        etat:
+          type: string
+          enum: [A_TRAITER, OBTENU, REUTILISE, REFUSE, INCONNU, EXPIRE]
+        attestation: {type: string, description: JWE compact chiffré pour le service ; absent tant qu'il n'est pas
+            livrable.}
+        prochaine_tentative_le: {type: string, format: date-time, description: Élément `A_TRAITER` seulement.}
+    EtatDeLaDemande:
+      type: object
+      required: [id, etat, pseudonyme, elements]
+      additionalProperties: false
+      properties:
+        id: {type: string, format: uuid}
+        etat: {$ref: '#/components/schemas/EtatDemande'}
+        pseudonyme:
+          type: [string, 'null']
+          description: Pseudonyme du citoyen chez ce service, une fois l'accord donné et livrable.
+        elements:
+          type: array
+          items: {$ref: '#/components/schemas/Element'}
+    DemarcheDecrite:
+      type: object
+      required: [code, libelle, jeux]
+      additionalProperties: false
+      properties:
+        code: {type: string}
+        libelle: {type: string}
+        jeux:
+          type: array
+          items: {$ref: '#/components/schemas/JeuDemande'}
+    Statistiques:
+      type: object
+      required: [demandes_jour, accords_jour, refus_jour, consultations_jour, pieces_evitees_total]
+      additionalProperties: false
+      properties:
+        demandes_jour: {type: integer, minimum: 0}
+        accords_jour: {type: integer, minimum: 0}
+        refus_jour: {type: integer, minimum: 0}
+        consultations_jour: {type: integer, minimum: 0}
+        pieces_evitees_total: {type: integer, minimum: 0}

@@ -1,0 +1,113 @@
+<div class="sira-titre-page">
+  <div>
+    <h1>Mon profil</h1>
+    <p>Vos informations de connexion et la sécurité de votre compte.</p>
+  </div>
+</div>
+
+@if (session.utilisateur(); as personne) {
+  <div class="sira-profil">
+    <section class="sira-profil__carte">
+      <div class="sira-profil__identite">
+        <span class="sira-profil__avatar" aria-hidden="true">{{ initiales() }}</span>
+        <div>
+          <p class="sira-profil__nom">{{ personne.nom }}</p>
+          @if (personne.identifiant) {
+            <p class="sira-profil__ligne">{{ personne.identifiant }}</p>
+          }
+        </div>
+      </div>
+      <dl class="sira-profil__infos">
+        <div>
+          <dt>Nom complet</dt>
+          <dd>{{ personne.nom }}</dd>
+        </div>
+        @if (personne.identifiant) {
+          <div>
+            <dt>Identifiant de connexion</dt>
+            <dd>{{ personne.identifiant }}</dd>
+          </div>
+        }
+        @if (personne.courriel) {
+          <div>
+            <dt>Adresse de messagerie</dt>
+            <dd>{{ personne.courriel }}</dd>
+          </div>
+        }
+        @if (lesRoles().length > 0) {
+          <div>
+            <dt>Rôles</dt>
+            <dd>
+              <ul class="sira-profil__roles">
+                @for (role of lesRoles(); track role) {
+                  <li>{{ role }}</li>
+                }
+              </ul>
+            </dd>
+          </div>
+        }
+      </dl>
+      <p class="sira-profil__note">
+        Le nom et l’identifiant sont gérés par l’équipe qui administre les comptes.
+      </p>
+    </section>
+
+    <section class="sira-profil__carte">
+      <h2 class="sira-profil__titre">Sécurité du compte</h2>
+      @if (actionsCompte()) {
+        <div class="sira-profil__action">
+          <span class="sira-profil__icone" aria-hidden="true"><sira-icone nom="key-round" /></span>
+          <div>
+            <p class="sira-profil__action-titre">Mot de passe</p>
+            <p class="sira-profil__ligne">
+              Saisissez le nouveau mot de passe deux fois, puis vous revenez ici.
+            </p>
+          </div>
+          <button
+            siraBouton
+            variante="secondaire"
+            type="button"
+            (click)="session.agirSurLeCompte('mot-de-passe')"
+          >
+            Changer
+          </button>
+        </div>
+        <div class="sira-profil__action">
+          <span class="sira-profil__icone" aria-hidden="true"><sira-icone nom="smartphone" /></span>
+          <div>
+            <p class="sira-profil__action-titre">Application d’authentification</p>
+            <p class="sira-profil__ligne">
+              Nouveau téléphone ? Affichez un nouveau QR code et scannez-le vous-même.
+            </p>
+          </div>
+          <button
+            siraBouton
+            variante="secondaire"
+            type="button"
+            (click)="session.agirSurLeCompte('authentification')"
+          >
+            <sira-icone nom="qr-code" />
+            Afficher un nouveau QR code
+          </button>
+        </div>
+      } @else {
+        <p class="sira-profil__ligne">
+          Vous vous connectez avec votre identifiant unique et un code à usage unique reçu sur votre
+          téléphone : il n’y a pas de mot de passe à gérer.
+        </p>
+      }
+      <div class="sira-profil__action">
+        <span class="sira-profil__icone sira-profil__icone--sortie" aria-hidden="true"
+          ><sira-icone nom="log-out"
+        /></span>
+        <div>
+          <p class="sira-profil__action-titre">Se déconnecter</p>
+          <p class="sira-profil__ligne">Ferme votre session sur cet appareil.</p>
+        </div>
+        <button siraBouton variante="danger" type="button" (click)="session.seDeconnecter()">
+          Se déconnecter
+        </button>
+      </div>
+    </section>
+  </div>
+}

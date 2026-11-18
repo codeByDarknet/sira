@@ -1,0 +1,964 @@
+{
+  "realm": "demo-agents",
+  "displayName": "Sira",
+  "displayNameHtml": "Agents des administrations",
+  "enabled": true,
+  "sslRequired": "external",
+  "registrationAllowed": false,
+  "resetPasswordAllowed": true,
+  "rememberMe": false,
+  "editUsernameAllowed": false,
+  "loginWithEmailAllowed": true,
+  "verifyEmail": false,
+  "bruteForceProtected": true,
+  "passwordPolicy": "length(12) and maxLength(128) and upperCase(1) and lowerCase(1) and digits(1) and specialChars(1) and notUsername and notEmail and passwordHistory(3)",
+  "smtpServer": {
+    "host": "${SIRA_COURRIEL_HOTE}",
+    "port": "${SIRA_COURRIEL_PORT}",
+    "starttls": "true",
+    "ssl": "false",
+    "auth": "true",
+    "user": "${SIRA_COURRIEL_UTILISATEUR}",
+    "password": "${SIRA_COURRIEL_MOT_DE_PASSE}",
+    "from": "${SIRA_COURRIEL_ADRESSE}",
+    "fromDisplayName": "Sira"
+  },
+  "eventsEnabled": true,
+  "eventsListeners": [
+    "jboss-logging"
+  ],
+  "eventsExpiration": 2592000,
+  "browserFlow": "sira-agents",
+  "authenticationFlows": [
+    {
+      "alias": "sira-agents",
+      "description": "Mot de passe et code TOTP, tous deux obligatoires",
+      "providerId": "basic-flow",
+      "topLevel": true,
+      "builtIn": false,
+      "authenticationExecutions": [
+        {
+          "requirement": "ALTERNATIVE",
+          "priority": 10,
+          "userSetupAllowed": false,
+          "authenticatorFlow": false,
+          "authenticator": "auth-cookie"
+        },
+        {
+          "requirement": "ALTERNATIVE",
+          "priority": 20,
+          "userSetupAllowed": false,
+          "authenticatorFlow": true,
+          "flowAlias": "sira-agents-formulaire"
+        }
+      ]
+    },
+    {
+      "alias": "sira-agents-formulaire",
+      "description": "Mot de passe puis code TOTP",
+      "providerId": "basic-flow",
+      "topLevel": false,
+      "builtIn": false,
+      "authenticationExecutions": [
+        {
+          "requirement": "REQUIRED",
+          "priority": 10,
+          "userSetupAllowed": false,
+          "authenticatorFlow": false,
+          "authenticator": "auth-username-password-form"
+        },
+        {
+          "requirement": "REQUIRED",
+          "priority": 20,
+          "userSetupAllowed": false,
+          "authenticatorFlow": false,
+          "authenticator": "sira-code-totp"
+        }
+      ]
+    }
+  ],
+  "adminEventsEnabled": true,
+  "adminEventsDetailsEnabled": false,
+  "failureFactor": 10,
+  "internationalizationEnabled": true,
+  "supportedLocales": [
+    "fr"
+  ],
+  "defaultLocale": "fr",
+  "loginTheme": "sira",
+  "accessTokenLifespan": 300,
+  "accessCodeLifespan": 60,
+  "ssoSessionIdleTimeout": 900,
+  "ssoSessionMaxLifespan": 28800,
+  "requiredActions": [
+    {
+      "alias": "UPDATE_PASSWORD",
+      "name": "UPDATE_PASSWORD",
+      "providerId": "UPDATE_PASSWORD",
+      "enabled": true,
+      "defaultAction": false,
+      "priority": 10,
+      "config": {}
+    },
+    {
+      "alias": "CONFIGURE_TOTP",
+      "name": "CONFIGURE_TOTP",
+      "providerId": "CONFIGURE_TOTP",
+      "enabled": true,
+      "defaultAction": false,
+      "priority": 20,
+      "config": {}
+    },
+    {
+      "alias": "TERMS_AND_CONDITIONS",
+      "name": "TERMS_AND_CONDITIONS",
+      "providerId": "TERMS_AND_CONDITIONS",
+      "enabled": false,
+      "defaultAction": false,
+      "priority": 20,
+      "config": {}
+    },
+    {
+      "alias": "UPDATE_PROFILE",
+      "name": "UPDATE_PROFILE",
+      "providerId": "UPDATE_PROFILE",
+      "enabled": true,
+      "defaultAction": false,
+      "priority": 40,
+      "config": {}
+    },
+    {
+      "alias": "VERIFY_EMAIL",
+      "name": "VERIFY_EMAIL",
+      "providerId": "VERIFY_EMAIL",
+      "enabled": true,
+      "defaultAction": false,
+      "priority": 50,
+      "config": {}
+    },
+    {
+      "alias": "delete_account",
+      "name": "delete_account",
+      "providerId": "delete_account",
+      "enabled": false,
+      "defaultAction": false,
+      "priority": 60,
+      "config": {}
+    },
+    {
+      "alias": "UPDATE_EMAIL",
+      "name": "UPDATE_EMAIL",
+      "providerId": "UPDATE_EMAIL",
+      "enabled": false,
+      "defaultAction": false,
+      "priority": 70,
+      "config": {}
+    },
+    {
+      "alias": "webauthn-register",
+      "name": "webauthn-register",
+      "providerId": "webauthn-register",
+      "enabled": true,
+      "defaultAction": false,
+      "priority": 80,
+      "config": {}
+    },
+    {
+      "alias": "webauthn-register-passwordless",
+      "name": "webauthn-register-passwordless",
+      "providerId": "webauthn-register-passwordless",
+      "enabled": true,
+      "defaultAction": false,
+      "priority": 90,
+      "config": {}
+    },
+    {
+      "alias": "VERIFY_PROFILE",
+      "name": "VERIFY_PROFILE",
+      "providerId": "VERIFY_PROFILE",
+      "enabled": true,
+      "defaultAction": false,
+      "priority": 100,
+      "config": {}
+    },
+    {
+      "alias": "delete_credential",
+      "name": "delete_credential",
+      "providerId": "delete_credential",
+      "enabled": true,
+      "defaultAction": false,
+      "priority": 110,
+      "config": {}
+    },
+    {
+      "alias": "idp_link",
+      "name": "idp_link",
+      "providerId": "idp_link",
+      "enabled": true,
+      "defaultAction": false,
+      "priority": 120,
+      "config": {}
+    },
+    {
+      "alias": "CONFIGURE_RECOVERY_AUTHN_CODES",
+      "name": "CONFIGURE_RECOVERY_AUTHN_CODES",
+      "providerId": "CONFIGURE_RECOVERY_AUTHN_CODES",
+      "enabled": true,
+      "defaultAction": false,
+      "priority": 130,
+      "config": {}
+    },
+    {
+      "alias": "update_user_locale",
+      "name": "update_user_locale",
+      "providerId": "update_user_locale",
+      "enabled": true,
+      "defaultAction": false,
+      "priority": 1000,
+      "config": {}
+    }
+  ],
+  "clients": [
+    {
+      "clientId": "demo-concours",
+      "name": "Concours de la fonction publique",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "clientAuthenticatorType": "client-x509",
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "fullScopeAllowed": false,
+      "rootUrl": "http://concours.sira.localhost:${SIRA_PORT}",
+      "baseUrl": "/",
+      "redirectUris": [
+        "http://concours.sira.localhost:${SIRA_PORT}/api/auth/retour"
+      ],
+      "webOrigins": [],
+      "attributes": {
+        "x509.subjectdn": "CN=urn:sira:service:concours,OU=tls,O=Sira",
+        "x509.allow.regex.pattern.comparison": "false",
+        "x509.casubjectdn": "CN=AC Sira,O=Sira",
+        "tls.client.certificate.bound.access.tokens": "true",
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "http://concours.sira.localhost:${SIRA_PORT}/"
+      },
+      "defaultClientScopes": [
+        "basic",
+        "acr",
+        "profile"
+      ],
+      "optionalClientScopes": [],
+      "protocolMappers": [
+        {
+          "name": "audience-demo-concours",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": {
+            "included.custom.audience": "demo-concours",
+            "access.token.claim": "true",
+            "id.token.claim": "false",
+            "introspection.token.claim": "true"
+          }
+        },
+        {
+          "name": "administration",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "config": {
+            "user.attribute": "administration",
+            "claim.name": "administration",
+            "jsonType.label": "String",
+            "access.token.claim": "true",
+            "id.token.claim": "true",
+            "userinfo.token.claim": "false",
+            "introspection.token.claim": "true"
+          }
+        }
+      ]
+    },
+    {
+      "clientId": "demo-bourses",
+      "name": "Bourses d'études",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "clientAuthenticatorType": "client-x509",
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "fullScopeAllowed": false,
+      "rootUrl": "http://bourses.sira.localhost:${SIRA_PORT}",
+      "baseUrl": "/",
+      "redirectUris": [
+        "http://bourses.sira.localhost:${SIRA_PORT}/api/auth/retour"
+      ],
+      "webOrigins": [],
+      "attributes": {
+        "x509.subjectdn": "CN=urn:sira:service:bourses,OU=tls,O=Sira",
+        "x509.allow.regex.pattern.comparison": "false",
+        "x509.casubjectdn": "CN=AC Sira,O=Sira",
+        "tls.client.certificate.bound.access.tokens": "true",
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "http://bourses.sira.localhost:${SIRA_PORT}/"
+      },
+      "defaultClientScopes": [
+        "basic",
+        "acr",
+        "profile"
+      ],
+      "optionalClientScopes": [],
+      "protocolMappers": [
+        {
+          "name": "audience-demo-bourses",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": {
+            "included.custom.audience": "demo-bourses",
+            "access.token.claim": "true",
+            "id.token.claim": "false",
+            "introspection.token.claim": "true"
+          }
+        },
+        {
+          "name": "administration",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "config": {
+            "user.attribute": "administration",
+            "claim.name": "administration",
+            "jsonType.label": "String",
+            "access.token.claim": "true",
+            "id.token.claim": "true",
+            "userinfo.token.claim": "false",
+            "introspection.token.claim": "true"
+          }
+        }
+      ]
+    },
+    {
+      "clientId": "demo-entreprises",
+      "name": "Créer son entreprise",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "clientAuthenticatorType": "client-x509",
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "fullScopeAllowed": false,
+      "rootUrl": "http://entreprises.sira.localhost:${SIRA_PORT}",
+      "baseUrl": "/",
+      "redirectUris": [
+        "http://entreprises.sira.localhost:${SIRA_PORT}/api/auth/retour"
+      ],
+      "webOrigins": [],
+      "attributes": {
+        "x509.subjectdn": "CN=urn:sira:service:entreprises,OU=tls,O=Sira",
+        "x509.allow.regex.pattern.comparison": "false",
+        "x509.casubjectdn": "CN=AC Sira,O=Sira",
+        "tls.client.certificate.bound.access.tokens": "true",
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "http://entreprises.sira.localhost:${SIRA_PORT}/"
+      },
+      "defaultClientScopes": [
+        "basic",
+        "acr",
+        "profile"
+      ],
+      "optionalClientScopes": [],
+      "protocolMappers": [
+        {
+          "name": "audience-demo-entreprises",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": {
+            "included.custom.audience": "demo-entreprises",
+            "access.token.claim": "true",
+            "id.token.claim": "false",
+            "introspection.token.claim": "true"
+          }
+        },
+        {
+          "name": "administration",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "config": {
+            "user.attribute": "administration",
+            "claim.name": "administration",
+            "jsonType.label": "String",
+            "access.token.claim": "true",
+            "id.token.claim": "true",
+            "userinfo.token.claim": "false",
+            "introspection.token.claim": "true"
+          }
+        }
+      ]
+    },
+    {
+      "clientId": "demo-etat-civil",
+      "name": "État civil",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "clientAuthenticatorType": "client-x509",
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "fullScopeAllowed": false,
+      "rootUrl": "http://etat-civil.sira.localhost:${SIRA_PORT}",
+      "baseUrl": "/",
+      "redirectUris": [
+        "http://etat-civil.sira.localhost:${SIRA_PORT}/api/auth/retour"
+      ],
+      "webOrigins": [],
+      "attributes": {
+        "x509.subjectdn": "CN=urn:sira:demo:etat-civil,OU=tls,O=Sira",
+        "x509.allow.regex.pattern.comparison": "false",
+        "x509.casubjectdn": "CN=AC Sira,O=Sira",
+        "tls.client.certificate.bound.access.tokens": "true",
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "http://etat-civil.sira.localhost:${SIRA_PORT}/"
+      },
+      "defaultClientScopes": [
+        "basic",
+        "acr",
+        "profile"
+      ],
+      "optionalClientScopes": [],
+      "protocolMappers": [
+        {
+          "name": "audience-demo-etat-civil",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": {
+            "included.custom.audience": "demo-etat-civil",
+            "access.token.claim": "true",
+            "id.token.claim": "false",
+            "introspection.token.claim": "true"
+          }
+        },
+        {
+          "name": "administration",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "config": {
+            "user.attribute": "administration",
+            "claim.name": "administration",
+            "jsonType.label": "String",
+            "access.token.claim": "true",
+            "id.token.claim": "true",
+            "userinfo.token.claim": "false",
+            "introspection.token.claim": "true"
+          }
+        }
+      ]
+    },
+    {
+      "clientId": "demo-nationalite",
+      "name": "Nationalité",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "clientAuthenticatorType": "client-x509",
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "fullScopeAllowed": false,
+      "rootUrl": "http://nationalite.sira.localhost:${SIRA_PORT}",
+      "baseUrl": "/",
+      "redirectUris": [
+        "http://nationalite.sira.localhost:${SIRA_PORT}/api/auth/retour"
+      ],
+      "webOrigins": [],
+      "attributes": {
+        "x509.subjectdn": "CN=urn:sira:demo:nationalite,OU=tls,O=Sira",
+        "x509.allow.regex.pattern.comparison": "false",
+        "x509.casubjectdn": "CN=AC Sira,O=Sira",
+        "tls.client.certificate.bound.access.tokens": "true",
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "http://nationalite.sira.localhost:${SIRA_PORT}/"
+      },
+      "defaultClientScopes": [
+        "basic",
+        "acr",
+        "profile"
+      ],
+      "optionalClientScopes": [],
+      "protocolMappers": [
+        {
+          "name": "audience-demo-nationalite",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": {
+            "included.custom.audience": "demo-nationalite",
+            "access.token.claim": "true",
+            "id.token.claim": "false",
+            "introspection.token.claim": "true"
+          }
+        },
+        {
+          "name": "administration",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "config": {
+            "user.attribute": "administration",
+            "claim.name": "administration",
+            "jsonType.label": "String",
+            "access.token.claim": "true",
+            "id.token.claim": "true",
+            "userinfo.token.claim": "false",
+            "introspection.token.claim": "true"
+          }
+        }
+      ]
+    },
+    {
+      "clientId": "demo-casier",
+      "name": "Casier judiciaire",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "clientAuthenticatorType": "client-x509",
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "fullScopeAllowed": false,
+      "rootUrl": "http://casier.sira.localhost:${SIRA_PORT}",
+      "baseUrl": "/",
+      "redirectUris": [
+        "http://casier.sira.localhost:${SIRA_PORT}/api/auth/retour"
+      ],
+      "webOrigins": [],
+      "attributes": {
+        "x509.subjectdn": "CN=urn:sira:demo:casier,OU=tls,O=Sira",
+        "x509.allow.regex.pattern.comparison": "false",
+        "x509.casubjectdn": "CN=AC Sira,O=Sira",
+        "tls.client.certificate.bound.access.tokens": "true",
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "http://casier.sira.localhost:${SIRA_PORT}/"
+      },
+      "defaultClientScopes": [
+        "basic",
+        "acr",
+        "profile"
+      ],
+      "optionalClientScopes": [],
+      "protocolMappers": [
+        {
+          "name": "audience-demo-casier",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": {
+            "included.custom.audience": "demo-casier",
+            "access.token.claim": "true",
+            "id.token.claim": "false",
+            "introspection.token.claim": "true"
+          }
+        },
+        {
+          "name": "administration",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "config": {
+            "user.attribute": "administration",
+            "claim.name": "administration",
+            "jsonType.label": "String",
+            "access.token.claim": "true",
+            "id.token.claim": "true",
+            "userinfo.token.claim": "false",
+            "introspection.token.claim": "true"
+          }
+        }
+      ]
+    },
+    {
+      "clientId": "demo-diplomes",
+      "name": "Diplômes",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "clientAuthenticatorType": "client-x509",
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "fullScopeAllowed": false,
+      "rootUrl": "http://diplomes.sira.localhost:${SIRA_PORT}",
+      "baseUrl": "/",
+      "redirectUris": [
+        "http://diplomes.sira.localhost:${SIRA_PORT}/api/auth/retour"
+      ],
+      "webOrigins": [],
+      "attributes": {
+        "x509.subjectdn": "CN=urn:sira:demo:diplomes,OU=tls,O=Sira",
+        "x509.allow.regex.pattern.comparison": "false",
+        "x509.casubjectdn": "CN=AC Sira,O=Sira",
+        "tls.client.certificate.bound.access.tokens": "true",
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "http://diplomes.sira.localhost:${SIRA_PORT}/"
+      },
+      "defaultClientScopes": [
+        "basic",
+        "acr",
+        "profile"
+      ],
+      "optionalClientScopes": [],
+      "protocolMappers": [
+        {
+          "name": "audience-demo-diplomes",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": {
+            "included.custom.audience": "demo-diplomes",
+            "access.token.claim": "true",
+            "id.token.claim": "false",
+            "introspection.token.claim": "true"
+          }
+        },
+        {
+          "name": "administration",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "config": {
+            "user.attribute": "administration",
+            "claim.name": "administration",
+            "jsonType.label": "String",
+            "access.token.claim": "true",
+            "id.token.claim": "true",
+            "userinfo.token.claim": "false",
+            "introspection.token.claim": "true"
+          }
+        }
+      ]
+    }
+  ],
+  "components": {
+    "org.keycloak.userprofile.UserProfileProvider": [
+      {
+        "providerId": "declarative-user-profile",
+        "config": {
+          "kc.user.profile.config": [
+            "{\"attributes\": [{\"name\": \"username\", \"displayName\": \"${username}\", \"permissions\": {\"view\": [\"admin\", \"user\"], \"edit\": [\"admin\"]}, \"validations\": {\"length\": {\"min\": 3, \"max\": 64}}}, {\"name\": \"email\", \"displayName\": \"${email}\", \"permissions\": {\"view\": [\"admin\", \"user\"], \"edit\": [\"admin\"]}, \"validations\": {\"email\": {}, \"length\": {\"max\": 255}}}, {\"name\": \"firstName\", \"displayName\": \"${firstName}\", \"permissions\": {\"view\": [\"admin\", \"user\"], \"edit\": [\"admin\"]}, \"validations\": {\"length\": {\"max\": 255}}}, {\"name\": \"lastName\", \"displayName\": \"${lastName}\", \"permissions\": {\"view\": [\"admin\", \"user\"], \"edit\": [\"admin\"]}, \"validations\": {\"length\": {\"max\": 255}}}, {\"name\": \"administration\", \"displayName\": \"Administration\", \"validations\": {\"options\": {\"options\": [\"concours\", \"bourses\", \"entreprises\", \"etat-civil\", \"nationalite\", \"casier\", \"diplomes\"]}}, \"permissions\": {\"view\": [\"admin\", \"user\"], \"edit\": [\"admin\"]}}]}"
+          ]
+        }
+      }
+    ]
+  },
+  "clientScopeMappings": {
+    "realm-management": [
+      {
+        "client": "demo-concours",
+        "roles": [
+          "manage-users",
+          "view-users",
+          "query-users"
+        ]
+      },
+      {
+        "client": "demo-bourses",
+        "roles": [
+          "manage-users",
+          "view-users",
+          "query-users"
+        ]
+      },
+      {
+        "client": "demo-entreprises",
+        "roles": [
+          "manage-users",
+          "view-users",
+          "query-users"
+        ]
+      },
+      {
+        "client": "demo-etat-civil",
+        "roles": [
+          "manage-users",
+          "view-users",
+          "query-users"
+        ]
+      },
+      {
+        "client": "demo-nationalite",
+        "roles": [
+          "manage-users",
+          "view-users",
+          "query-users"
+        ]
+      },
+      {
+        "client": "demo-casier",
+        "roles": [
+          "manage-users",
+          "view-users",
+          "query-users"
+        ]
+      },
+      {
+        "client": "demo-diplomes",
+        "roles": [
+          "manage-users",
+          "view-users",
+          "query-users"
+        ]
+      }
+    ]
+  },
+  "users": [
+    {
+      "username": "agent.concours@sira.example",
+      "enabled": true,
+      "firstName": "Noëlie",
+      "lastName": "TAPSOBA",
+      "email": "agent.concours@sira.example",
+      "emailVerified": true,
+      "attributes": {
+        "administration": [
+          "concours"
+        ]
+      },
+      "realmRoles": [
+        "default-roles-demo-agents"
+      ],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "${SIRA_DEMO_MOT_DE_PASSE}",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "username": "agent.bourses@sira.example",
+      "enabled": true,
+      "firstName": "Sié Franck",
+      "lastName": "HIEN",
+      "email": "agent.bourses@sira.example",
+      "emailVerified": true,
+      "attributes": {
+        "administration": [
+          "bourses"
+        ]
+      },
+      "realmRoles": [
+        "default-roles-demo-agents"
+      ],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "${SIRA_DEMO_MOT_DE_PASSE}",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "username": "agent.entreprises@sira.example",
+      "enabled": true,
+      "firstName": "Awa",
+      "lastName": "TRAORÉ",
+      "email": "agent.entreprises@sira.example",
+      "emailVerified": true,
+      "attributes": {
+        "administration": [
+          "entreprises"
+        ]
+      },
+      "realmRoles": [
+        "default-roles-demo-agents"
+      ],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "${SIRA_DEMO_MOT_DE_PASSE}",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "username": "agent.etat-civil@sira.example",
+      "enabled": true,
+      "firstName": "Salimata",
+      "lastName": "OUATTARA",
+      "email": "agent.etat-civil@sira.example",
+      "emailVerified": true,
+      "attributes": {
+        "administration": [
+          "etat-civil"
+        ]
+      },
+      "realmRoles": [
+        "default-roles-demo-agents"
+      ],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "${SIRA_DEMO_MOT_DE_PASSE}",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "username": "agent.nationalite@sira.example",
+      "enabled": true,
+      "firstName": "Lassané",
+      "lastName": "BAMOGO",
+      "email": "agent.nationalite@sira.example",
+      "emailVerified": true,
+      "attributes": {
+        "administration": [
+          "nationalite"
+        ]
+      },
+      "realmRoles": [
+        "default-roles-demo-agents"
+      ],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "${SIRA_DEMO_MOT_DE_PASSE}",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "username": "agent.casier@sira.example",
+      "enabled": true,
+      "firstName": "Clarisse",
+      "lastName": "YAMÉOGO",
+      "email": "agent.casier@sira.example",
+      "emailVerified": true,
+      "attributes": {
+        "administration": [
+          "casier"
+        ]
+      },
+      "realmRoles": [
+        "default-roles-demo-agents"
+      ],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "${SIRA_DEMO_MOT_DE_PASSE}",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "username": "agent.diplomes@sira.example",
+      "enabled": true,
+      "firstName": "Koffi Modeste",
+      "lastName": "DABIRÉ",
+      "email": "agent.diplomes@sira.example",
+      "emailVerified": true,
+      "attributes": {
+        "administration": [
+          "diplomes"
+        ]
+      },
+      "realmRoles": [
+        "default-roles-demo-agents"
+      ],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "${SIRA_DEMO_MOT_DE_PASSE}",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "username": "service-account-demo-concours",
+      "enabled": true,
+      "serviceAccountClientId": "demo-concours",
+      "clientRoles": {
+        "realm-management": [
+          "manage-users",
+          "view-users",
+          "query-users"
+        ]
+      }
+    },
+    {
+      "username": "service-account-demo-bourses",
+      "enabled": true,
+      "serviceAccountClientId": "demo-bourses",
+      "clientRoles": {
+        "realm-management": [
+          "manage-users",
+          "view-users",
+          "query-users"
+        ]
+      }
+    },
+    {
+      "username": "service-account-demo-entreprises",
+      "enabled": true,
+      "serviceAccountClientId": "demo-entreprises",
+      "clientRoles": {
+        "realm-management": [
+          "manage-users",
+          "view-users",
+          "query-users"
+        ]
+      }
+    },
+    {
+      "username": "service-account-demo-etat-civil",
+      "enabled": true,
+      "serviceAccountClientId": "demo-etat-civil",
+      "clientRoles": {
+        "realm-management": [
+          "manage-users",
+          "view-users",
+          "query-users"
+        ]
+      }
+    },
+    {
+      "username": "service-account-demo-nationalite",
+      "enabled": true,
+      "serviceAccountClientId": "demo-nationalite",
+      "clientRoles": {
+        "realm-management": [
+          "manage-users",
+          "view-users",
+          "query-users"
+        ]
+      }
+    },
+    {
+      "username": "service-account-demo-casier",
+      "enabled": true,
+      "serviceAccountClientId": "demo-casier",
+      "clientRoles": {
+        "realm-management": [
+          "manage-users",
+          "view-users",
+          "query-users"
+        ]
+      }
+    },
+    {
+      "username": "service-account-demo-diplomes",
+      "enabled": true,
+      "serviceAccountClientId": "demo-diplomes",
+      "clientRoles": {
+        "realm-management": [
+          "manage-users",
+          "view-users",
+          "query-users"
+        ]
+      }
+    }
+  ],
+  "registrationEmailAsUsername": true,
+  "duplicateEmailsAllowed": false
+}

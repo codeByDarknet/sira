@@ -1,0 +1,60 @@
+<sira-fil [elements]="[{ libelle: 'Mes accès', chemin: '/acces' }, { libelle: nomService() }]" />
+
+@if (probleme(); as message) {
+  <h1>Accès introuvable</h1>
+  <sira-alerte type="erreur">{{ message }}</sira-alerte>
+} @else if (autorisation.value(); as acces) {
+  <h1>{{ acces.service.nom }}</h1>
+
+  @if (retire()) {
+    <sira-alerte
+      type="succes"
+      ephemere
+      [titre]="'L’accès de ' + acces.service.nom + ' est retiré'"
+    />
+  }
+
+  <dl siraSynthese>
+    <div siraSyntheseLigne cle="État"><ec-etat-acces [etat]="acces.etat" /></div>
+    @if (acces.service.organisme; as organisme) {
+      <div siraSyntheseLigne cle="Organisme">{{ organisme }}</div>
+    }
+    <div siraSyntheseLigne cle="Pour">{{ acces.demarche.libelle }}</div>
+    <div siraSyntheseLigne cle="Pourquoi">{{ acces.demarche.finalite }}</div>
+    <div siraSyntheseLigne cle="Accord donné le">{{ acces.accordee_le | siraDate }}</div>
+    @if (acces.retiree_le; as retrait) {
+      <div siraSyntheseLigne cle="Retiré le">{{ retrait | siraDate }}</div>
+    } @else if (acces.expire_le; as fin) {
+      <div siraSyntheseLigne cle="Jusqu’au">{{ fin | siraDate: 'jour' }}</div>
+    }
+    <div siraSyntheseLigne cle="Utilisation">{{ utilisation() }}</div>
+  </dl>
+
+  <h2 class="sira-marge-haut">Informations</h2>
+  <sira-tableau
+    legende="Informations"
+    legendeMasquee
+    [colonnes]="colonnes"
+    [lignes]="informations()"
+  />
+
+  <p class="sira-marge-haut">
+    <a
+      siraLien
+      icone="history"
+      routerLink="/historique"
+      [queryParams]="{ service: acces.service.code }"
+    >
+      Consultations de ce service
+    </a>
+  </p>
+
+  @if (acces.etat === 'ACTIVE') {
+    <div class="sira-groupe-boutons">
+      <ec-retrait [autorisation]="acces" (retire)="apresRetrait()" />
+    </div>
+  }
+} @else {
+  <h1>Détail de l’accès</h1>
+  <sira-squelette [lignes]="6" libelle="Chargement de l’accès" />
+}

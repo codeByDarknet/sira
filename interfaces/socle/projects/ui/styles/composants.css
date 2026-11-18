@@ -1,0 +1,1122 @@
+/*
+ * Composants de Sira en CSS pur. Chaque bloc correspond à un composant Angular
+ * de @sira/ui, mais reste utilisable seul (thème Keycloak, page HTML d'un tiers).
+ * Seuls les jetons sémantiques sont lus ici.
+ */
+
+/* Les balises de composants Angular sont des blocs. */
+sira-alerte,
+sira-bandeau,
+sira-carte,
+sira-champ,
+sira-code,
+sira-demande-acces,
+sira-dialogue,
+sira-entete,
+sira-etapes,
+sira-etat-vide,
+sira-fil,
+sira-groupe-formulaire,
+sira-minuteur,
+sira-onglets,
+sira-pagination,
+sira-pied,
+sira-resume-erreurs,
+sira-squelette,
+sira-tableau,
+router-outlet + * {
+  display: block;
+}
+
+/* ---------- Structure de page ---------- */
+
+.sira-application {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+.sira-conteneur {
+  width: 100%;
+  max-width: calc(var(--sira-largeur-page) + 2 * var(--sira-esp-4));
+  margin-inline: auto;
+  padding-inline: var(--sira-esp-4);
+}
+.sira-conteneur--large {
+  max-width: calc(var(--sira-largeur-tableau) + 2 * var(--sira-esp-4));
+}
+.sira-page {
+  flex: 1;
+  padding-block: var(--sira-esp-8) var(--sira-esp-16);
+}
+.sira-page:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+.sira-evitement {
+  position: absolute;
+  left: var(--sira-esp-2);
+  top: var(--sira-esp-2);
+  z-index: 10;
+  padding: var(--sira-esp-2) var(--sira-esp-4);
+  color: var(--sira-texte);
+  background: var(--sira-fond);
+  transform: translateY(-200%);
+}
+.sira-evitement:focus {
+  transform: none;
+}
+
+/* ---------- Icône ---------- */
+
+/* L'hôte du composant ne doit pas rétrécir dans un bouton ou une ligne flexible. */
+sira-icone {
+  display: inline-flex;
+  flex: none;
+}
+.sira-icone {
+  display: inline-block;
+  flex: none;
+  width: 1.25rem;
+  height: 1.25rem;
+  vertical-align: -0.25em;
+}
+.sira-icone--grande {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+/* ---------- Bandeau (pleine largeur) ---------- */
+
+.sira-bandeau {
+  padding-block: var(--sira-esp-2);
+  font-size: var(--sira-texte-xs);
+  line-height: 1.45;
+  color: var(--sira-texte);
+  background: var(--sira-info-fond);
+  border-bottom: var(--sira-trait) solid var(--sira-info);
+}
+.sira-bandeau--attention {
+  background: var(--sira-alerte-fond);
+  border-color: var(--sira-alerte);
+}
+.sira-bandeau__contenu {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sira-esp-2);
+}
+.sira-bandeau .sira-icone {
+  margin-top: 0.1em;
+  width: 1rem;
+  height: 1rem;
+}
+
+/* ---------- En-tête ---------- */
+
+.sira-entete {
+  background: var(--sira-fond);
+  border-bottom: var(--sira-trait) solid var(--sira-bordure);
+}
+.sira-entete__barre {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sira-esp-2) var(--sira-esp-6);
+  padding-block: var(--sira-esp-3);
+}
+.sira-entete__marque {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sira-esp-3);
+  min-height: var(--sira-cible);
+  color: var(--sira-texte-fort);
+  text-decoration: none;
+}
+.sira-entete__marque:hover {
+  color: var(--sira-texte-fort);
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+}
+.sira-entete__signe {
+  flex: none;
+  width: 2.25rem;
+  height: 2.25rem;
+  color: var(--sira-action);
+}
+.sira-entete__signe--icone {
+  padding: 0.4rem;
+  color: var(--sira-sur-action);
+  background: var(--sira-action);
+  border-radius: var(--sira-rayon);
+}
+.sira-entete__signe-accent {
+  color: var(--sira-accent);
+}
+.sira-entete__textes {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.25;
+}
+.sira-entete__nom {
+  font-size: var(--sira-titre-s);
+  font-weight: var(--sira-graisse-forte);
+}
+.sira-entete__service {
+  font-size: var(--sira-texte-xs);
+  color: var(--sira-texte-secondaire);
+}
+.sira-entete__outils {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sira-esp-2) var(--sira-esp-4);
+}
+.sira-entete__utilisateur {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sira-esp-2);
+  font-weight: var(--sira-graisse-forte);
+}
+.sira-entete__nav {
+  border-top: var(--sira-trait) solid var(--sira-bordure);
+}
+.sira-entete__menu {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 var(--sira-esp-6);
+  margin-block: 0;
+  padding-block: 0;
+  list-style: none;
+}
+.sira-entete__menu li {
+  margin: 0;
+}
+.sira-entete__menu a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--sira-cible);
+  color: var(--sira-texte);
+  text-decoration: none;
+  border-bottom: 3px solid transparent;
+}
+.sira-entete__menu a:hover {
+  border-bottom-color: var(--sira-bordure-champ);
+}
+.sira-entete__menu a[aria-current='page'] {
+  font-weight: var(--sira-graisse-forte);
+  color: var(--sira-action);
+  border-bottom-color: var(--sira-action);
+}
+
+/* Variante « plein » : bandeau à la couleur du thème, pour les plateformes de service. */
+.sira-entete--plein {
+  border-bottom: 0;
+}
+.sira-entete--plein .sira-entete__haut {
+  color: var(--sira-sur-action);
+  background: var(--sira-action);
+}
+.sira-entete--plein .sira-entete__marque,
+.sira-entete--plein .sira-entete__marque:hover,
+.sira-entete--plein .sira-entete__service {
+  color: inherit;
+}
+.sira-entete--plein .sira-entete__signe--icone {
+  color: var(--sira-action);
+  background: var(--sira-sur-action);
+}
+.sira-entete--plein .sira-entete__outils .sira-bouton:not(.p-button) {
+  color: var(--sira-sur-action);
+  border-color: var(--sira-sur-action);
+  background: transparent;
+}
+.sira-entete--plein .sira-entete__outils .sira-bouton:not(.p-button):hover {
+  color: var(--sira-action);
+  background: var(--sira-sur-action);
+}
+.sira-entete--plein .sira-entete__nav {
+  border-top: 0;
+  border-bottom: var(--sira-trait) solid var(--sira-bordure);
+}
+
+/* ---------- Pied de page ---------- */
+
+.sira-pied {
+  padding-block: var(--sira-esp-6);
+  font-size: var(--sira-texte-xs);
+  line-height: 1.45;
+  color: var(--sira-texte-secondaire);
+  background: var(--sira-fond-alt);
+  border-top: var(--sira-trait) solid var(--sira-bordure);
+}
+.sira-pied__liens {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 var(--sira-esp-6);
+  max-width: none;
+  margin: 0 0 var(--sira-esp-2);
+  padding: 0;
+  list-style: none;
+}
+.sira-pied__liens li {
+  margin: 0;
+}
+.sira-pied__liens a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--sira-cible);
+  color: var(--sira-texte);
+}
+.sira-pied p {
+  margin: 0;
+}
+
+/* ---------- Fil d'Ariane ---------- */
+
+.sira-fil {
+  margin-bottom: var(--sira-esp-6);
+  font-size: var(--sira-texte-xs);
+}
+.sira-fil__liste {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sira-esp-1) var(--sira-esp-2);
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.sira-fil__liste li {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sira-esp-2);
+  margin: 0;
+}
+.sira-fil__liste .sira-icone {
+  width: 1rem;
+  height: 1rem;
+  color: var(--sira-texte-secondaire);
+}
+.sira-fil__liste a {
+  /* Cible de 24 px au moins (critère 2.5.8) sans alourdir la ligne. */
+  display: inline-block;
+  padding-block: var(--sira-esp-1);
+}
+.sira-fil__liste [aria-current='page'] {
+  color: var(--sira-texte-secondaire);
+}
+
+/* ---------- Bouton ---------- */
+
+.sira-bouton:not(.p-button) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sira-esp-2);
+  min-height: var(--sira-cible);
+  padding: var(--sira-esp-2) var(--sira-esp-6);
+  font: inherit;
+  font-weight: var(--sira-graisse-forte);
+  line-height: 1.25;
+  text-align: center;
+  text-decoration: none;
+  color: var(--sira-sur-action);
+  background: var(--sira-action);
+  border: var(--sira-trait-champ) solid var(--sira-action);
+  border-radius: var(--sira-rayon);
+  cursor: pointer;
+}
+.sira-bouton:not(.p-button):hover {
+  color: var(--sira-sur-action);
+  background: var(--sira-action-survol);
+  border-color: var(--sira-action-survol);
+}
+.sira-bouton--secondaire:not(.p-button) {
+  color: var(--sira-action);
+  background: var(--sira-fond);
+}
+.sira-bouton--danger:not(.p-button) {
+  background: var(--sira-erreur);
+  border-color: var(--sira-erreur);
+}
+.sira-bouton--danger:not(.p-button):hover {
+  background: var(--sira-erreur-survol);
+  border-color: var(--sira-erreur-survol);
+}
+/* Bouton discret : aspect de lien, cible de bouton. */
+.sira-bouton--discret:not(.p-button) {
+  padding-inline: var(--sira-esp-3);
+  font-weight: var(--sira-graisse);
+  color: var(--sira-lien);
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+  background: transparent;
+  border-color: transparent;
+}
+.sira-bouton--discret:not(.p-button):hover {
+  color: var(--sira-action-survol);
+  text-decoration-thickness: 2px;
+  background: var(--sira-selection);
+  border-color: transparent;
+}
+.sira-bouton:not(.p-button)[aria-disabled='true'] {
+  cursor: progress;
+  opacity: 0.75;
+}
+.sira-groupe-boutons {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sira-esp-3) var(--sira-esp-4);
+  margin-top: var(--sira-esp-6);
+}
+@media (max-width: 39.99rem) {
+  .sira-groupe-boutons {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+/* Deux décisions de même poids : même largeur, même style. */
+@media (min-width: 40rem) {
+  .sira-groupe-boutons--egaux {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* ---------- Lien ---------- */
+
+.sira-lien {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sira-esp-1);
+}
+.sira-lien--bloc {
+  min-height: var(--sira-cible);
+}
+
+/* ---------- Formulaire ---------- */
+
+.sira-champ {
+  max-width: 30rem;
+  margin-bottom: var(--sira-esp-6);
+}
+.sira-champ__libelle {
+  display: block;
+  margin-bottom: var(--sira-esp-1);
+  font-weight: var(--sira-graisse-forte);
+}
+.sira-champ__aide {
+  display: block;
+  margin: 0 0 var(--sira-esp-2);
+  color: var(--sira-texte-secondaire);
+}
+.sira-champ__erreur {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sira-esp-2);
+  margin: 0 0 var(--sira-esp-2);
+  font-weight: var(--sira-graisse-forte);
+  color: var(--sira-erreur);
+}
+.sira-champ__erreur .sira-icone {
+  margin-top: 0.1em;
+}
+.sira-champ--erreur {
+  padding-left: var(--sira-esp-4);
+  border-left: var(--sira-trait-alerte) solid var(--sira-erreur);
+}
+.sira-saisie:not(.p-inputtext) {
+  display: block;
+  width: 100%;
+  min-height: var(--sira-cible);
+  padding: var(--sira-esp-2) var(--sira-esp-3);
+  color: var(--sira-texte);
+  background: var(--sira-fond);
+  border: var(--sira-trait-champ) solid var(--sira-bordure-champ);
+  border-radius: var(--sira-rayon);
+}
+textarea.sira-saisie:not(.p-inputtext) {
+  min-height: 7.5rem;
+  resize: vertical;
+}
+select.sira-saisie:not(.p-inputtext) {
+  padding-right: var(--sira-esp-8);
+}
+.sira-saisie:not(.p-inputtext)[aria-invalid='true'] {
+  border-color: var(--sira-erreur);
+}
+.sira-saisie--courte:not(.p-inputtext) {
+  max-width: 12rem;
+}
+/* Choix d'un fichier : le bouton du navigateur prend l'allure d'un bouton secondaire. */
+.sira-saisie:not(.p-inputtext)[type='file'] {
+  padding: var(--sira-esp-2);
+  cursor: pointer;
+}
+.sira-saisie:not(.p-inputtext)[type='file']::file-selector-button {
+  margin-right: var(--sira-esp-3);
+  padding: var(--sira-esp-1) var(--sira-esp-3);
+  font: inherit;
+  font-weight: var(--sira-graisse-forte);
+  color: var(--sira-action);
+  background: var(--sira-fond);
+  border: var(--sira-trait-champ) solid var(--sira-action);
+  border-radius: var(--sira-rayon);
+  cursor: pointer;
+}
+
+.sira-groupe {
+  min-width: 0;
+  margin: 0 0 var(--sira-esp-6);
+  padding: 0;
+  border: 0;
+}
+.sira-groupe--erreur {
+  padding-left: var(--sira-esp-4);
+  border-left: var(--sira-trait-alerte) solid var(--sira-erreur);
+}
+.sira-groupe__legende {
+  margin-bottom: var(--sira-esp-2);
+  padding: 0;
+  font-size: var(--sira-titre-s);
+  font-weight: var(--sira-graisse-forte);
+  line-height: var(--sira-interligne-titre);
+}
+.sira-groupe .sira-champ:last-child {
+  margin-bottom: 0;
+}
+
+.sira-choix {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sira-esp-3);
+  min-height: var(--sira-cible);
+  padding-block: var(--sira-esp-2);
+}
+.sira-choix input {
+  flex: none;
+  width: 1.5rem;
+  height: 1.5rem;
+  margin: 0.1rem 0 0;
+  accent-color: var(--sira-action);
+}
+/* Une saisie verrouillée reste lisible : sa valeur vient d'une source qui fait foi. */
+.sira-saisie:not(.p-inputtext):disabled {
+  color: var(--sira-texte);
+  background: var(--sira-fond-alt);
+  border-color: var(--sira-bordure);
+  opacity: 1;
+  -webkit-text-fill-color: var(--sira-texte);
+}
+.sira-choix input:checked + label {
+  font-weight: var(--sira-graisse-forte);
+}
+.sira-choix input:disabled,
+.sira-choix input:disabled + label {
+  opacity: 1;
+  color: var(--sira-texte);
+}
+
+.sira-resume-erreurs {
+  margin-bottom: var(--sira-esp-8);
+  padding: var(--sira-esp-4);
+  border: var(--sira-trait-alerte) solid var(--sira-erreur);
+  border-radius: var(--sira-rayon);
+}
+.sira-resume-erreurs__titre {
+  margin: 0 0 var(--sira-esp-2);
+  font-size: var(--sira-titre-s);
+}
+.sira-resume-erreurs ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.sira-resume-erreurs a {
+  font-weight: var(--sira-graisse-forte);
+  color: var(--sira-erreur);
+}
+
+/* ---------- Alerte ---------- */
+
+.sira-alerte {
+  display: flex;
+  gap: var(--sira-esp-3);
+  padding: var(--sira-esp-4);
+  background: var(--sira-info-fond);
+  border-left: var(--sira-trait-alerte) solid var(--sira-info);
+}
+.sira-alerte > .sira-icone {
+  margin-top: 0.1em;
+  color: var(--sira-info);
+}
+.sira-alerte--succes {
+  background: var(--sira-succes-fond);
+  border-color: var(--sira-succes);
+}
+.sira-alerte--succes > .sira-icone {
+  color: var(--sira-succes);
+}
+.sira-alerte--attention {
+  background: var(--sira-alerte-fond);
+  border-color: var(--sira-alerte);
+}
+.sira-alerte--attention > .sira-icone {
+  color: var(--sira-alerte);
+}
+.sira-alerte--erreur {
+  background: var(--sira-erreur-fond);
+  border-color: var(--sira-erreur);
+}
+.sira-alerte--erreur > .sira-icone {
+  color: var(--sira-erreur);
+}
+.sira-alerte__corps {
+  min-width: 0;
+}
+.sira-alerte__titre {
+  margin: 0 0 var(--sira-esp-1);
+  font-weight: var(--sira-graisse-forte);
+}
+.sira-alerte__corps > :last-child {
+  margin-bottom: 0;
+}
+
+/* ---------- Carte ---------- */
+
+.sira-carte {
+  padding: var(--sira-esp-6);
+  background: var(--sira-fond);
+  border: var(--sira-trait) solid var(--sira-bordure);
+  border-radius: var(--sira-rayon);
+}
+.sira-carte--teintee {
+  background: var(--sira-fond-alt);
+}
+.sira-carte__entete {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sira-esp-2) var(--sira-esp-4);
+  margin-bottom: var(--sira-esp-3);
+}
+.sira-carte__titre {
+  margin: 0;
+  font-size: var(--sira-titre-s);
+  font-weight: var(--sira-graisse-forte);
+  line-height: var(--sira-interligne-titre);
+}
+.sira-carte__corps > :last-child {
+  margin-bottom: 0;
+}
+.sira-carte__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sira-esp-2) var(--sira-esp-6);
+  margin-top: var(--sira-esp-4);
+}
+.sira-carte__actions:empty {
+  display: none;
+}
+
+/* ---------- Fichier ---------- */
+
+.sira-fichier {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sira-esp-3);
+  max-width: 36rem;
+  padding: var(--sira-esp-4);
+  background: var(--sira-fond);
+  border: var(--sira-trait) solid var(--sira-bordure);
+  border-radius: var(--sira-rayon);
+}
+.sira-fichier > .sira-icone {
+  flex: none;
+  width: 2rem;
+  height: 2rem;
+  color: var(--sira-action);
+}
+.sira-fichier__corps {
+  flex: 1;
+  min-width: 0;
+}
+.sira-fichier__nom {
+  margin: 0;
+  font-weight: var(--sira-graisse-forte);
+  overflow-wrap: anywhere;
+}
+.sira-fichier__details {
+  margin: 0;
+  font-size: var(--sira-texte-xs);
+  line-height: 1.45;
+  color: var(--sira-texte-secondaire);
+}
+.sira-fichier__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sira-esp-2) var(--sira-esp-6);
+  margin-top: var(--sira-esp-2);
+}
+.sira-fichier__actions:empty {
+  display: none;
+}
+/* Une fiche peut porter le champ qui dépose la pièce. */
+.sira-fichier .sira-champ {
+  max-width: none;
+  margin-bottom: 0;
+}
+
+/* ---------- Étiquette d'état ---------- */
+
+.sira-etiquette {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sira-esp-1);
+  padding: 0.125rem var(--sira-esp-3) 0.125rem var(--sira-esp-2);
+  font-size: var(--sira-texte-xs);
+  font-weight: var(--sira-graisse-forte);
+  line-height: 1.45;
+  white-space: nowrap;
+  color: var(--sira-texte);
+  background: var(--sira-fond-alt);
+  border: var(--sira-trait) solid var(--sira-bordure-champ);
+  border-radius: var(--sira-rayon-pilule);
+}
+.sira-etiquette .sira-icone {
+  width: 1rem;
+  height: 1rem;
+}
+.sira-etiquette--succes {
+  color: var(--sira-succes);
+  background: var(--sira-succes-fond);
+  border-color: var(--sira-succes);
+}
+.sira-etiquette--erreur {
+  color: var(--sira-erreur);
+  background: var(--sira-erreur-fond);
+  border-color: var(--sira-erreur);
+}
+.sira-etiquette--attention {
+  color: var(--sira-alerte);
+  background: var(--sira-alerte-fond);
+  border-color: var(--sira-alerte);
+}
+.sira-etiquette--info {
+  color: var(--sira-info);
+  background: var(--sira-info-fond);
+  border-color: var(--sira-info);
+}
+
+/* ---------- Tableau adaptable ---------- */
+
+.sira-tableau {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+.sira-tableau caption {
+  margin-bottom: var(--sira-esp-3);
+  font-weight: var(--sira-graisse-forte);
+  text-align: left;
+}
+.sira-tableau th,
+.sira-tableau td {
+  padding: var(--sira-esp-3) var(--sira-esp-4) var(--sira-esp-3) 0;
+  vertical-align: top;
+  border-bottom: var(--sira-trait) solid var(--sira-bordure);
+}
+.sira-tableau th:last-child,
+.sira-tableau td:last-child {
+  padding-right: 0;
+}
+.sira-tableau thead th {
+  font-size: var(--sira-texte-xs);
+  font-weight: var(--sira-graisse-forte);
+  color: var(--sira-texte-secondaire);
+  white-space: nowrap;
+  border-bottom: var(--sira-trait-champ) solid var(--sira-texte);
+}
+.sira-tableau td {
+  font-variant-numeric: tabular-nums;
+}
+.sira-tableau__numerique {
+  text-align: right;
+}
+/* Sous 640 px, chaque ligne devient une carte et chaque cellule une paire libellé / valeur. */
+@media (max-width: 39.99rem) {
+  .sira-tableau,
+  .sira-tableau tbody,
+  .sira-tableau tr,
+  .sira-tableau td {
+    display: block;
+  }
+  .sira-tableau caption {
+    display: block;
+  }
+  .sira-tableau thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+  .sira-tableau tr {
+    margin-bottom: var(--sira-esp-4);
+    padding: var(--sira-esp-2) var(--sira-esp-4);
+    border: var(--sira-trait) solid var(--sira-bordure);
+    border-radius: var(--sira-rayon);
+  }
+  .sira-tableau td,
+  .sira-tableau td:last-child {
+    display: grid;
+    grid-template-columns: minmax(6rem, 2fr) 3fr;
+    gap: var(--sira-esp-3);
+    padding: var(--sira-esp-2) 0;
+    text-align: left;
+  }
+  .sira-tableau td:last-child {
+    border-bottom: 0;
+  }
+  .sira-tableau td::before {
+    content: attr(data-libelle);
+    font-size: var(--sira-texte-xs);
+    line-height: 1.7;
+    color: var(--sira-texte-secondaire);
+  }
+}
+
+/* ---------- Pagination ---------- */
+
+.sira-pagination {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: var(--sira-esp-2);
+  margin-top: var(--sira-esp-6);
+}
+.sira-pagination__suivant {
+  justify-self: end;
+}
+.sira-pagination__position {
+  margin: 0;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.sira-pagination .sira-bouton:not(.p-button) {
+  width: auto;
+  padding-inline: var(--sira-esp-2);
+}
+
+/* ---------- Indicateur d'étapes ---------- */
+
+.sira-etapes {
+  margin-bottom: var(--sira-esp-8);
+}
+.sira-etapes__position {
+  margin: 0;
+  font-size: var(--sira-texte-xs);
+  color: var(--sira-texte-secondaire);
+}
+.sira-etapes__titre {
+  margin: 0 0 var(--sira-esp-2);
+  font-size: var(--sira-titre-s);
+  font-weight: var(--sira-graisse-forte);
+  line-height: var(--sira-interligne-titre);
+}
+.sira-etapes__barre {
+  display: flex;
+  gap: var(--sira-esp-1);
+  margin-bottom: var(--sira-esp-2);
+}
+.sira-etapes__segment {
+  flex: 1;
+  height: 0.375rem;
+  background: var(--sira-bordure);
+}
+.sira-etapes__segment--fait {
+  background: var(--sira-action);
+}
+.sira-etapes__suivante {
+  margin: 0;
+  font-size: var(--sira-texte-xs);
+  color: var(--sira-texte-secondaire);
+}
+
+/* ---------- Fenêtre de dialogue ---------- */
+
+.sira-dialogue {
+  width: calc(100% - 2 * var(--sira-esp-4));
+  max-width: 34rem;
+  max-height: calc(100vh - 2 * var(--sira-esp-4));
+  padding: var(--sira-esp-6);
+  color: var(--sira-texte);
+  background: var(--sira-fond);
+  border: var(--sira-trait) solid var(--sira-bordure-champ);
+  border-radius: var(--sira-rayon);
+  box-shadow: 0 0.25rem 1rem rgb(27 31 35 / 12%);
+}
+.sira-dialogue::backdrop {
+  background: rgb(27 31 35 / 50%);
+}
+.sira-dialogue__titre {
+  margin: 0 0 var(--sira-esp-4);
+  font-size: var(--sira-titre-m);
+}
+.sira-dialogue__titre:focus {
+  outline: none;
+  box-shadow: none;
+}
+.sira-dialogue__corps > :last-child {
+  margin-bottom: 0;
+}
+
+/* ---------- État vide ---------- */
+
+.sira-etat-vide {
+  padding: var(--sira-esp-8) var(--sira-esp-6);
+  background: var(--sira-fond-alt);
+  border: var(--sira-trait) dashed var(--sira-bordure-champ);
+  border-radius: var(--sira-rayon);
+}
+.sira-etat-vide > .sira-icone {
+  margin-bottom: var(--sira-esp-3);
+  color: var(--sira-texte-secondaire);
+}
+.sira-etat-vide__titre {
+  margin: 0 0 var(--sira-esp-2);
+  font-size: var(--sira-titre-s);
+  font-weight: var(--sira-graisse-forte);
+  line-height: var(--sira-interligne-titre);
+}
+.sira-etat-vide__corps > :last-child {
+  margin-bottom: 0;
+}
+
+/* ---------- Squelette de chargement (sans animation) ---------- */
+
+.sira-squelette__ligne {
+  height: 1rem;
+  margin-bottom: var(--sira-esp-3);
+  background: var(--sira-bordure);
+  border-radius: var(--sira-rayon);
+}
+.sira-squelette__ligne:nth-child(3n + 1) {
+  width: 62%;
+}
+.sira-squelette__ligne:nth-child(3n + 2) {
+  width: 88%;
+}
+.sira-squelette__ligne:nth-child(3n) {
+  width: 74%;
+}
+
+/* ---------- Onglets ---------- */
+
+.sira-onglets__liste {
+  display: flex;
+  gap: var(--sira-esp-1);
+  overflow-x: auto;
+  /* L'anneau de focus déborde du bouton : on lui laisse sa place dans la zone défilante. */
+  padding: 6px 6px 0;
+  margin: -6px -6px 0;
+  border-bottom: var(--sira-trait) solid var(--sira-bordure-champ);
+}
+.sira-onglets__onglet {
+  flex: none;
+  min-height: var(--sira-cible);
+  padding: var(--sira-esp-2) var(--sira-esp-4);
+  color: var(--sira-texte);
+  background: var(--sira-fond-alt);
+  border: var(--sira-trait) solid var(--sira-bordure);
+  border-bottom: 0;
+  border-radius: var(--sira-rayon) var(--sira-rayon) 0 0;
+  cursor: pointer;
+}
+.sira-onglets__onglet:hover {
+  text-decoration: underline;
+}
+.sira-onglets__onglet[aria-selected='true'] {
+  font-weight: var(--sira-graisse-forte);
+  color: var(--sira-action);
+  background: var(--sira-fond);
+  border-color: var(--sira-bordure-champ);
+  box-shadow: inset 0 3px 0 var(--sira-action);
+}
+.sira-onglets__onglet[aria-selected='true']:focus-visible {
+  box-shadow: 0 0 0 6px var(--sira-focus-exterieur);
+}
+.sira-onglets__panneau {
+  padding-top: var(--sira-esp-6);
+}
+.sira-onglets__panneau > :last-child {
+  margin-bottom: 0;
+}
+
+/* ---------- Liste de synthèse (clé / valeur) ---------- */
+
+.sira-synthese {
+  margin: 0 0 var(--sira-esp-6);
+  border-top: var(--sira-trait) solid var(--sira-bordure);
+}
+.sira-synthese__ligne {
+  display: grid;
+  gap: var(--sira-esp-1) var(--sira-esp-4);
+  padding-block: var(--sira-esp-3);
+  border-bottom: var(--sira-trait) solid var(--sira-bordure);
+}
+.sira-synthese__cle {
+  font-weight: var(--sira-graisse-forte);
+}
+.sira-synthese__valeur,
+.sira-synthese__action {
+  min-width: 0;
+  margin: 0;
+}
+.sira-synthese__action:empty {
+  display: none;
+}
+@media (min-width: 40rem) {
+  .sira-synthese__ligne {
+    grid-template-columns: minmax(0, 2fr) minmax(0, 3fr) auto;
+  }
+  .sira-synthese__action {
+    text-align: right;
+  }
+}
+
+/* ---------- Code à comparer ---------- */
+
+.sira-code {
+  padding: var(--sira-esp-4);
+  text-align: center;
+  background: var(--sira-selection);
+  border: var(--sira-trait) solid var(--sira-action);
+  border-radius: var(--sira-rayon);
+}
+.sira-code__libelle {
+  margin: 0 0 var(--sira-esp-1);
+  font-size: var(--sira-texte-xs);
+  color: var(--sira-texte-secondaire);
+}
+.sira-code__chiffres {
+  display: flex;
+  justify-content: center;
+  gap: 0.6em;
+  margin: 0;
+  font-family: var(--sira-police-mono);
+  font-size: 2.25rem;
+  font-weight: var(--sira-graisse-forte);
+  line-height: 1.2;
+  letter-spacing: 0.12em;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Minuteur d'expiration ---------- */
+
+.sira-minuteur {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sira-esp-2);
+}
+.sira-minuteur .sira-icone {
+  margin-top: 0.1em;
+  color: var(--sira-texte-secondaire);
+}
+.sira-minuteur--expire {
+  font-weight: var(--sira-graisse-forte);
+  color: var(--sira-erreur);
+}
+.sira-minuteur--expire .sira-icone {
+  color: inherit;
+}
+
+/* ---------- Demande d'accès ---------- */
+
+.sira-demande > * + * {
+  margin-top: var(--sira-esp-6);
+}
+.sira-demande__demandeur {
+  display: flex;
+  gap: var(--sira-esp-3);
+  padding: var(--sira-esp-4);
+  background: var(--sira-fond-alt);
+  border: var(--sira-trait) solid var(--sira-bordure);
+  border-radius: var(--sira-rayon);
+}
+.sira-demande__demandeur > .sira-icone {
+  margin-top: 0.15em;
+}
+.sira-demande__demandeur p {
+  margin: 0;
+}
+.sira-demande__nom {
+  font-size: var(--sira-titre-s);
+  font-weight: var(--sira-graisse-forte);
+  line-height: var(--sira-interligne-titre);
+}
+.sira-demande__enregistre {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sira-esp-1);
+  margin-top: var(--sira-esp-1);
+  font-size: var(--sira-texte-xs);
+  color: var(--sira-succes);
+}
+.sira-demande__titre {
+  margin-bottom: var(--sira-esp-2);
+  font-size: var(--sira-titre-s);
+  font-weight: var(--sira-graisse-forte);
+  line-height: var(--sira-interligne-titre);
+}
+.sira-demande__section > p:last-child {
+  margin-bottom: 0;
+}
+.sira-demande__informations {
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: var(--sira-trait) solid var(--sira-bordure);
+}
+.sira-demande__information {
+  margin: 0;
+  padding-block: var(--sira-esp-3);
+  border-bottom: var(--sira-trait) solid var(--sira-bordure);
+}
+.sira-demande__information p {
+  margin: 0;
+}
+.sira-demande__libelle {
+  font-weight: var(--sira-graisse-forte);
+}
+.sira-demande__forme {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sira-esp-2);
+}
+.sira-demande__forme .sira-icone {
+  margin-top: 0.1em;
+  color: var(--sira-action);
+}
+.sira-demande__source {
+  font-size: var(--sira-texte-xs);
+  line-height: 1.45;
+  color: var(--sira-texte-secondaire);
+}
+.sira-demande__verification > * + * {
+  margin-top: var(--sira-esp-3);
+}
+.sira-demande .sira-groupe-boutons {
+  margin-top: var(--sira-esp-8);
+}
+.sira-demande__refus {
+  margin-top: var(--sira-esp-4);
+  color: var(--sira-texte-secondaire);
+}

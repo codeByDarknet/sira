@@ -1,0 +1,98 @@
+<div class="te-scene">
+  <div class="te-explication">
+    <h1>Messages reçus</h1>
+    <p class="sira-chapeau">Dans la réalité, ce code arrive par SMS.</p>
+    <p class="sira-secondaire">
+      Choisissez la personne : son téléphone s’affiche et se met à jour tout seul, toutes les trois
+      secondes.
+    </p>
+  </div>
+
+  <div class="te-telephone">
+    <div class="te-ecran">
+      <div class="te-ilot" aria-hidden="true"></div>
+      <div class="te-statut" aria-hidden="true">
+        <span>{{ heure() }}</span>
+        <span class="te-statut__icones">
+          <sira-icone nom="signal" />
+          <sira-icone nom="wifi" />
+          <sira-icone nom="battery" />
+        </span>
+      </div>
+
+      <div class="te-barre-app">
+        <span class="te-barre-app__avatar" aria-hidden="true">S</span>
+        <span class="te-barre-app__nom">
+          <strong>Sira</strong>
+          <span>Messages officiels</span>
+        </span>
+      </div>
+
+      <div #fil class="te-fil" aria-live="polite">
+        <h2 class="te-jour">Messages de {{ destinataire().nom }}</h2>
+
+        @if (illisible()) {
+          <sira-alerte type="erreur" titre="Messages illisibles pour le moment">
+            <p>Nouvel essai dans quelques secondes.</p>
+          </sira-alerte>
+        }
+
+        @if (messages(); as recus) {
+          @if (recus.length) {
+            @for (message of chronologie(); track message.id) {
+              <p class="te-bulle">
+                {{ message.texte }}
+                <span class="te-bulle__heure">{{ message.recu_le | siraDate }}</span>
+              </p>
+            }
+          } @else {
+            <div class="te-vide">
+              <sira-icone nom="message-square" />
+              <p>Aucun message pour le moment.</p>
+            </div>
+          }
+
+          @if (dernierCode(); as message) {
+            <div class="te-code">
+              <p class="te-code__libelle">Dernier code reçu</p>
+              <sira-code libelle="Code de connexion" [code]="message.code ?? ''" />
+              <p class="te-code__heure">Reçu le {{ message.recu_le | siraDate }}.</p>
+              <button siraBouton type="button" (click)="copier(message)">
+                <sira-icone nom="copy" />
+                Copier le code
+              </button>
+              @if (copie()?.id === message.id) {
+                <p class="te-code__heure">
+                  {{ copie()?.faite ? 'Code copié.' : 'Copie impossible : recopiez le code.' }}
+                </p>
+              }
+            </div>
+          }
+        } @else if (!illisible()) {
+          <sira-squelette [lignes]="4" libelle="Chargement des messages" />
+        }
+      </div>
+
+      <div class="te-saisie" aria-hidden="true">
+        <span class="te-saisie__champ">Message</span>
+        <span class="te-saisie__envoi"><sira-icone nom="send" /></span>
+      </div>
+      <div class="te-indicateur" aria-hidden="true"></div>
+    </div>
+  </div>
+
+  <div class="te-choix">
+    <sira-carte titre="Changer de téléphone" [niveauTitre]="2">
+      <sira-champ
+        libelle="Téléphone de"
+        [aide]="'Identifiant unique : ' + destinataire().identifiant"
+      >
+        <select #choix siraSaisie name="destinataire" (change)="choisir(choix.value)">
+          @for (citoyen of citoyens; track citoyen.identifiant) {
+            <option [value]="citoyen.identifiant">{{ citoyen.nom }}</option>
+          }
+        </select>
+      </sira-champ>
+    </sira-carte>
+  </div>
+</div>

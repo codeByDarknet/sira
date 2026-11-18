@@ -1,0 +1,24 @@
+# Raccordement du « registre d'une autre équipe » (docs/brancher-un-registre.md). C'est le seul
+# fichier écrit côté Sira : le registre, lui, n'est pas modifié.
+
+adresse: http://registre-etranger:8080
+
+fiche:
+  # Autre forme d'URL : l'identifiant passe en paramètre de requête.
+  chemin: /registry/v2/citizens/lookup?nin={identifiant}
+  # La personne est enveloppée : on ne lit que ce nœud.
+  racine: /data/citizen
+
+# Pas de document délivré par ce registre.
+
+authentification:
+  type: CLE_API
+  en_tete: X-Api-Key
+  # Monté depuis le volume des secrets, jamais dans le dépôt.
+  fichier: /run/sira/secrets/cle-api
+
+# Noms employés par les questions → emplacement dans la réponse de l'autre équipe.
+correspondance:
+  nom: /name/family
+  prenoms: name.given[*]
+  date_naissance: /birth/date

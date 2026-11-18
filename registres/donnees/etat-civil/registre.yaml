@@ -1,0 +1,37 @@
+# Description du registre simulé : ses champs (ordre d’affichage, type, ce qu’un agent peut
+# corriger) et les documents qu’il délivre. Lue par registres/serveur au démarrage.
+# Types : TEXTE, DATE (AAAA-MM-JJ), NOMBRE, BOOLEEN, CHOIX.
+sira:
+  registre:
+    code: etat-civil
+    nom: État civil
+    organisme: Direction de l’état civil 
+    champs:
+      - { nom: identifiant_unique, libelle: Identifiant unique, type: TEXTE }
+      - { nom: nom, libelle: Nom, type: TEXTE, modifiable: true }
+      - { nom: prenoms, libelle: Prénoms, type: TEXTE, modifiable: true }
+      - { nom: date_naissance, libelle: Date de naissance, type: DATE, modifiable: true }
+      - { nom: sexe, libelle: Sexe, type: CHOIX, choix: { F: Féminin, M: Masculin } }
+      - { nom: lieu_naissance, libelle: Lieu de naissance, type: TEXTE, modifiable: true }
+      - { nom: province_naissance, libelle: Province de naissance, type: TEXTE, facultatif: true }
+      - { nom: pays_naissance, libelle: Pays de naissance, type: TEXTE }
+      - { nom: nom_pere, libelle: Nom du père, type: TEXTE }
+      - { nom: nom_mere, libelle: Nom de la mère, type: TEXTE }
+      - nom: type_acte
+        libelle: Nature de l’acte
+        type: CHOIX
+        choix: { ACTE_NAISSANCE: Acte de naissance, JUGEMENT_SUPPLETIF: Jugement supplétif }
+      - { nom: numero_acte, libelle: Numéro de l’acte de naissance, type: TEXTE }
+    documents:
+      extrait-naissance:
+        titre: Extrait d’acte de naissance
+        champs: [numero_acte, type_acte, nom, prenoms, sexe, date_naissance, lieu_naissance,
+                 province_naissance, pays_naissance, nom_pere, nom_mere]
+      copie-integrale-naissance:
+        titre: Copie intégrale d’acte de naissance
+        champs: [numero_acte, type_acte, nom, prenoms, sexe, date_naissance, lieu_naissance,
+                 province_naissance, pays_naissance, nom_pere, nom_mere, identifiant_unique]
+      fiche-individuelle:
+        titre: Fiche individuelle d’état civil
+        champs: [identifiant_unique, nom, prenoms, sexe, date_naissance, lieu_naissance,
+                 province_naissance, pays_naissance]

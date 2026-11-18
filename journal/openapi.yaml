@@ -1,0 +1,517 @@
+openapi: 3.1.0
+info:
+  title: Sira — Journal
+  version: 0.1.0
+  summary: Historique chaîné des accès, lu par le citoyen et par l'administration.
+  description: |
+    Le journal est une bibliothèque assemblée dans le processus de la passerelle : ses routes
+    sont servies par `https://passerelle:8443`, sous les chaînes de sécurité de la passerelle.
+
+    - Le **citoyen** lit ses propres lignes et conteste un accès (`/v1/citoyen/journal`). Il passe
+      toujours par le serveur de l'espace citoyen (voir `espace-usager/openapi.yaml`).
+    - L'**administration** lit tout le journal, sans désignation directe du citoyen (pseudonyme de
+      journal tronqué à 8 caractères), vérifie la chaîne de hachage et répond aux signalements.
+
+    Conventions : JSON en `snake_case`, dates ISO 8601 UTC, identifiants UUID, listes paginées
+    (`page` de 1 à 1 000 000, `taille` de 1 à 100), erreurs RFC 9457 en
+    `application/problem+json`. Une erreur interne rend `500` avec une `reference` à citer.
+  license:
+    name: Licence du dépôt Sira
+servers:
+  - url: https://passerelle:8443
+    description: Passerelle (mTLS obligatoire)
+tags:
+  - name: Citoyen
+    description: Identité `urn:sira:socle:espace-citoyen` et jeton du royaume `sira-citoyens`.
+  - name: Administration
+    description: |
+      Identité `urn:sira:socle:console` et jeton du royaume `sira-socle`. Lecture : rôles
+      `instructeur`, `autorite`, `auditeur`. Réponse à un signalement : `instructeur` ou
+      `autorite`.
+paths:
+  /v1/citoyen/journal:
+    get:
+      tags: [Citoyen]
+      operationId: lireMonJournal
+      summary: Qui a consulté quoi, quand, pourquoi, avec quel résultat
+      description: Les lignes du citoyen du jeton, la plus récente d'abord. Ni `pseudonyme` ni `acteur` ne sont rendus.
+      security:
+        - certificatMembre: []
+          jetonCitoyen: []
+      parameters:
+        - name: type
+          in: query
+          description: 'Filtre sur le type de ligne (vide ou absent : tous).'
+          schema: {type: string, maxLength: 32}
+        - name: service
+          in: query
+          description: Filtre sur le code du service.
+          schema: {type: string, maxLength: 64}
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Taille'
+      responses:
+        '200':
+          description: Page de lignes.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/PageDeLignes'}
+              example:
+                elements:
+                  - id: 0b7c2f1e-5a3d-4e8b-9c61-2d4f8a6e1b03
+                    numero: 1284
+                    horodatage: '2026-11-16T09:42:17.512Z'
+                    type: CONSULTATION
+                    resultat: REUSSI
+                    pseudonyme: null
+                    service: {code: concours, nom: Concours directs 2026}
+                    registre: {code: etat-civil, nom: État civil}
+                    jeu: {code: etat-civil.majeur, libelle: Vous êtes majeur, niveau: STATUT}
+                    niveau: STATUT
+                    demarche: {code: concours-direct, libelle: Inscription à un concours direct}
+                    finalite: Vérifier que vous remplissez les conditions du concours.
+                    canal: CODE
+                    id_echange: 6f1d0c9a-27b4-4a5e-8f3c-91e2b7d4a650
+                    detail: null
+                    acteur: null
+                    objet: null
+                    signalee: false
+                page: 1
+                taille: 20
+                total: 1
+        '400': {$ref: '#/components/responses/RequeteInvalide'}
+        '401': {$ref: '#/components/responses/NonAuthentifie'}
+        '403': {$ref: '#/components/responses/AccesRefuse'}
+  /v1/citoyen/journal/{id}/signalement:
+    post:
+      tags: [Citoyen]
+      operationId: signalerUnAcces
+      summary: Contester un accès lu dans son historique
+      description: Une ligne ne se signale qu'une fois. Le signalement est lui-même journalisé (type `SIGNALEMENT`).
+      security:
+        - certificatMembre: []
+          jetonCitoyen: []
+      parameters:
+        - $ref: '#/components/parameters/IdLigne'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/MotifDeSignalement'}
+            example:
+              motif: Je n'ai fait aucune démarche auprès de ce service ce jour-là.
+      responses:
+        '413': {$ref: '#/components/responses/CorpsTropVolumineux'}
+        '201':
+          description: Signalement enregistré.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Recu'}
+              example:
+                id: 4c8e2a17-9b3f-4d61-a0e5-7f2c9d1b8e44
+                cree_le: '2026-11-16T10:03:55.201Z'
+        '400': {$ref: '#/components/responses/RequeteInvalide'}
+        '401': {$ref: '#/components/responses/NonAuthentifie'}
+        '403': {$ref: '#/components/responses/AccesRefuse'}
+        '404':
+          description: Cette ligne n'existe pas ou n'est pas une ligne de ce citoyen (`urn:sira:erreur:introuvable`).
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/Probleme'}
+        '409':
+          description: Ligne déjà signalée (`urn:sira:erreur:conflit`, code `CONFLIT`).
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/Probleme'}
+              example:
+                type: urn:sira:erreur:conflit
+                title: Conflit avec l'état actuel
+                status: 409
+                detail: Vous avez déjà signalé cet accès.
+                code: CONFLIT
+  /v1/admin/journal:
+    get:
+      tags: [Administration]
+      operationId: lireLeJournal
+      summary: Lire tout le journal
+      description: Lignes sans désignation directe du citoyen ; `pseudonyme` est tronqué à 8 caractères.
+      security:
+        - certificatMembre: []
+          jetonSocle: []
+      parameters:
+        - name: type
+          in: query
+          schema: {type: string, maxLength: 32}
+        - name: service
+          in: query
+          schema: {type: string, maxLength: 64}
+        - name: registre
+          in: query
+          schema: {type: string, maxLength: 64}
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Taille'
+      responses:
+        '200':
+          description: Page de lignes.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/PageDeLignes'}
+              example:
+                elements:
+                  - id: 9a3e5b71-0c2d-4f86-b4a9-e1d7c3f05b28
+                    numero: 1290
+                    horodatage: '2026-11-16T11:15:02.004Z'
+                    type: ADMINISTRATION
+                    resultat: REUSSI
+                    pseudonyme: null
+                    service: null
+                    registre: null
+                    jeu: null
+                    niveau: null
+                    demarche: null
+                    finalite: null
+                    canal: null
+                    id_echange: null
+                    detail: APPROBATION
+                    acteur: autorite.demo
+                    objet: habilitation:2d9b6e04-7c1a-4f3e-8b52-a6c0e9f17d38
+                    signalee: false
+                page: 1
+                taille: 20
+                total: 1
+        '400': {$ref: '#/components/responses/RequeteInvalide'}
+        '401': {$ref: '#/components/responses/NonAuthentifie'}
+        '403': {$ref: '#/components/responses/AccesRefuse'}
+  /v1/admin/journal/verification:
+    get:
+      tags: [Administration]
+      operationId: verifierLeJournal
+      summary: Vérifier la chaîne de hachage et le dernier point de contrôle signé
+      security:
+        - certificatMembre: []
+          jetonSocle: []
+      responses:
+        '200':
+          description: Résultat de la vérification.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Verification'}
+              example:
+                valide: true
+                lignes: 1290
+                dernier_hachage: 3f9c0a7e51b2d8c46e0f1a9b7d3c5e2f8a6b4d0c1e9f7a5b3d2c8e6f4a1b0c9d
+                dernier_point_de_controle:
+                  horodatage: '2026-11-16T11:00:00Z'
+                  ligne: 1288
+                  jws: eyJhbGciOiJFUzI1NiJ9.eyJsaWduZSI6MTI4OH0.c2lnbmF0dXJlLWRlLWRlbW9uc3RyYXRpb24
+                premiere_rupture: null
+        '401': {$ref: '#/components/responses/NonAuthentifie'}
+        '403': {$ref: '#/components/responses/AccesRefuse'}
+  /v1/admin/signalements:
+    get:
+      tags: [Administration]
+      operationId: listerLesSignalements
+      summary: Les signalements des citoyens, les plus récents d'abord
+      security:
+        - certificatMembre: []
+          jetonSocle: []
+      parameters:
+        - name: etat
+          in: query
+          description: '`A_TRAITER`, `TRAITE`, ou vide/absent pour tous.'
+          schema: {type: string, enum: ['', A_TRAITER, TRAITE]}
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Taille'
+      responses:
+        '200':
+          description: Page de signalements.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PageCommune'
+                  - type: object
+                    properties:
+                      elements:
+                        type: array
+                        items: {$ref: '#/components/schemas/Signalement'}
+              example:
+                elements:
+                  - id: 4c8e2a17-9b3f-4d61-a0e5-7f2c9d1b8e44
+                    ligne:
+                      id: 0b7c2f1e-5a3d-4e8b-9c61-2d4f8a6e1b03
+                      numero: 1284
+                      horodatage: '2026-11-16T09:42:17.512Z'
+                      type: CONSULTATION
+                      resultat: REUSSI
+                      pseudonyme: 7QhK2xWb
+                      service: {code: concours, nom: Concours directs 2026}
+                      registre: {code: etat-civil, nom: État civil}
+                      jeu: {code: etat-civil.majeur, libelle: Vous êtes majeur, niveau: STATUT}
+                      niveau: STATUT
+                      demarche: {code: concours-direct, libelle: Inscription à un concours direct}
+                      finalite: Vérifier que vous remplissez les conditions du concours.
+                      canal: CODE
+                      id_echange: 6f1d0c9a-27b4-4a5e-8f3c-91e2b7d4a650
+                      detail: null
+                      acteur: null
+                      objet: null
+                      signalee: true
+                    motif: Je n'ai fait aucune démarche auprès de ce service ce jour-là.
+                    cree_le: '2026-11-16T10:03:55.201Z'
+                    reponse: null
+                    traite_par: null
+                    traite_le: null
+                page: 1
+                taille: 20
+                total: 1
+        '400': {$ref: '#/components/responses/RequeteInvalide'}
+        '401': {$ref: '#/components/responses/NonAuthentifie'}
+        '403': {$ref: '#/components/responses/AccesRefuse'}
+  /v1/admin/signalements/{id}/traitement:
+    post:
+      tags: [Administration]
+      operationId: repondreAUnSignalement
+      summary: Répondre à un signalement (rôles `instructeur` ou `autorite`)
+      security:
+        - certificatMembre: []
+          jetonSocle: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reponse]
+              properties:
+                reponse: {type: string, minLength: 10, maxLength: 1000}
+            example:
+              reponse: L'accès correspond à votre inscription du 16 novembre ; aucune anomalie.
+      responses:
+        '413': {$ref: '#/components/responses/CorpsTropVolumineux'}
+        '204':
+          description: Réponse enregistrée et journalisée (`ADMINISTRATION`, détail `TRAITEMENT`).
+        '400': {$ref: '#/components/responses/RequeteInvalide'}
+        '401': {$ref: '#/components/responses/NonAuthentifie'}
+        '403': {$ref: '#/components/responses/AccesRefuse'}
+        '404':
+          description: Signalement inconnu (`urn:sira:erreur:introuvable`).
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/Probleme'}
+        '409':
+          description: Ce signalement a déjà reçu une réponse (`urn:sira:erreur:conflit`).
+          content:
+            application/problem+json:
+              schema: {$ref: '#/components/schemas/Probleme'}
+components:
+  securitySchemes:
+    certificatMembre:
+      type: mutualTLS
+      description: |
+        Certificat client émis par l'autorité Sira. L'identité du membre est l'URI du SAN
+        (`urn:sira:socle:espace-citoyen` pour `/v1/citoyen/**`, `urn:sira:socle:console` pour
+        `/v1/admin/**`) ; toute autre identité reçoit `403`.
+    jetonCitoyen:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        Jeton du royaume `sira-citoyens` (émetteur exact, audience de la passerelle, signature
+        RS256, PS256 ou ES256), lié au certificat du serveur qui le relaie. L'identifiant unique du
+        citoyen vient de la revendication `iue`, jamais d'un paramètre.
+    jetonSocle:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Jeton du royaume `sira-socle`, lié au certificat de la console ; les rôles du royaume donnent les droits.
+  parameters:
+    Page:
+      name: page
+      in: query
+      schema: {type: integer, minimum: 1, maximum: 1000000, default: 1}
+    Taille:
+      name: taille
+      in: query
+      schema: {type: integer, minimum: 1, maximum: 100, default: 20}
+    IdLigne:
+      name: id
+      in: path
+      required: true
+      description: Identifiant de la ligne du journal.
+      schema: {type: string, format: uuid}
+  responses:
+    CorpsTropVolumineux:
+      description: Corps au-delà de la borne `sira.http.taille-corps-max` (256 Kio par défaut), refusé avant toute lecture (`urn:sira:erreur:corps-trop-volumineux`).
+      content:
+        application/problem+json:
+          schema: {$ref: '#/components/schemas/Probleme'}
+          example: {type: 'urn:sira:erreur:corps-trop-volumineux', title: Corps trop volumineux, status: 413}
+    RequeteInvalide:
+      description: Paramètre ou corps refusé (`urn:sira:erreur:requete-invalide`, code `VALIDATION` et liste `erreurs` pour un corps).
+      content:
+        application/problem+json:
+          schema: {$ref: '#/components/schemas/Probleme'}
+          example:
+            type: urn:sira:erreur:requete-invalide
+            title: Requête invalide
+            status: 400
+            code: VALIDATION
+            erreurs:
+              - {champ: motif, message: La longueur de ce champ n'est pas admise.}
+    NonAuthentifie:
+      description: Jeton absent ou refusé (`urn:sira:erreur:non-authentifie`).
+      content:
+        application/problem+json:
+          schema: {$ref: '#/components/schemas/Probleme'}
+          example: {type: 'urn:sira:erreur:non-authentifie', title: Authentification requise, status: 401}
+    AccesRefuse:
+      description: Certificat d'un autre membre, ou rôle insuffisant (`urn:sira:erreur:acces-refuse`).
+      content:
+        application/problem+json:
+          schema: {$ref: '#/components/schemas/Probleme'}
+          example: {type: 'urn:sira:erreur:acces-refuse', title: Accès refusé, status: 403}
+  schemas:
+    Probleme:
+      type: object
+      description: Problème RFC 9457. `code` et `erreurs` ne sont présents que lorsqu'ils s'appliquent.
+      required: [type, title, status]
+      additionalProperties: false
+      properties:
+        type: {type: string, pattern: '^urn:sira:erreur:[a-z0-9-]+$'}
+        title: {type: string}
+        status: {type: integer, minimum: 400, maximum: 599}
+        detail: {type: [string, 'null']}
+        instance: {type: [string, 'null']}
+        code: {type: string, pattern: '^[A-Z0-9_]+$'}
+        erreurs:
+          type: array
+          items:
+            type: object
+            required: [champ]
+            additionalProperties: false
+            properties:
+              champ: {type: string}
+              message: {type: string}
+              regle: {type: string}
+        reference: {type: string, description: Référence à citer pour une erreur interne (500).}
+    PageCommune:
+      type: object
+      required: [elements, page, taille, total]
+      additionalProperties: false
+      properties:
+        elements: {type: array}
+        page: {type: integer, minimum: 1}
+        taille: {type: integer, minimum: 1, maximum: 100}
+        total: {type: integer, minimum: 0}
+    PageDeLignes:
+      allOf:
+        - $ref: '#/components/schemas/PageCommune'
+        - type: object
+          properties:
+            elements:
+              type: array
+              items: {$ref: '#/components/schemas/Ligne'}
+    Reference:
+      type: [object, 'null']
+      required: [code, nom]
+      additionalProperties: false
+      properties:
+        code: {type: string}
+        nom: {type: string}
+    Ligne:
+      type: object
+      description: Une ligne du journal. Elle ne porte ni valeur de registre, ni identifiant unique.
+      required: [id, numero, horodatage, type, resultat, pseudonyme, service, registre, jeu, niveau, demarche, finalite, canal, id_echange, detail, acteur, objet, signalee]
+      additionalProperties: false
+      properties:
+        id: {type: string, format: uuid}
+        numero: {type: integer, minimum: 1}
+        horodatage: {type: string, format: date-time}
+        type: {$ref: '#/components/schemas/TypeLigne'}
+        resultat:
+          type: string
+          enum: [REUSSI, REFUSE, ECHEC, EN_ATTENTE]
+        pseudonyme:
+          type: [string, 'null']
+          maxLength: 8
+          description: Début du pseudonyme de journal, pour l'administration seulement ; toujours `null` pour le citoyen.
+        service: {$ref: '#/components/schemas/Reference'}
+        registre: {$ref: '#/components/schemas/Reference'}
+        jeu:
+          type: [object, 'null']
+          required: [code, libelle, niveau]
+          additionalProperties: false
+          properties:
+            code: {type: string}
+            libelle: {type: [string, 'null']}
+            niveau: {type: [string, 'null']}
+        niveau: {type: [string, 'null'], enum: [STATUT, CHAMPS, DOCUMENT, null]}
+        demarche:
+          type: [object, 'null']
+          required: [code, libelle]
+          additionalProperties: false
+          properties:
+            code: {type: string}
+            libelle: {type: [string, 'null']}
+        finalite: {type: [string, 'null']}
+        canal: {type: [string, 'null']}
+        id_echange: {type: [string, 'null']}
+        detail: {type: [string, 'null']}
+        acteur:
+          type: [string, 'null']
+          description: Nom de l'administrateur, pour l'administration seulement.
+        objet:
+          type: [string, 'null']
+          description: Objet touché quand ce n'est pas un jeu, par exemple `membre:concours`.
+        signalee: {type: boolean}
+    TypeLigne:
+      type: string
+      enum: [DEMANDE, ACCORD, REFUS, CONSULTATION, ECHEC, REUTILISATION, RETRAIT, SIGNALEMENT, ADMINISTRATION]
+    Recu:
+      type: object
+      required: [id, cree_le]
+      additionalProperties: false
+      properties:
+        id: {type: string, format: uuid}
+        cree_le: {type: string, format: date-time}
+    Signalement:
+      type: object
+      required: [id, ligne, motif, cree_le, reponse, traite_par, traite_le]
+      additionalProperties: false
+      properties:
+        id: {type: string, format: uuid}
+        ligne: {$ref: '#/components/schemas/Ligne'}
+        motif: {type: string}
+        cree_le: {type: string, format: date-time}
+        reponse: {type: [string, 'null']}
+        traite_par: {type: [string, 'null']}
+        traite_le: {type: [string, 'null'], format: date-time}
+    MotifDeSignalement:
+      type: object
+      required: [motif]
+      properties:
+        motif: {type: string, minLength: 10, maxLength: 500}
+    Verification:
+      type: object
+      required: [valide, lignes, dernier_hachage, dernier_point_de_controle, premiere_rupture]
+      additionalProperties: false
+      properties:
+        valide: {type: boolean}
+        lignes: {type: integer, minimum: 0}
+        dernier_hachage: {type: [string, 'null'], description: Hachage SHA-256 de la dernière ligne, en hexadécimal.}
+        dernier_point_de_controle:
+          type: [object, 'null']
+          required: [horodatage, ligne, jws]
+          additionalProperties: false
+          properties:
+            horodatage: {type: string, format: date-time}
+            ligne: {type: integer}
+            jws: {type: string, description: JWS compact signé par le cachet de la passerelle.}
+        premiere_rupture:
+          type: [integer, 'null']
+          description: Numéro de la première ligne dont le chaînage est rompu, sinon `null`.

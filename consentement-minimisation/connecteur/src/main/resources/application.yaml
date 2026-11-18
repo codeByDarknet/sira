@@ -1,0 +1,14 @@
+spring:
+  application:
+    name: connecteur
+  datasource:
+    hikari:
+      maximum-pool-size: 5
+  flyway:
+    # Le journal local ne se vide jamais.
+    clean-disabled: true
+
+# Un même binaire sert tous les registres. Ce qui change vient de l'environnement :
+#   SIRA_CONNECTEUR_REGISTRE_CODE, SIRA_CONNECTEUR_REGISTRE_URL, SIRA_CONNECTEUR_POLITIQUE,
+#   SPRING_DATASOURCE_URL, SPRING_DATASOURCE_USERNAME, SPRING_DATASOURCE_PASSWORD.
+# Voir docs/composants/connecteur.md.

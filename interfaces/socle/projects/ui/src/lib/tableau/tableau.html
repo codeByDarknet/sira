@@ -1,0 +1,154 @@
+<p-table
+  [value]="$any(affichees())"
+  [lazy]="serveur()"
+  [totalRecords]="serveur() ? (total() ?? 0) : visibles().length"
+  [class.sira-tableau--recharge]="chargement() && !squelette()"
+  [attr.aria-busy]="chargement()"
+  [paginator]="(serveur() ? (total() ?? 0) : visibles().length) > parPage()"
+  [rows]="parPage()"
+  [first]="premiereLigne()"
+  (firstChange)="premier.set($event)"
+  (onLazyLoad)="chargerPage($event)"
+  [rowsPerPageOptions]="[10, 20, 50]"
+  [showCurrentPageReport]="true"
+  currentPageReportTemplate="{first} à {last} sur {totalRecords}"
+  [rowHover]="true"
+  sortMode="single"
+  tableStyleClass="sira-tableau"
+  paginatorStyleClass="sira-tableau__pagination"
+>
+  <ng-template #caption>
+    <div class="sira-tableau__entete">
+      <span class="sira-masque">{{ legende() }}</span>
+      <div
+        class="sira-tableau__outils"
+        role="search"
+        [attr.aria-label]="'Rechercher : ' + legende()"
+      >
+        @if (outils()) {
+          <p-iconfield class="sira-tableau__recherche">
+            <p-inputicon><sira-icone nom="search" /></p-inputicon>
+            <input
+              pInputText
+              type="search"
+              autocomplete="off"
+              placeholder="Rechercher…"
+              [attr.aria-label]="'Rechercher dans ' + legende()"
+              [id]="prefixe + '-recherche'"
+              [ngModel]="recherche()"
+              (ngModelChange)="chercher($event)"
+            />
+          </p-iconfield>
+          @for (filtre of filtres(); track filtre.cle) {
+            <p-select
+              class="sira-tableau__filtre"
+              [options]="filtre.options"
+              optionLabel="libelle"
+              optionValue="valeur"
+              [showClear]="true"
+              [placeholder]="filtre.libelle"
+              [ariaLabel]="'Filtrer par ' + filtre.libelle"
+              appendTo="body"
+              [ngModel]="choix()[filtre.cle] ?? null"
+              (ngModelChange)="choisir(filtre.cle, $event ?? null)"
+            />
+          }
+          @if (filtreActif() && !serveur()) {
+            <button
+              type="button"
+              class="sira-action"
+              aria-label="Effacer la recherche et les filtres"
+              title="Effacer la recherche et les filtres"
+              (click)="effacer()"
+            >
+              <sira-icone nom="x" />
+            </button>
+          }
+        }
+        <ng-content select="[tableau-filtres]" />
+        <span class="sira-tableau__espace"></span>
+        <ng-content select="[tableau-actions]" />
+      </div>
+    </div>
+  </ng-template>
+  <ng-template #header>
+    <tr>
+      @for (colonne of colonnes(); track colonne.cle) {
+        @if (colonne.tri !== false) {
+          <th
+            scope="col"
+            [pSortableColumn]="colonne.cle"
+            [class.sira-tableau__numerique]="colonne.numerique"
+          >
+            <span class="sira-tableau__tri">
+              {{ colonne.libelle }}
+              <p-sortIcon [field]="colonne.cle" />
+            </span>
+          </th>
+        } @else {
+          <th scope="col" [class.sira-tableau__numerique]="colonne.numerique">
+            {{ colonne.libelle }}
+          </th>
+        }
+      }
+      @if (actions()) {
+        <th scope="col" class="sira-tableau__actions">Actions</th>
+      }
+    </tr>
+  </ng-template>
+  <ng-template #body let-ligne>
+    @if (squelette()) {
+      <tr class="sira-tableau__squelette" aria-hidden="true">
+        @for (colonne of colonnes(); track colonne.cle) {
+          <td><p-skeleton [width]="$first ? '70%' : '55%'" height="1rem" /></td>
+        }
+        @if (actions()) {
+          <td class="sira-tableau__actions"><p-skeleton width="4.5rem" height="1rem" /></td>
+        }
+      </tr>
+    } @else {
+      <tr>
+        @for (colonne of colonnes(); track colonne.cle) {
+          <td
+            [attr.data-libelle]="colonne.libelle"
+            [class.sira-tableau__numerique]="colonne.numerique"
+          >
+            <div>
+              @if (gabarits().get(colonne.cle); as gabarit) {
+                <ng-container
+                  [ngTemplateOutlet]="gabarit"
+                  [ngTemplateOutletContext]="{ $implicit: ligne }"
+                />
+              } @else {
+                {{ valeur(ligne, colonne.cle) }}
+              }
+            </div>
+          </td>
+        }
+        @if (actions(); as modele) {
+          <td class="sira-tableau__actions" data-libelle="Actions">
+            <div class="sira-tableau__boutons">
+              <ng-container
+                [ngTemplateOutlet]="modele.gabarit"
+                [ngTemplateOutletContext]="{ $implicit: ligne }"
+              />
+            </div>
+          </td>
+        }
+      </tr>
+    }
+  </ng-template>
+  <ng-template #emptymessage>
+    <tr>
+      <td class="sira-tableau__vide" [attr.colspan]="nombreColonnes()">
+        @if (chargement()) {
+          Chargement…
+        } @else if (recherche()) {
+          Aucune ligne ne correspond à votre recherche.
+        } @else {
+          Aucune ligne pour le moment.
+        }
+      </td>
+    </tr>
+  </ng-template>
+</p-table>

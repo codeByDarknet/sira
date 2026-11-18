@@ -1,0 +1,174 @@
+<div class="sira-titre-page">
+  <div>
+    <h1>Rôles</h1>
+    <p>Chaque rôle regroupe des droits. Un utilisateur a un seul rôle.</p>
+  </div>
+  @if (gerer()) {
+    <button siraBouton type="button" (click)="ajouter()">
+      <sira-icone nom="plus" />
+      Créer un rôle
+    </button>
+  }
+</div>
+
+<div aria-live="polite">
+  @if (message(); as texte) {
+    <sira-alerte type="succes" ephemere>{{ texte }}</sira-alerte>
+  }
+</div>
+
+@if (probleme(); as texte) {
+  <sira-alerte type="erreur" titre="Les rôles n’ont pas pu être chargés">
+    <p>{{ texte }}</p>
+    <button siraBouton variante="secondaire" type="button" (click)="donnees.reload()">
+      Réessayer
+    </button>
+  </sira-alerte>
+} @else if (donnees.value(); as d) {
+  <sira-tableau legende="Rôles" [colonnes]="colonnes" [lignes]="d.roles" [outils]="false">
+    <ng-template siraCellule="libelle" let-ligne>
+      <span class="sira-tableau__principal">
+        {{ ligne.libelle }}
+        @if (ligne.systeme) {
+          <sira-etiquette etat="info">Fourni</sira-etiquette>
+        }
+      </span>
+      @if (ligne.description) {
+        <span class="sira-tableau__secondaire">{{ ligne.description }}</span>
+      }
+    </ng-template>
+    <ng-template siraCellule="permissions" let-ligne>{{ resumeDroits(ligne) }}</ng-template>
+    <ng-template siraActions let-ligne>
+      <button
+        type="button"
+        [siraAction]="gerer() && !verrouille(ligne) ? 'pencil' : 'eye'"
+        [libelle]="(gerer() && !verrouille(ligne) ? 'Modifier ' : 'Voir ') + ligne.libelle"
+        (click)="ouvrir(ligne)"
+      ></button>
+      @if (gerer() && !ligne.systeme) {
+        <button
+          type="button"
+          siraAction="trash-2"
+          [libelle]="'Supprimer ' + ligne.libelle"
+          (click)="aSupprimer.set(ligne)"
+        ></button>
+      }
+    </ng-template>
+  </sira-tableau>
+} @else {
+  <sira-squelette [lignes]="4" libelle="Chargement des rôles" />
+}
+
+@if (fenetre(); as f) {
+  @let lectureSeule = !gerer() || verrouille(f.role);
+  <sira-dialogue
+    [titre]="f.role ? (lectureSeule ? f.role.libelle : 'Modifier le rôle') : 'Créer un rôle'"
+    [ouvert]="true"
+    (ouvertChange)="$event || fenetre.set(null)"
+  >
+    @if (verrouille(f.role)) {
+      <p class="sira-secondaire">L’administrateur a toujours tous les droits.</p>
+    }
+    @if (echec(); as texte) {
+      <sira-alerte type="erreur" titre="Enregistrement impossible">{{ texte }}</sira-alerte>
+    }
+    <form class="ra-formulaire" novalidate id="form-role" (ngSubmit)="enregistrer()">
+      <sira-champ
+        obligatoire
+        libelle="Nom du rôle"
+        identifiant="role-libelle"
+        [erreur]="erreurs()['libelle']"
+      >
+        <input
+          siraSaisie
+          name="libelle"
+          maxlength="60"
+          autocomplete="off"
+          [disabled]="lectureSeule"
+          [(ngModel)]="libelle"
+        />
+      </sira-champ>
+      <sira-champ libelle="Description" identifiant="role-description">
+        <input
+          siraSaisie
+          name="description"
+          maxlength="300"
+          autocomplete="off"
+          [disabled]="lectureSeule"
+          [(ngModel)]="description"
+        />
+      </sira-champ>
+      <fieldset class="ra-droits" id="role-permissions" tabindex="-1">
+        <legend>Droits <span class="sira-champ__requis" aria-hidden="true">*</span></legend>
+        @if (erreurs()['permissions']; as erreur) {
+          <p class="sira-champ__erreur">{{ erreur }}</p>
+        }
+        @for (groupe of groupes(); track groupe.nom) {
+          <div class="ra-droits__groupe">
+            <label class="sira-choix ra-droits__titre">
+              <input
+                type="checkbox"
+                [disabled]="lectureSeule"
+                [checked]="groupeCoche(groupe)"
+                (change)="basculerGroupe(groupe, $any($event.target).checked)"
+              />
+              {{ groupe.nom }}
+            </label>
+            @for (permission of groupe.permissions; track permission.code) {
+              <label class="sira-choix">
+                <input
+                  type="checkbox"
+                  [disabled]="lectureSeule"
+                  [checked]="cochees().has(permission.code)"
+                  (change)="basculer(permission.code, $any($event.target).checked)"
+                />
+                {{ permission.libelle }}
+              </label>
+            }
+          </div>
+        }
+      </fieldset>
+    </form>
+    <button
+      dialogue-actions
+      siraBouton
+      variante="secondaire"
+      type="button"
+      (click)="fenetre.set(null)"
+    >
+      {{ lectureSeule ? 'Fermer' : 'Annuler' }}
+    </button>
+    @if (!lectureSeule) {
+      <button dialogue-actions siraBouton type="submit" form="form-role" [enCours]="envoi()">
+        {{ f.role ? 'Enregistrer' : 'Créer le rôle' }}
+      </button>
+    }
+  </sira-dialogue>
+}
+
+@if (aSupprimer(); as role) {
+  <sira-dialogue
+    titre="Supprimer ce rôle ?"
+    [ouvert]="true"
+    (ouvertChange)="$event || aSupprimer.set(null)"
+  >
+    <p>
+      Le rôle <strong>{{ role.libelle }}</strong> sera supprimé.
+    </p>
+    @if (echecSuppression(); as texte) {
+      <sira-alerte type="erreur" titre="Suppression impossible">{{ texte }}</sira-alerte>
+    }
+    <button
+      dialogue-actions
+      siraBouton
+      variante="secondaire"
+      type="button"
+      (click)="aSupprimer.set(null)"
+    >
+      Annuler
+    </button>
+    <button dialogue-actions siraBouton variante="danger" type="button" (click)="supprimer(role)">
+      Supprimer
+    </button>
+  </sira-dialogue>
+}

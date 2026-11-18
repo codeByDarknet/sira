@@ -1,0 +1,69 @@
+<sira-fil
+  [elements]="[
+    { libelle: 'Démarches', chemin: '/exemple' },
+    { libelle: demarche.value()?.nom ?? 'Détail' },
+  ]"
+/>
+
+@if (probleme(); as message) {
+  <h1>Démarche introuvable</h1>
+  <sira-alerte type="erreur">{{ message }}</sira-alerte>
+} @else if (demarche.value(); as fiche) {
+  <h1>{{ fiche.nom }}</h1>
+
+  @if (echec(); as message) {
+    <sira-alerte type="erreur" titre="La démarche n’a pas été supprimée">{{ message }}</sira-alerte>
+  }
+
+  <dl siraSynthese>
+    <div siraSyntheseLigne cle="Organisme">{{ fiche.organisme }}</div>
+    <div siraSyntheseLigne cle="État">
+      @if (fiche.etat === 'ACTIVE') {
+        <sira-etiquette etat="succes">Active</sira-etiquette>
+      } @else {
+        <sira-etiquette etat="attention">Suspendue</sira-etiquette>
+      }
+    </div>
+    <div siraSyntheseLigne cle="Pourquoi">{{ fiche.finalite }}</div>
+    <div siraSyntheseLigne cle="Durée de l’accès">
+      @if (fiche.duree_jours === 0) {
+        Une seule consultation
+      } @else {
+        {{ fiche.duree_jours }} jours
+      }
+    </div>
+    <div siraSyntheseLigne cle="Ajoutée le">{{ fiche.cree_le | siraDate }}</div>
+  </dl>
+
+  <div class="sira-groupe-boutons sira-marge-haut">
+    <button siraBouton variante="danger" type="button" (click)="confirmation.set(true)">
+      <sira-icone nom="trash-2" />
+      Supprimer la démarche
+    </button>
+  </div>
+
+  <sira-dialogue titre="Supprimer cette démarche ?" [(ouvert)]="confirmation">
+    <p>Les accords déjà donnés par les citoyens prennent fin.</p>
+    <button
+      dialogue-actions
+      siraBouton
+      variante="danger"
+      type="button"
+      [enCours]="suppression()"
+      (click)="supprimer()"
+    >
+      Supprimer
+    </button>
+    <button
+      dialogue-actions
+      siraBouton
+      variante="secondaire"
+      type="button"
+      (click)="confirmation.set(false)"
+    >
+      Annuler
+    </button>
+  </sira-dialogue>
+} @else {
+  <sira-squelette [lignes]="5" libelle="Chargement de la démarche" />
+}

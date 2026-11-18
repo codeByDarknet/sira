@@ -1,0 +1,20 @@
+spring:
+  application:
+    name: espace-citoyen
+
+server:
+  servlet:
+    session:
+      cookie:
+        # Un nom par application : la session du citoyen ne se confond avec aucune autre.
+        name: SIRA_CITOYEN
+
+sira:
+  mtls:
+    mode: client
+  oidc:
+    client-id: espace-citoyen
+    # Contrat §4 : un seul émetteur, le royaume des citoyens. Seules les adresses se règlent.
+    emetteur: ${SIRA_IDENTITE_URL_PUBLIQUE:http://identite.sira.localhost:8600}/realms/sira-citoyens
+    url-interne: ${SIRA_IDENTITE_URL_INTERNE:https://keycloak:8443}/realms/sira-citoyens
+    url-publique: ${SIRA_URL_PUBLIQUE:http://citoyen.sira.localhost:8600}

@@ -1,0 +1,24 @@
+# Politique locale du registre des diplômes.
+
+validite:
+  par_defaut: P365D
+  maximale: P365D
+
+champs:
+  # « diplomes[type=BAC] » filtre sur le type : ce champ doit être exposé pour que le filtre soit admis.
+  - chemin: diplomes
+    niveau: STATUT
+    operateurs: [EXISTE, AUCUN]
+  - chemin: diplomes.type
+    niveau: CHAMPS
+  - chemin: diplomes.intitule
+    niveau: CHAMPS
+  - chemin: diplomes.annee
+    niveau: STATUT
+    operateurs: [EGAL, AU_MOINS, AU_PLUS]
+  - chemin: diplomes.mention
+    niveau: STATUT
+    operateurs: [EGAL]
+
+documents:
+  - attestation-diplome

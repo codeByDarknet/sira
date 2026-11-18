@@ -1,0 +1,24 @@
+<h1>Demandes en attente</h1>
+
+@if (probleme(); as message) {
+  <sira-alerte type="erreur" titre="Les demandes n’ont pas pu être chargées">
+    <p>{{ message }}</p>
+    <button siraBouton variante="secondaire" type="button" (click)="resultat.reload()">
+      Réessayer
+    </button>
+  </sira-alerte>
+} @else if (resultat.value(); as liste) {
+  @if (liste.elements.length === 0) {
+    <sira-etat-vide titre="Aucune demande en attente" />
+  } @else {
+    <ec-liste-demandes [demandes]="liste.elements" />
+  }
+  <div class="sira-groupe-boutons sira-marge-haut">
+    <a siraBouton variante="secondaire" routerLink="/scanner">
+      <sira-icone nom="qr-code" />
+      Scanner un code
+    </a>
+  </div>
+} @else {
+  <sira-squelette [lignes]="4" libelle="Chargement des demandes" />
+}
