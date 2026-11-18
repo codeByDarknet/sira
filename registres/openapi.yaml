@@ -1,0 +1,308 @@
+openapi: 3.1.0
+info:
+  title: Registres simulés de Sira — contrat commun
+  version: 1.0.0
+  summary: Lecture d'une personne par son identifiant unique dans les registres d'état civil, de nationalité et de casier judiciaire.
+  description: |
+    Contrat de lecture que les trois registres simulés de la démonstration exposent réellement
+    (module `registres/serveur`, tests `ContratCommunTest` et `ApiContratTest`). Il tient lieu du contrat qu'une
+    administration publiera : le connecteur de Sira ne dépend pas de ces noms de champs, il les lit à travers un
+    fichier de raccordement (`docs/brancher-un-registre.md`).
+
+    - Une personne se lit par son identifiant unique (douze chiffres) : `200` et la fiche, ou `404`.
+    - Chaque registre ne sert que sa propre ressource : le registre d'état civil répond `404` sur
+      `/v1/casier/...`.
+    - Aucune authentification : comme le système ancien qu'il simule, le registre n'est joignable
+      que sur le réseau privé de son administration, où seul le connecteur l'appelle.
+    - Les noms de champs sont en `snake_case` ; un champ sans valeur est absent, jamais `null`.
+  license:
+    name: EUPL-1.2
+    identifier: EUPL-1.2
+servers:
+  - url: http://registre-etat-civil:8080
+    description: Registre d'état civil (réseau privé de l'administration, démonstration)
+  - url: http://registre-nationalite:8080
+    description: Registre de nationalité
+  - url: http://registre-casier:8080
+    description: Registre du casier judiciaire
+tags:
+  - name: etat-civil
+  - name: nationalite
+  - name: casier
+  - name: sante
+paths:
+  /v1/etat-civil/personnes/{identifiant}:
+    get:
+      tags: [etat-civil]
+      operationId: lireEtatCivil
+      summary: État civil d'une personne
+      parameters:
+        - $ref: '#/components/parameters/Identifiant'
+      responses:
+        '200':
+          description: La personne est connue du registre.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EtatCivil'
+              example:
+                identifiant: '990048217350'
+                nom: KABORÉ
+                prenoms: Wendkuni Aïcha
+                sexe: F
+                naissance: { date: '2003-03-14', lieu: Koudougou, province: Boulkiemdé, pays: Burkina Faso }
+                filiation: { pere: KABORÉ Tibo Jean, mere: OUÉDRAOGO Poko Awa }
+                acte: { type: ACTE_NAISSANCE, numero: 2003/KDG/00317 }
+        '404':
+          $ref: '#/components/responses/Introuvable'
+        '5XX':
+          $ref: '#/components/responses/Indisponible'
+  /v1/nationalite/personnes/{identifiant}:
+    get:
+      tags: [nationalite]
+      operationId: lireNationalite
+      summary: Nationalité(s) d'une personne
+      parameters:
+        - $ref: '#/components/parameters/Identifiant'
+      responses:
+        '200':
+          description: La personne est connue du registre.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Nationalite'
+              example:
+                identifiant: '990048217350'
+                nom: KABORÉ
+                prenoms: Wendkuni Aïcha
+                nationalites:
+                  - code: BF
+                    mode_acquisition: FILIATION
+                    certificat: { numero: CN-2021-KDG-00357, date: '2021-06-21' }
+        '404':
+          $ref: '#/components/responses/Introuvable'
+        '5XX':
+          $ref: '#/components/responses/Indisponible'
+  /v1/casier/personnes/{identifiant}:
+    get:
+      tags: [casier]
+      operationId: lireCasier
+      summary: Condamnations inscrites au casier judiciaire d'une personne
+      parameters:
+        - $ref: '#/components/parameters/Identifiant'
+      responses:
+        '200':
+          description: |
+            La personne est connue du registre. Un casier vierge rend une liste `condamnations`
+            vide : l'absence de condamnation n'est pas une absence de réponse.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Casier'
+              example:
+                identifiant: '990048217350'
+                nom: KABORÉ
+                prenoms: Wendkuni Aïcha
+                naissance: { date: '2003-03-14', lieu: Koudougou }
+                condamnations: []
+        '404':
+          $ref: '#/components/responses/Introuvable'
+        '5XX':
+          $ref: '#/components/responses/Indisponible'
+  /v1/sante:
+    get:
+      tags: [sante]
+      operationId: sante
+      summary: Le registre répond-il ?
+      description: Ne lit aucune donnée personnelle ; sert aux sondes et au connecteur.
+      responses:
+        '200':
+          description: Le registre est en état de répondre.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Sante'
+              example: { statut: OK }
+        '5XX':
+          $ref: '#/components/responses/Indisponible'
+components:
+  parameters:
+    Identifiant:
+      name: identifiant
+      in: path
+      required: true
+      description: Identifiant unique de la personne. Toute autre forme rend `404`.
+      schema:
+        $ref: '#/components/schemas/IdentifiantUnique'
+  responses:
+    Introuvable:
+      description: Aucune personne ne porte cet identifiant dans ce registre.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Probleme'
+          example:
+            type: urn:sira:erreur:introuvable
+            title: Ressource introuvable
+            status: 404
+    Indisponible:
+      description: Le registre ne peut pas répondre pour l'instant.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Probleme'
+  schemas:
+    IdentifiantUnique:
+      type: string
+      pattern: '^[0-9]{12}$'
+      examples: ['990048217350']
+    Date:
+      type: string
+      format: date
+      examples: ['2003-03-14']
+    Texte:
+      type: string
+      minLength: 1
+    EtatCivil:
+      type: object
+      additionalProperties: false
+      required: [identifiant, nom, prenoms, sexe, naissance]
+      properties:
+        identifiant:
+          $ref: '#/components/schemas/IdentifiantUnique'
+        nom:
+          $ref: '#/components/schemas/Texte'
+        prenoms:
+          $ref: '#/components/schemas/Texte'
+        sexe:
+          type: string
+          enum: [F, M]
+        naissance:
+          type: object
+          additionalProperties: false
+          required: [date, lieu, pays]
+          properties:
+            date:
+              $ref: '#/components/schemas/Date'
+            lieu:
+              $ref: '#/components/schemas/Texte'
+            province:
+              $ref: '#/components/schemas/Texte'
+            pays:
+              $ref: '#/components/schemas/Texte'
+        filiation:
+          type: object
+          additionalProperties: false
+          properties:
+            pere:
+              $ref: '#/components/schemas/Texte'
+            mere:
+              $ref: '#/components/schemas/Texte'
+        acte:
+          type: object
+          additionalProperties: false
+          required: [type, numero]
+          properties:
+            type:
+              type: string
+              enum: [ACTE_NAISSANCE, JUGEMENT_SUPPLETIF]
+            numero:
+              $ref: '#/components/schemas/Texte'
+    Nationalite:
+      type: object
+      additionalProperties: false
+      required: [identifiant, nom, prenoms, nationalites]
+      properties:
+        identifiant:
+          $ref: '#/components/schemas/IdentifiantUnique'
+        nom:
+          $ref: '#/components/schemas/Texte'
+        prenoms:
+          $ref: '#/components/schemas/Texte'
+        nationalites:
+          description: Les nationalités reconnues, la principale en premier.
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required: [code]
+            properties:
+              code:
+                description: Code pays ISO 3166-1 alpha-2.
+                type: string
+                pattern: '^[A-Z]{2}$'
+              mode_acquisition:
+                type: string
+                enum: [FILIATION, NAISSANCE, MARIAGE, NATURALISATION]
+              certificat:
+                type: object
+                additionalProperties: false
+                required: [numero]
+                properties:
+                  numero:
+                    $ref: '#/components/schemas/Texte'
+                  date:
+                    $ref: '#/components/schemas/Date'
+    Casier:
+      type: object
+      additionalProperties: false
+      required: [identifiant, nom, prenoms, naissance, condamnations]
+      properties:
+        identifiant:
+          $ref: '#/components/schemas/IdentifiantUnique'
+        nom:
+          $ref: '#/components/schemas/Texte'
+        prenoms:
+          $ref: '#/components/schemas/Texte'
+        naissance:
+          type: object
+          additionalProperties: false
+          required: [date]
+          properties:
+            date:
+              $ref: '#/components/schemas/Date'
+            lieu:
+              $ref: '#/components/schemas/Texte'
+        condamnations:
+          description: Condamnations inscrites au bulletin n° 3 ; vide pour un casier vierge.
+          type: array
+          items:
+            $ref: '#/components/schemas/Condamnation'
+    Condamnation:
+      type: object
+      additionalProperties: false
+      required: [juridiction, nature]
+      properties:
+        juridiction:
+          $ref: '#/components/schemas/Texte'
+        nature:
+          $ref: '#/components/schemas/Texte'
+        date:
+          $ref: '#/components/schemas/Date'
+        peine:
+          $ref: '#/components/schemas/Texte'
+    Sante:
+      type: object
+      additionalProperties: false
+      required: [statut]
+      properties:
+        statut:
+          type: string
+          enum: [OK]
+    Probleme:
+      description: Problème au format RFC 9457 ; ne cite jamais l'identifiant demandé.
+      type: object
+      required: [status]
+      properties:
+        type:
+          type: string
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
+        instance:
+          type: string
+        code:
+          type: string

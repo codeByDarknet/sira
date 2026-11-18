@@ -1,0 +1,14 @@
+# Politique locale du connecteur posé devant le « registre d'une autre équipe ».
+# Seule une question d'âge est permise : la réponse est un oui ou un non.
+
+validite:
+  par_defaut: P90D
+  maximale: P180D
+
+champs:
+  - chemin: date_naissance
+    niveau: STATUT
+    operateurs: [AGE_AU_MOINS]
+    valeurs: [18]
+
+documents: []

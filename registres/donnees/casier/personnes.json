@@ -1,0 +1,239 @@
+{
+  "avertissement": "Données fictives de démonstration. Toute ressemblance avec une personne réelle est fortuite.",
+  "personnes": [
+    {
+      "identifiant_unique": "990048217350",
+      "nom": "KABORÉ",
+      "prenoms": "Wendkuni Aïcha",
+      "date_naissance": "2003-03-14",
+      "lieu_naissance": "Koudougou",
+      "juridiction": "Tribunal de grande instance de Koudougou",
+      "bulletin3": "NEANT"
+    },
+    {
+      "identifiant_unique": "990017734062",
+      "nom": "SANOU",
+      "prenoms": "Bakary Désiré",
+      "date_naissance": "2005-11-02",
+      "lieu_naissance": "Bobo-Dioulasso",
+      "juridiction": "Tribunal de grande instance de Bobo-Dioulasso",
+      "bulletin3": "NEANT"
+    },
+    {
+      "identifiant_unique": "990063390218",
+      "nom": "ZONGO",
+      "prenoms": "Pingdwendé Rasmata",
+      "date_naissance": "1986-07-27",
+      "lieu_naissance": "Réo",
+      "juridiction": "Tribunal de grande instance de Réo",
+      "bulletin3": "NEANT"
+    },
+    {
+      "identifiant_unique": "990029915477",
+      "nom": "SOMÉ",
+      "prenoms": "Dieudonné Yirbar",
+      "date_naissance": "1998-01-09",
+      "lieu_naissance": "Diébougou",
+      "juridiction": "Tribunal de grande instance de Diébougou",
+      "bulletin3": "MENTIONS"
+    },
+    {
+      "identifiant_unique": "990085502641",
+      "nom": "COULIBALY",
+      "prenoms": "Mariam Sita",
+      "date_naissance": "2001-05-19",
+      "lieu_naissance": "Bouaké",
+      "juridiction": "Tribunal de grande instance de Bobo-Dioulasso",
+      "bulletin3": "NEANT"
+    },
+    {
+      "identifiant_unique": "990051176839",
+      "nom": "DICKO",
+      "prenoms": "Hamidou Boureima",
+      "date_naissance": "1999-09-30",
+      "lieu_naissance": "Dori",
+      "juridiction": "Tribunal de grande instance de Dori",
+      "bulletin3": "NEANT"
+    },
+    {
+      "identifiant_unique": "990010452876",
+      "nom": "OUÉDRAOGO",
+      "prenoms": "Abdoul Karim",
+      "date_naissance": "1995-06-12",
+      "lieu_naissance": "Ouahigouya",
+      "juridiction": "Tribunal de grande instance de Ouahigouya",
+      "bulletin3": "NEANT"
+    },
+    {
+      "identifiant_unique": "990011380594",
+      "nom": "SAWADOGO",
+      "prenoms": "Zalissa",
+      "date_naissance": "2000-12-03",
+      "lieu_naissance": "Kaya",
+      "juridiction": "Tribunal de grande instance de Kaya",
+      "bulletin3": "NEANT"
+    },
+    {
+      "identifiant_unique": "990012907431",
+      "nom": "TRAORÉ",
+      "prenoms": "Issouf",
+      "date_naissance": "1992-02-25",
+      "lieu_naissance": "Banfora",
+      "juridiction": "Tribunal de grande instance de Banfora",
+      "bulletin3": "MENTIONS"
+    },
+    {
+      "identifiant_unique": "990013665208",
+      "nom": "COMPAORÉ",
+      "prenoms": "Nadège Wendyam",
+      "date_naissance": "2004-08-17",
+      "lieu_naissance": "Ziniaré",
+      "juridiction": "Tribunal de grande instance de Ziniaré",
+      "bulletin3": "NEANT"
+    },
+    {
+      "identifiant_unique": "990014239765",
+      "nom": "ILBOUDO",
+      "prenoms": "Rodrigue",
+      "date_naissance": "2009-08-21",
+      "lieu_naissance": "Ouagadougou",
+      "juridiction": "Tribunal de grande instance de Ouagadougou",
+      "bulletin3": "NEANT"
+    },
+    {
+      "identifiant_unique": "990015718342",
+      "nom": "NIKIÉMA",
+      "prenoms": "Flore Bénéwendé",
+      "date_naissance": "1997-04-05",
+      "lieu_naissance": "Ouagadougou",
+      "juridiction": "Tribunal de grande instance de Ouagadougou",
+      "bulletin3": "NEANT"
+    },
+    {
+      "identifiant_unique": "990016094127",
+      "nom": "BARRY",
+      "prenoms": "Aminata",
+      "date_naissance": "2002-10-29",
+      "lieu_naissance": "Dori",
+      "juridiction": "Tribunal de grande instance de Dori",
+      "bulletin3": "NEANT"
+    },
+    {
+      "identifiant_unique": "990018523690",
+      "nom": "DIALLO",
+      "prenoms": "Ousmane",
+      "date_naissance": "1988-01-14",
+      "lieu_naissance": "Fada N'Gourma",
+      "juridiction": "Tribunal de grande instance de Fada N'Gourma",
+      "bulletin3": "NEANT"
+    },
+    {
+      "identifiant_unique": "990019846013",
+      "nom": "YAMÉOGO",
+      "prenoms": "Estelle Marie",
+      "date_naissance": "2006-03-08",
+      "lieu_naissance": "Koudougou",
+      "juridiction": "Tribunal de grande instance de Koudougou",
+      "bulletin3": "NEANT"
+    },
+    {
+      "identifiant_unique": "990020371459",
+      "nom": "TIENDRÉBÉOGO",
+      "prenoms": "Wilfried",
+      "date_naissance": "1999-07-22",
+      "lieu_naissance": "Manga",
+      "juridiction": "Tribunal de grande instance de Manga",
+      "bulletin3": "NEANT"
+    },
+    {
+      "identifiant_unique": "990021659834",
+      "nom": "KONATÉ",
+      "prenoms": "Djénéba",
+      "date_naissance": "2001-11-11",
+      "lieu_naissance": "Bobo-Dioulasso",
+      "juridiction": "Tribunal de grande instance de Bobo-Dioulasso",
+      "bulletin3": "NEANT"
+    },
+    {
+      "identifiant_unique": "990022418067",
+      "nom": "HIEN",
+      "prenoms": "Sansan Olivier",
+      "date_naissance": "1994-09-02",
+      "lieu_naissance": "Gaoua",
+      "juridiction": "Tribunal de grande instance de Gaoua",
+      "bulletin3": "NEANT"
+    },
+    {
+      "identifiant_unique": "990023970581",
+      "nom": "LOMPO",
+      "prenoms": "Yempabou",
+      "date_naissance": "2003-05-30",
+      "lieu_naissance": "Fada N'Gourma",
+      "juridiction": "Tribunal de grande instance de Fada N'Gourma",
+      "bulletin3": "NEANT"
+    },
+    {
+      "identifiant_unique": "990024135796",
+      "nom": "KINDA",
+      "prenoms": "Rasmané",
+      "date_naissance": "1983-12-19",
+      "lieu_naissance": "Kaya",
+      "juridiction": "Tribunal de grande instance de Kaya",
+      "bulletin3": "NEANT"
+    },
+    {
+      "identifiant_unique": "990025782940",
+      "nom": "BAMBARA",
+      "prenoms": "Charlotte",
+      "date_naissance": "1996-02-07",
+      "lieu_naissance": "Tenkodogo",
+      "juridiction": "Tribunal de grande instance de Tenkodogo",
+      "bulletin3": "NEANT"
+    },
+    {
+      "identifiant_unique": "990026340815",
+      "nom": "DEMBÉLÉ",
+      "prenoms": "Moussa",
+      "date_naissance": "2000-06-26",
+      "lieu_naissance": "Dédougou",
+      "juridiction": "Tribunal de grande instance de Dédougou",
+      "bulletin3": "NEANT"
+    },
+    {
+      "identifiant_unique": "990027894603",
+      "nom": "OUATTARA",
+      "prenoms": "Fatimata",
+      "date_naissance": "2005-01-16",
+      "lieu_naissance": "Banfora",
+      "juridiction": "Tribunal de grande instance de Banfora",
+      "bulletin3": "NEANT"
+    },
+    {
+      "identifiant_unique": "990028061372",
+      "nom": "ZIDA",
+      "prenoms": "Parfait Wendpanga",
+      "date_naissance": "1990-10-04",
+      "lieu_naissance": "Ziniaré",
+      "juridiction": "Tribunal de grande instance de Ziniaré",
+      "bulletin3": "NEANT"
+    },
+    {
+      "identifiant_unique": "990030257948",
+      "nom": "SIMPORÉ",
+      "prenoms": "Alimata",
+      "date_naissance": "1998-08-13",
+      "lieu_naissance": "Tenkodogo",
+      "juridiction": "Tribunal de grande instance de Tenkodogo",
+      "bulletin3": "NEANT"
+    },
+    {
+      "identifiant_unique": "990031603275",
+      "nom": "PODA",
+      "prenoms": "Naapouo Éric",
+      "date_naissance": "2002-04-21",
+      "lieu_naissance": "Diébougou",
+      "juridiction": "Tribunal de grande instance de Diébougou",
+      "bulletin3": "NEANT"
+    }
+  ]
+}

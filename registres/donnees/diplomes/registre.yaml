@@ -1,0 +1,40 @@
+# Description du registre simulé : ses champs (ordre d’affichage, type, ce qu’un agent peut
+# corriger) et les documents qu’il délivre. Lue par registres/serveur au démarrage.
+# Types : TEXTE, DATE (AAAA-MM-JJ), NOMBRE, BOOLEEN, CHOIX.
+sira:
+  registre:
+    code: diplomes
+    nom: Diplômes
+    organisme: Office des examens et des diplômes 
+    champs:
+      - { nom: identifiant_unique, libelle: Identifiant unique, type: TEXTE }
+      - { nom: nom, libelle: Nom, type: TEXTE }
+      - { nom: prenoms, libelle: Prénoms, type: TEXTE }
+      - { nom: date_naissance, libelle: Date de naissance, type: DATE }
+      - { nom: baccalaureat_obtenu, libelle: Baccalauréat obtenu, type: BOOLEEN, modifiable: true }
+      - nom: baccalaureat_serie
+        libelle: Série du baccalauréat
+        type: CHOIX
+        facultatif: true
+        choix: { A4: A4, C: C, D: D, E: E, F3: F3, G1: G1, G2: G2 }
+      - { nom: baccalaureat_annee, libelle: Année du baccalauréat, type: NOMBRE, facultatif: true, minimum: 1960, maximum: 2026 }
+      - nom: baccalaureat_mention
+        libelle: Mention au baccalauréat
+        type: CHOIX
+        modifiable: true
+        facultatif: true
+        choix: { PASSABLE: Passable, ASSEZ_BIEN: Assez bien, BIEN: Bien, TRES_BIEN: Très bien }
+      - { nom: baccalaureat_moyenne, libelle: Moyenne au baccalauréat (sur 20), type: NOMBRE, modifiable: true, facultatif: true, minimum: 0, maximum: 20 }
+      - { nom: baccalaureat_numero_pv, libelle: Numéro du procès-verbal, type: TEXTE, facultatif: true }
+      - { nom: diplome_superieur, libelle: Diplôme de l’enseignement supérieur, type: TEXTE, facultatif: true }
+      - { nom: etablissement, libelle: Établissement de délivrance, type: TEXTE, facultatif: true }
+    documents:
+      attestation-diplome:
+        titre: Attestation de diplôme
+        champs: [nom, prenoms, date_naissance, baccalaureat_obtenu, baccalaureat_serie,
+                 baccalaureat_annee, baccalaureat_mention, baccalaureat_moyenne,
+                 baccalaureat_numero_pv, diplome_superieur, etablissement]
+      releve-notes-bac:
+        titre: Relevé de notes du baccalauréat
+        champs: [nom, prenoms, date_naissance, baccalaureat_serie, baccalaureat_annee,
+                 baccalaureat_moyenne, baccalaureat_mention, baccalaureat_numero_pv]

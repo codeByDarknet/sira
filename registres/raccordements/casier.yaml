@@ -1,0 +1,21 @@
+# Raccordement du connecteur du casier judiciaire (docs/brancher-un-registre.md).
+
+adresse: http://registre-casier:8080
+
+fiche:
+  chemin: /v1/casier/personnes/{identifiant}
+
+document:
+  chemin: /interne/personnes/{identifiant}/documents/{type}
+
+authentification:
+  type: AUCUNE
+
+# La liste entière est lue dans le connecteur ; la politique n'en laisse sortir que
+# « vide ou non » (opérateur AUCUN).
+correspondance:
+  nom: /nom
+  prenoms: /prenoms
+  date_naissance: /naissance/date
+  lieu_naissance: /naissance/lieu
+  condamnations: /condamnations

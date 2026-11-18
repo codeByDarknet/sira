@@ -1,0 +1,28 @@
+# Raccordement du connecteur d'état civil : comment lire le registre (docs/brancher-un-registre.md).
+# Le registre simulé expose le contrat commun (registres/openapi.yaml) ; les documents restent
+# servis par son API interne.
+
+adresse: http://registre-etat-civil:8080
+
+fiche:
+  chemin: /v1/etat-civil/personnes/{identifiant}
+
+document:
+  chemin: /interne/personnes/{identifiant}/documents/{type}
+
+authentification:
+  type: AUCUNE
+
+# Nom employé par les questions (politique locale, jeux de la passerelle) → emplacement dans la
+# réponse du registre. Rien d'autre n'est lu.
+correspondance:
+  nom: /nom
+  prenoms: /prenoms
+  sexe: /sexe
+  date_naissance: /naissance/date
+  lieu_naissance: /naissance/lieu
+  province_naissance: /naissance/province
+  pays_naissance: /naissance/pays
+  nom_pere: /filiation/pere
+  nom_mere: /filiation/mere
+  numero_acte: /acte/numero

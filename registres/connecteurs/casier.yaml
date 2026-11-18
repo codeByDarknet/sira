@@ -1,0 +1,40 @@
+# Politique locale du casier judiciaire (démonstration).
+# Le contenu du casier ne sort jamais : on dit seulement si aucune condamnation n'y figure
+# (bulletin n° 3 néant). Le champ « condamnations » est celui du raccordement
+# (registres/raccordements/casier.yaml), lu sur le contrat commun.
+
+validite:
+  par_defaut: P30D
+  maximale: P90D
+
+champs:
+  - chemin: condamnations
+    libelle: Casier judiciaire vierge (aucune condamnation)
+    type: TEXTE
+    niveau: STATUT
+    operateurs: [AUCUN]
+
+  # Identité telle qu’inscrite au casier, pour rapprocher le bulletin de la bonne personne.
+  - chemin: nom
+    libelle: Nom
+    type: TEXTE
+    niveau: CHAMPS
+  - chemin: prenoms
+    libelle: Prénoms
+    type: TEXTE
+    niveau: CHAMPS
+  - chemin: date_naissance
+    libelle: Date de naissance
+    type: DATE
+    niveau: CHAMPS
+  - chemin: lieu_naissance
+    libelle: Lieu de naissance
+    type: TEXTE
+    niveau: CHAMPS
+
+documents:
+  - bulletin-3
+
+# Nom lisible de chaque document, montré dans la console.
+libelles_documents:
+  bulletin-3: Extrait de casier judiciaire (bulletin n°3)

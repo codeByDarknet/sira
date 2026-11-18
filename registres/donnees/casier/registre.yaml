@@ -1,0 +1,25 @@
+# Description du registre simulé : ses champs (ordre d’affichage, type, ce qu’un agent peut
+# corriger) et les documents qu’il délivre. Lue par registres/serveur au démarrage.
+# Types : TEXTE, DATE (AAAA-MM-JJ), NOMBRE, BOOLEEN, CHOIX.
+sira:
+  registre:
+    code: casier
+    nom: Casier judiciaire
+    organisme: Service du casier judiciaire 
+    champs:
+      - { nom: identifiant_unique, libelle: Identifiant unique, type: TEXTE }
+      - { nom: nom, libelle: Nom, type: TEXTE }
+      - { nom: prenoms, libelle: Prénoms, type: TEXTE }
+      - { nom: date_naissance, libelle: Date de naissance, type: DATE }
+      - { nom: lieu_naissance, libelle: Lieu de naissance, type: TEXTE }
+      - { nom: juridiction, libelle: Tribunal qui tient le casier, type: TEXTE }
+      # Le détail d’une mention n’existe volontairement pas dans le jeu de démonstration.
+      - nom: bulletin3
+        libelle: Extrait de casier judiciaire (bulletin n°3)
+        type: CHOIX
+        modifiable: true
+        choix: { NEANT: Néant (casier vierge), MENTIONS: Une ou plusieurs condamnations }
+    documents:
+      bulletin-3:
+        titre: Extrait de casier judiciaire (bulletin n°3)
+        champs: [nom, prenoms, date_naissance, lieu_naissance, juridiction, bulletin3]
