@@ -1,0 +1,17 @@
+# Seuls le réacteur Maven et ses modules entrent dans le contexte de build.
+*
+!mvnw
+!pom.xml
+!.mvn
+!commun
+!console
+!journal
+!resilience
+!consentement-minimisation/consentement
+!consentement-minimisation/connecteur
+!passerelle/kit
+!passerelle/serveur
+!espace-usager/serveur
+!registres/serveur
+!guichet-agent/serveur
+**/target

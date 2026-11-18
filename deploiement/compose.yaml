@@ -1,0 +1,347 @@
+# Sira - le socle : autorité de certification, base, fournisseur d'identité, passerelle,
+# espace citoyen, console et proxy d'entrée. Il démarre seul, sans aucune administration.
+# La démonstration (administrations simulées, comptes fictifs) est dans compose.demo.yaml.
+# Lancement : scripts/sira demarrer (ou « docker compose up -d --wait » depuis ce dossier).
+# Images : versions exactes épinglées par empreinte, ici et dans les Dockerfile ; .env n'y touche pas.
+name: sira
+
+# Journaux Docker bornés : trois fichiers de 10 Mo par conteneur.
+x-journaux: &journaux
+  driver: json-file
+  options: { max-size: 10m, max-file: "3" }
+
+# Durcissement commun à tous les conteneurs permanents. Chaque service fixe aussi sa mémoire.
+x-durci: &durci
+  restart: unless-stopped
+  read_only: true
+  cap_drop: [ALL]
+  security_opt: ["no-new-privileges:true"]
+  pids_limit: 256
+  logging: *journaux
+
+# Applications Java : image commune (java.Dockerfile), utilisateur 10001, /tmp en mémoire.
+# Mémoire bornée : une quinzaine de JVM partagent le poste.
+x-java: &java
+  <<: *durci
+  user: "10001:10001"
+  mem_limit: 512m
+  tmpfs: [/tmp]
+  environment: &java-env
+    JAVA_TOOL_OPTIONS: >-
+      -XX:MaxRAMPercentage=70 -XX:+UseSerialGC -XX:TieredStopAtLevel=1
+      -XX:ReservedCodeCacheSize=64m -Xss512k -XX:+ExitOnOutOfMemoryError -Djava.io.tmpdir=/tmp
+    # Cookie de session « Secure » dès que Sira est servi en HTTPS (SIRA_HTTPS=true).
+    SERVER_SERVLET_SESSION_COOKIE_SECURE: ${SIRA_HTTPS:-false}
+  healthcheck:
+    # La sonde de l'image, avec un délai de démarrage à la mesure d'un démarrage à froid.
+    test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8081/actuator/health/readiness"]
+    interval: 5s
+    timeout: 3s
+    retries: 24
+    start_period: 240s
+
+# Écrans web : image commune (web.Dockerfile), nginx sans privilège sur 8080.
+x-web: &web
+  <<: *durci
+  mem_limit: 64m
+  tmpfs:
+    - /tmp
+  healthcheck:
+    test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/sante"]
+    interval: 5s
+    timeout: 3s
+    retries: 12
+
+services:
+  # Émet les certificats et génère les secrets, puis s'arrête. Seul à voir la clé de l'autorité.
+  pki:
+    build: ../pki
+    image: sira/pki:local
+    restart: "no"
+    read_only: true
+    network_mode: none
+    cap_drop: [ALL]
+    cap_add: [CHOWN] # remettre chaque clé à l'utilisateur du conteneur qui la lit
+    security_opt: ["no-new-privileges:true"]
+    pids_limit: 64
+    mem_limit: 64m
+    logging: *journaux
+    tmpfs: [/tmp]
+    # Les volumes gardent la trace de leur mode : un socle seul refuse des volumes de démonstration.
+    environment:
+      SIRA_MODE: socle
+    volumes:
+      - autorite:/autorite
+      - pki:/pki
+      - secrets:/secrets
+      - ./membres.conf:/etc/sira/membres.conf:ro
+      - ./secrets.conf:/etc/sira/secrets.conf:ro
+
+  socle-db:
+    <<: *durci
+    image: postgres:17.11-alpine@sha256:266d3c257594e195b309ae9d1805e54c788f1d7b375f56bf6c367aac6c917e7b
+    user: "70:70"
+    mem_limit: 256m
+    pids_limit: 512 # un processus par connexion
+    command:
+      - postgres
+      - -c
+      - hba_file=/etc/sira/pg_hba.conf
+      - -c
+      - ssl=on
+      - -c
+      - ssl_cert_file=/run/sira/pki/tls.crt
+      - -c
+      - ssl_key_file=/run/sira/pki/tls.key
+      - -c
+      - ssl_min_protocol_version=TLSv1.3
+    environment:
+      POSTGRES_PASSWORD_FILE: /run/sira/secrets/superutilisateur
+    tmpfs:
+      - /tmp
+      - /var/run/postgresql:uid=70,gid=70
+    volumes:
+      - socle-db:/var/lib/postgresql/data
+      - ./bases/pg_hba.conf:/etc/sira/pg_hba.conf:ro
+      - ./bases/roles.sh:/docker-entrypoint-initdb.d/10-roles.sh:ro
+      - { type: volume, source: pki, target: /run/sira/pki, read_only: true, volume: { subpath: membres/socle-db } }
+      - { type: volume, source: secrets, target: /run/sira/secrets, read_only: true, volume: { subpath: socle-db } }
+    networks: [donnees, base-identite]
+    healthcheck:
+      # Par TCP : pendant l'initialisation, le serveur n'écoute que sur son socket local.
+      test: ["CMD", "pg_isready", "--host=127.0.0.1", "--username=postgres", "--quiet"]
+      interval: 3s
+      timeout: 3s
+      retries: 40
+    depends_on:
+      pki: { condition: service_completed_successfully }
+
+  # Fournisseur d'identité. Il n'est sur aucun réseau d'application : le navigateur l'atteint par
+  # le proxy, les serveurs par « acces-identite » (mTLS), et lui ne voit que sa base.
+  keycloak:
+    <<: *durci
+    build: ../identite
+    image: sira/identite:local
+    mem_limit: 1g
+    environment:
+      SIRA_MODE: socle
+      KC_BOOTSTRAP_ADMIN_USERNAME: amorcage
+      KC_DB_URL: jdbc:postgresql://socle-db:5432/keycloak?sslmode=verify-full&sslrootcert=/run/sira/pki/ca.crt
+      KC_DB_USERNAME: keycloak
+      # Nom public (navigateur, émetteur des jetons). Les serveurs passent par https://keycloak:8443.
+      KC_HOSTNAME: http://identite.sira.localhost:${SIRA_PORT:-8600}
+      KC_HOSTNAME_BACKCHANNEL_DYNAMIC: "true"
+      # HTTP sur le seul réseau « identite » ; les en-têtes X-Forwarded-* ne sont crus que des deux
+      # relais, qui les écrasent.
+      KC_HTTP_ENABLED: "true"
+      KC_PROXY_HEADERS: xforwarded
+      KC_PROXY_TRUSTED_ADDRESSES: 172.16.226.3,172.16.226.4
+      # Certificat client des serveurs : vérifié par acces-identite, transmis dans un en-tête, puis
+      # revérifié ici contre l'autorité Sira seule.
+      KC_SPI_X509CERT_LOOKUP__NGINX__SSL_CLIENT_CERT: ssl-client-cert
+      KC_TRUSTSTORE_PATHS: /run/sira/pki/ca.crt
+      # Interface de gestion (santé) : boucle locale seulement.
+      KC_HTTP_MANAGEMENT_HOST: 127.0.0.1
+      KC_HTTP_MANAGEMENT_SCHEME: http
+      SIRA_PORT: ${SIRA_PORT:-8600}
+      # Messagerie qui porte le code de connexion (SMTP). Vide : aucun envoi possible.
+      SIRA_MESSAGERIE_HOTE: ${SIRA_MESSAGERIE_HOTE:-}
+      SIRA_MESSAGERIE_PORT: ${SIRA_MESSAGERIE_PORT:-587}
+      SIRA_MESSAGERIE_STARTTLS: ${SIRA_MESSAGERIE_STARTTLS:-true}
+      SIRA_MESSAGERIE_SSL: ${SIRA_MESSAGERIE_SSL:-false}
+      SIRA_MESSAGERIE_AUTH: ${SIRA_MESSAGERIE_AUTH:-false}
+      SIRA_MESSAGERIE_UTILISATEUR: ${SIRA_MESSAGERIE_UTILISATEUR:-}
+      SIRA_MESSAGERIE_MOT_DE_PASSE: ${SIRA_MESSAGERIE_MOT_DE_PASSE:-}
+      SIRA_MESSAGERIE_EXPEDITEUR: ${SIRA_MESSAGERIE_EXPEDITEUR:-ne-pas-repondre@sira.example}
+      # Royaumes des administrateurs : lien « afficher un nouveau QR code » (téléphone perdu).
+      SIRA_COURRIEL_HOTE: ${SIRA_COURRIEL_HOTE:-}
+      SIRA_COURRIEL_PORT: ${SIRA_COURRIEL_PORT:-587}
+      SIRA_COURRIEL_UTILISATEUR: ${SIRA_COURRIEL_UTILISATEUR:-}
+      SIRA_COURRIEL_MOT_DE_PASSE: ${SIRA_COURRIEL_MOT_DE_PASSE:-}
+      SIRA_COURRIEL_ADRESSE: ${SIRA_COURRIEL_UTILISATEUR:-ne-pas-repondre@sira.example}
+    tmpfs:
+      - /tmp
+      - /opt/keycloak/data:uid=1000,gid=0,mode=0700
+    volumes:
+      - { type: volume, source: pki, target: /run/sira/pki, read_only: true, volume: { subpath: membres/identite } }
+      - { type: volume, source: secrets, target: /run/sira/secrets, read_only: true, volume: { subpath: identite } }
+    networks:
+      identite: { ipv4_address: 172.16.226.2, aliases: [fournisseur-identite] }
+      base-identite: {}
+    healthcheck:
+      # L'image n'embarque ni curl ni wget.
+      test:
+        - CMD-SHELL
+        - >-
+          exec 3<>/dev/tcp/127.0.0.1/9000
+          && printf 'GET /health/ready HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n' >&3
+          && read -r reponse <&3
+          && case "$$reponse" in *" 200 "*) true ;; *) false ;; esac
+      interval: 5s
+      timeout: 5s
+      retries: 60
+      start_period: 30s
+    depends_on:
+      pki: { condition: service_completed_successfully }
+      socle-db: { condition: service_healthy }
+
+  # Seule porte des serveurs vers Keycloak : mTLS sur 8443 sous le nom « keycloak », points
+  # d'entrée des jetons et des clés seulement. Ni console, ni royaume « master ».
+  acces-identite:
+    <<: *durci
+    image: nginxinc/nginx-unprivileged:1.31.7-alpine@sha256:b5047b9b76845eac124358373c6852377c52e4b05834a47647e955dd91cb8f1e
+    mem_limit: 32m
+    tmpfs:
+      - /tmp
+      - /etc/nginx/conf.d:uid=101,gid=101
+    volumes:
+      - ./proxy/acces-identite.conf.template:/etc/nginx/templates/acces-identite.conf.template:ro
+      - { type: volume, source: pki, target: /run/sira/pki, read_only: true, volume: { subpath: membres/acces-identite } }
+    networks:
+      identite: { ipv4_address: 172.16.226.4 }
+      sira: { aliases: [keycloak] }
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8081/_sante"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    depends_on:
+      pki: { condition: service_completed_successfully }
+
+  # Passerelle : seul point de passage entre services et registres (mTLS, 8443).
+  passerelle:
+    <<: *java
+    mem_limit: 768m
+    build:
+      context: ..
+      dockerfile: deploiement/docker/java.Dockerfile
+      args: { MODULE: passerelle/serveur }
+    image: sira/passerelle:local
+    environment:
+      <<: *java-env
+      SIRA_PORT: ${SIRA_PORT:-8600}
+      SIRA_PASSERELLE_IDENTITE_CITOYENS_EMETTEUR: http://identite.sira.localhost:${SIRA_PORT:-8600}/realms/sira-citoyens
+      SIRA_PASSERELLE_IDENTITE_SOCLE_EMETTEUR: http://identite.sira.localhost:${SIRA_PORT:-8600}/realms/sira-socle
+      SIRA_PASSERELLE_ESPACECITOYENURL: http://citoyen.sira.localhost:${SIRA_PORT:-8600}
+    volumes:
+      - { type: volume, source: pki, target: /run/sira/pki, read_only: true, volume: { subpath: membres/passerelle } }
+      - { type: volume, source: secrets, target: /run/sira/secrets, read_only: true, volume: { subpath: passerelle } }
+    networks: [sira, donnees]
+    depends_on:
+      pki: { condition: service_completed_successfully }
+      socle-db: { condition: service_healthy }
+
+  # Serveur de l'espace citoyen : session OIDC, relais vers la passerelle. HTTP 8080 derrière web-citoyen.
+  espace-citoyen:
+    <<: *java
+    build:
+      context: ..
+      dockerfile: deploiement/docker/java.Dockerfile
+      args: { MODULE: espace-usager/serveur }
+    image: sira/espace-citoyen:local
+    environment:
+      <<: *java-env
+      SIRA_URL_PUBLIQUE: http://citoyen.sira.localhost:${SIRA_PORT:-8600}
+      SIRA_IDENTITE_URL_PUBLIQUE: http://identite.sira.localhost:${SIRA_PORT:-8600}
+      SIRA_IDENTITE_URL_INTERNE: https://keycloak:8443
+    volumes:
+      - { type: volume, source: pki, target: /run/sira/pki, read_only: true, volume: { subpath: membres/espace-citoyen } }
+    networks: [sira, app-citoyen]
+    depends_on:
+      pki: { condition: service_completed_successfully }
+
+  web-citoyen:
+    <<: *web
+    build:
+      context: ..
+      dockerfile: deploiement/docker/web.Dockerfile
+      args: { ESPACE: interfaces/socle, APPLICATION: espace-citoyen }
+    image: sira/web-citoyen:local
+    environment:
+      API_AMONT: http://espace-citoyen:8080
+    networks: [entree, app-citoyen]
+
+  # Serveur de la console d'administration. HTTP 8080 derrière web-console.
+  console:
+    <<: *java
+    build:
+      context: ..
+      dockerfile: deploiement/docker/java.Dockerfile
+      args: { MODULE: console }
+    image: sira/console:local
+    environment:
+      <<: *java-env
+      SIRA_URL_PUBLIQUE: http://console.sira.localhost:${SIRA_PORT:-8600}
+      SIRA_IDENTITE_URL_PUBLIQUE: http://identite.sira.localhost:${SIRA_PORT:-8600}
+      SIRA_IDENTITE_URL_INTERNE: https://keycloak:8443
+    volumes:
+      - { type: volume, source: pki, target: /run/sira/pki, read_only: true, volume: { subpath: membres/console } }
+    networks: [sira, app-console]
+    depends_on:
+      pki: { condition: service_completed_successfully }
+
+  web-console:
+    <<: *web
+    build:
+      context: ..
+      dockerfile: deploiement/docker/web.Dockerfile
+      args: { ESPACE: interfaces/socle, APPLICATION: console }
+    image: sira/web-console:local
+    environment:
+      API_AMONT: http://console:8080
+    networks: [entree, app-console]
+
+  proxy:
+    <<: *durci
+    image: nginxinc/nginx-unprivileged:1.31.7-alpine@sha256:b5047b9b76845eac124358373c6852377c52e4b05834a47647e955dd91cb8f1e
+    mem_limit: 64m
+    ports:
+      - "${SIRA_ADRESSE:-127.0.0.1}:${SIRA_PORT:-8600}:8080"
+    tmpfs:
+      - /tmp
+      - /etc/nginx/conf.d:uid=101,gid=101
+    volumes:
+      - ./proxy/sira.conf.template:/etc/nginx/templates/sira.conf.template:ro
+      - ./proxy/indisponible.html:/usr/share/nginx/sira/_indisponible.html:ro
+      - ./proxy/indisponible.conf:/etc/nginx/sira/indisponible.conf:ro
+    environment:
+      # true : Sira est servi en HTTPS par un frontal TLS placé devant ce proxy (HSTS, cookies Secure).
+      SIRA_HTTPS: ${SIRA_HTTPS:-false}
+    networks:
+      entree: {}
+      identite: { ipv4_address: 172.16.226.3 }
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/_sante"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+networks:
+  # Proxy et interfaces web.
+  entree: {}
+  # Keycloak et ses deux relais (proxy, acces-identite) : sous-réseau fixe, pour que Keycloak ne
+  # croie les en-têtes X-Forwarded-* que d'eux.
+  identite:
+    internal: true
+    ipam:
+      config: [{ subnet: 172.16.226.0/28 }]
+  # Keycloak et sa base, rien d'autre.
+  base-identite:
+    internal: true
+  # Échanges entre machines : mTLS obligatoire.
+  sira:
+    internal: true
+  # Accès à la base du socle (TLS, un rôle par composant).
+  donnees:
+    internal: true
+  # Chaque serveur d'application n'est joignable que par son écran.
+  app-citoyen:
+    internal: true
+  app-console:
+    internal: true
+
+volumes:
+  autorite: {}
+  pki: {}
+  secrets: {}
+  socle-db: {}

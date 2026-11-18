@@ -1,0 +1,76 @@
+# Monté en « sira.demo.conf.template » : lu après sira.conf, dont il reprend le format de journal
+# et la variable $hsts.
+# Écrans de la démonstration, ajoutés au proxy d'entrée par compose.demo.yaml. Absents du socle :
+# sans la démonstration, ces noms d'hôte répondent 404.
+
+map $host $amont_demo {
+  default                      "";
+  concours.sira.localhost      web-concours:8080;
+  bourses.sira.localhost       web-bourses:8080;
+  entreprises.sira.localhost   web-entreprises:8080;
+  etat-civil.sira.localhost    web-etat-civil:8080;
+  nationalite.sira.localhost   web-nationalite:8080;
+  casier.sira.localhost        web-casier:8080;
+  diplomes.sira.localhost      web-diplomes:8080;
+}
+
+server {
+  listen 8080;
+  server_name concours.sira.localhost bourses.sira.localhost entreprises.sira.localhost
+              etat-civil.sira.localhost nationalite.sira.localhost casier.sira.localhost
+              diplomes.sira.localhost;
+  access_log /dev/stdout sira;
+  add_header Strict-Transport-Security $hsts always;
+
+  location = /_indisponible.html {
+    internal;
+    root /usr/share/nginx/sira;
+    include /etc/nginx/sira/indisponible.conf;
+  }
+
+  location / {
+    proxy_pass http://$amont_demo;
+  }
+}
+
+# Téléphone simulé : son écran, et la seule recherche de la messagerie de démonstration, en
+# lecture. L'interface de Mailpit et son API d'écriture (suppression, envoi) ne sont pas publiées.
+server {
+  listen 8080;
+  server_name telephone.sira.localhost;
+  access_log /dev/stdout sira;
+  add_header Strict-Transport-Security $hsts always;
+
+  # Variables : le proxy démarre même si un amont n'est pas encore là.
+  set $messagerie mailpit:8025;
+  set $ecran web-telephone:8080;
+
+  location = /_indisponible.html {
+    internal;
+    root /usr/share/nginx/sira;
+    include /etc/nginx/sira/indisponible.conf;
+  }
+
+  location = /messagerie/search {
+    limit_except GET { deny all; }
+    proxy_pass http://$messagerie/api/v1/search$is_args$args;
+    proxy_set_header Host $messagerie;
+    proxy_hide_header Access-Control-Allow-Origin;
+    proxy_hide_header Access-Control-Allow-Methods;
+    proxy_hide_header Access-Control-Allow-Headers;
+    add_header Cache-Control "no-store" always;
+    add_header X-Content-Type-Options "nosniff" always;
+  }
+
+  location /messagerie/ {
+    return 404;
+  }
+
+  location /api/ {
+    return 404;
+  }
+
+  location / {
+    proxy_pass http://$ecran;
+  }
+}
