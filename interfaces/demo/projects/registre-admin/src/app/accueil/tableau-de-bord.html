@@ -1,0 +1,91 @@
+<div class="sira-titre-page">
+  <h1>Tableau de bord</h1>
+  @if (session.peut('PERSONNES_AJOUTER')) {
+    <a siraBouton routerLink="/personnes/nouvelle">
+      <sira-icone nom="plus" />
+      Ajouter une personne
+    </a>
+  }
+</div>
+
+@if (probleme(); as message) {
+  <sira-alerte type="erreur" titre="Le tableau de bord n’a pas pu être chargé">
+    <p>{{ message }}</p>
+    <button siraBouton variante="secondaire" type="button" (click)="donnees.reload()">
+      Réessayer
+    </button>
+  </sira-alerte>
+} @else if (donnees.value(); as d) {
+  <div class="sira-indicateurs">
+    @if (d.personnes; as personnes) {
+      <sira-indicateur
+        icone="users"
+        ton="bleu"
+        libelle="Personnes inscrites"
+        [valeur]="personnes.total"
+        note="dans le registre"
+        lien="/personnes"
+      />
+    }
+    @if (d.appels; as appels) {
+      <sira-indicateur
+        icone="inbox"
+        ton="violet"
+        libelle="Appels reçus"
+        [valeur]="appels.total"
+        note="depuis Sira"
+        lien="/appels"
+      />
+    }
+    @if (d.panne; as panne) {
+      <sira-indicateur
+        icone="signal"
+        [ton]="panne.mode === 'NORMAL' ? 'vert' : 'orange'"
+        libelle="État du registre"
+        [valeur]="libelles[panne.mode]"
+        [note]="panne.mode === 'NORMAL' ? 'répond normalement' : 'réponses perturbées'"
+        lien="/pannes"
+      />
+    }
+    <sira-indicateur
+      icone="file-text"
+      ton="gris"
+      libelle="Documents délivrés"
+      [valeur]="d.registre.documents.length"
+      note="types de documents"
+    />
+  </div>
+
+  @if (d.appels; as appels) {
+    <div class="sira-titre-page sira-marge-haut">
+      <h2>Derniers appels reçus</h2>
+      <a siraBouton variante="secondaire" routerLink="/appels">Tout voir</a>
+    </div>
+    <sira-tableau
+      legende="Derniers appels reçus"
+      [colonnes]="colonnes"
+      [lignes]="appels.elements.slice(0, 5)"
+      [outils]="false"
+    >
+      <ng-template siraCellule="horodatage" let-ligne>{{
+        ligne.horodatage | siraDate
+      }}</ng-template>
+      <ng-template siraCellule="type" let-ligne>{{
+        ligne.type === 'DOCUMENT' ? 'Document' : 'Fiche'
+      }}</ng-template>
+      <ng-template siraCellule="statut" let-ligne>
+        @if (ligne.statut === null) {
+          <sira-etiquette etat="attention">Sans réponse</sira-etiquette>
+        } @else if (ligne.statut < 300) {
+          <sira-etiquette etat="succes">Répondu</sira-etiquette>
+        } @else if (ligne.statut === 404) {
+          <sira-etiquette etat="info">Personne inconnue</sira-etiquette>
+        } @else {
+          <sira-etiquette etat="erreur">Erreur {{ ligne.statut }}</sira-etiquette>
+        }
+      </ng-template>
+    </sira-tableau>
+  }
+} @else {
+  <sira-squelette [lignes]="6" libelle="Chargement du tableau de bord" />
+}

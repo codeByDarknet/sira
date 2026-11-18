@@ -1,0 +1,308 @@
+@if (dossier(); as dossier) {
+  <sira-etapes [etapes]="etapes" [courante]="4" />
+
+  @if (dossier.depose_le === null) {
+    <h1>Votre dossier</h1>
+    <p class="sira-chapeau">
+      Vérifiez les informations reçues des registres, complétez le reste, puis déposez votre
+      dossier.
+    </p>
+
+    <h2>Informations des registres</h2>
+    <p class="sira-secondaire">
+      Ces réponses viennent directement des administrations. Vous ne pouvez pas les changer ici.
+    </p>
+
+    @for (information of informations(); track information.verification.jeu) {
+      @let verification = information.verification;
+      @switch (verification.niveau) {
+        @case ('STATUT') {
+          <sira-groupe-formulaire
+            [legende]="verification.libelle"
+            [aide]="provenance(verification)"
+          >
+            <div class="sira-choix">
+              <input
+                type="radio"
+                disabled
+                [id]="verification.jeu + '-oui'"
+                [name]="verification.jeu"
+                [checked]="verification.valeur === true"
+              />
+              <label [for]="verification.jeu + '-oui'">Oui</label>
+            </div>
+            <div class="sira-choix">
+              <input
+                type="radio"
+                disabled
+                [id]="verification.jeu + '-non'"
+                [name]="verification.jeu"
+                [checked]="verification.valeur === false"
+              />
+              <label [for]="verification.jeu + '-non'">Non</label>
+            </div>
+          </sira-groupe-formulaire>
+        }
+        @case ('CHAMPS') {
+          <sira-groupe-formulaire
+            [legende]="verification.libelle"
+            [aide]="provenance(verification)"
+          >
+            @for (champ of information.champs; track champ.cle) {
+              <sira-champ [libelle]="champ.libelle">
+                <input
+                  siraSaisie
+                  type="text"
+                  disabled
+                  [name]="verification.jeu + '.' + champ.cle"
+                  [value]="champ.valeur"
+                />
+              </sira-champ>
+            }
+          </sira-groupe-formulaire>
+        }
+        @default {
+          <div class="sira-champ">
+            @if (verification.piece; as piece) {
+              <ps-fichier
+                [nom]="verification.libelle + ' · ' + piece.nom"
+                [details]="provenance(verification) + ' · ' + tailleFichier(piece.taille)"
+                [apercu]="adressePiece(verification.jeu).apercu"
+                [telechargement]="adressePiece(verification.jeu).telechargement"
+              />
+            } @else {
+              <ps-fichier [nom]="verification.libelle" [details]="provenance(verification)" />
+            }
+          </div>
+        }
+      }
+
+      @if (nonTransmise(verification)) {
+        <div class="sira-champ" aria-live="polite">
+          @if (information.substitution; as substitution) {
+            <ps-fichier
+              [nom]="'Justificatif : ' + (substitution.piece?.nom ?? '')"
+              [details]="
+                'Déclaré par vous, à la place de : ' +
+                verification.libelle +
+                ' · ' +
+                tailleFichier(substitution.piece?.taille ?? 0)
+              "
+              [apercu]="adressePieceDeclaree(verification.jeu).apercu"
+              [telechargement]="adressePieceDeclaree(verification.jeu).telechargement"
+            >
+              <button
+                fichier-actions
+                siraBouton
+                variante="discret"
+                type="button"
+                [enCours]="envoi() === verification.jeu"
+                (click)="retirer(verification.jeu)"
+              >
+                Retirer<span class="sira-masque"> le justificatif</span>
+              </button>
+            </ps-fichier>
+          } @else {
+            <div class="sira-fichier">
+              <sira-icone nom="file-text" />
+              <div class="sira-fichier__corps">
+                <sira-champ
+                  [libelle]="'Justificatif à la place de : ' + verification.libelle"
+                  aide="Facultatif. Au format PDF, 2 Mo au plus."
+                  [erreur]="erreur(verification.jeu)"
+                >
+                  <input
+                    siraSaisie
+                    type="file"
+                    accept="application/pdf,.pdf"
+                    [name]="verification.jeu"
+                    [disabled]="envoi() !== null"
+                    (change)="joindre(verification.jeu, $event)"
+                  />
+                </sira-champ>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    }
+
+    @if (aCompleter().length > 0) {
+      <h2 class="sira-marge-haut">À compléter par vous</h2>
+      <p class="sira-secondaire">Ces informations sont déclarées par vous, sans vérification.</p>
+
+      @for (ligne of aCompleter(); track ligne.attendue.code) {
+        @let code = ligne.attendue.code;
+        @if (ligne.attendue.nature === 'TEXTE') {
+          <form class="sira-champ" novalidate (submit)="enregistrer($event, code)">
+            <sira-champ
+              [libelle]="ligne.attendue.libelle"
+              [aide]="ligne.attendue.aide ?? undefined"
+              [erreur]="erreur(code)"
+            >
+              <input
+                #saisie
+                siraSaisie
+                type="text"
+                maxlength="120"
+                autocomplete="off"
+                [name]="code"
+                [value]="brouillon(code, ligne.declaree?.valeur ?? null)"
+                (input)="modifier(code, saisie.value)"
+              />
+            </sira-champ>
+            <div class="sira-groupe-boutons">
+              <button siraBouton variante="secondaire" type="submit" [enCours]="envoi() === code">
+                Enregistrer<span class="sira-masque"> {{ ligne.attendue.libelle }}</span>
+              </button>
+              <span aria-live="polite" class="sira-secondaire">
+                @if (enregistre() === code) {
+                  Enregistré
+                }
+              </span>
+            </div>
+          </form>
+        } @else {
+          <div class="sira-champ" aria-live="polite">
+            @if (ligne.declaree?.piece; as piece) {
+              <ps-fichier
+                [nom]="ligne.attendue.libelle + ' · ' + piece.nom"
+                [details]="'Déclaré par vous · ' + tailleFichier(piece.taille)"
+                [apercu]="adressePieceDeclaree(code).apercu"
+                [telechargement]="adressePieceDeclaree(code).telechargement"
+              >
+                <button
+                  fichier-actions
+                  siraBouton
+                  variante="discret"
+                  type="button"
+                  [enCours]="envoi() === code"
+                  (click)="retirer(code)"
+                >
+                  Retirer<span class="sira-masque"> {{ ligne.attendue.libelle }}</span>
+                </button>
+              </ps-fichier>
+            } @else {
+              <div class="sira-fichier">
+                <sira-icone nom="file-text" />
+                <div class="sira-fichier__corps">
+                  <sira-champ
+                    [libelle]="ligne.attendue.libelle"
+                    [aide]="ligne.attendue.aide ?? undefined"
+                    [erreur]="erreur(code)"
+                  >
+                    <input
+                      siraSaisie
+                      type="file"
+                      accept="application/pdf,.pdf"
+                      [name]="code"
+                      [disabled]="envoi() !== null"
+                      (change)="joindre(code, $event)"
+                    />
+                  </sira-champ>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      }
+    }
+
+    <div aria-live="polite" class="sira-marge-haut">
+      @if (refusDepot(); as message) {
+        <sira-alerte type="erreur" titre="Le dossier n’a pas été déposé">
+          <p>{{ message }}</p>
+        </sira-alerte>
+      }
+    </div>
+    <div class="sira-groupe-boutons">
+      <button
+        siraBouton
+        type="button"
+        [enCours]="depot()"
+        [disabled]="envoi() !== null"
+        (click)="deposer()"
+      >
+        Déposer mon dossier
+      </button>
+    </div>
+  } @else {
+    <h1>Votre dossier est déposé</h1>
+
+    <div aria-live="polite">
+      @switch (dossier.etat) {
+        @case ('COMPLET') {
+          <sira-alerte type="succes" titre="Votre dossier est complet">
+            <p>Vous n’avez rien d’autre à faire.</p>
+          </sira-alerte>
+        }
+        @case ('A_EXAMINER') {
+          <sira-alerte type="info" titre="Un agent va examiner votre dossier">
+            <p>Une condition reste à confirmer. Votre dossier n’est pas rejeté.</p>
+          </sira-alerte>
+        }
+        @default {
+          <sira-alerte type="info" titre="Votre dossier est enregistré">
+            <p>Une réponse manque encore. Elle arrivera toute seule ; cette page se met à jour.</p>
+          </sira-alerte>
+        }
+      }
+    </div>
+
+    <dl siraSynthese class="sira-marge-haut">
+      <div siraSyntheseLigne cle="Numéro de dossier, à noter">
+        <span class="sira-chiffres">{{ dossier.numero }}</span>
+      </div>
+      <div siraSyntheseLigne cle="Déposé le">{{ dossier.depose_le | siraDate }}</div>
+    </dl>
+
+    <h2>Vérifié par les registres</h2>
+    <ps-verifications [verifications]="dossier.verifications" [adressePiece]="adressePiece" />
+
+    @if (dossier.declarations.length > 0) {
+      <h2 class="sira-marge-haut">Déclaré par vous</h2>
+      <ps-declarations
+        mention="Déclaré par vous"
+        [declarations]="dossier.declarations"
+        [adressePiece]="adressePieceDeclaree"
+      />
+    }
+
+    @if (dossier.pieces_evitees.length > 0) {
+      <h2 class="sira-marge-haut">Les pièces que vous n’avez pas eu à fournir</h2>
+      <ul>
+        @for (piece of dossier.pieces_evitees; track piece) {
+          <li>{{ piece }}</li>
+        }
+      </ul>
+    }
+
+    <p class="sira-marge-haut">Ce qui a été transmis reste visible dans votre espace Sira.</p>
+    <div class="sira-groupe-boutons">
+      <button
+        siraBouton
+        variante="secondaire"
+        type="button"
+        [enCours]="fermeture()"
+        (click)="terminer()"
+      >
+        Terminer
+      </button>
+    </div>
+  }
+} @else if (absent()) {
+  <h1>Votre dossier</h1>
+  <sira-etat-vide titre="Aucun dossier sur cet appareil" icone="file-text">
+    <p>Le dossier ne s’affiche que sur l’appareil qui l’a ouvert.</p>
+    <p><a siraBouton routerLink="/commencer">Commencer</a></p>
+  </sira-etat-vide>
+} @else if (probleme(); as message) {
+  <h1>Votre dossier</h1>
+  <sira-alerte type="erreur" titre="Votre dossier n’a pas pu être affiché">
+    <p>{{ message }}</p>
+    <button siraBouton variante="secondaire" type="button" (click)="actualiser()">Réessayer</button>
+  </sira-alerte>
+} @else {
+  <h1>Votre dossier</h1>
+  <sira-squelette [lignes]="5" libelle="Chargement de votre dossier" />
+}

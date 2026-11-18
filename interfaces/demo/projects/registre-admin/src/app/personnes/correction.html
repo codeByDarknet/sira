@@ -1,0 +1,190 @@
+@if (creation()) {
+  <sira-fil [elements]="[{ libelle: 'Personnes', chemin: '/personnes' }, { libelle: 'Ajouter' }]" />
+} @else {
+  <sira-fil
+    [elements]="[
+      { libelle: 'Personnes', chemin: '/personnes' },
+      { libelle: 'Fiche', chemin: '/personnes/' + id() },
+      { libelle: 'Modifier' },
+    ]"
+  />
+}
+
+@if (probleme(); as message) {
+  <h1>Fiche introuvable</h1>
+  <sira-alerte type="erreur">
+    <p>{{ message }}</p>
+    <a siraBouton variante="secondaire" routerLink="/personnes">Revenir à la liste</a>
+  </sira-alerte>
+} @else if (donnees.value(); as page) {
+  @if (page.personne; as personne) {
+    <h1>Modifier la fiche</h1>
+    <p class="sira-chapeau">
+      {{ personne.fiche['nom'] }} {{ personne.fiche['prenoms'] }} ·
+      <span class="sira-chiffres">{{ personne.identifiant }}</span>
+    </p>
+  } @else {
+    <h1>Ajouter une personne</h1>
+  }
+
+  <sira-resume-erreurs [erreurs]="resume()" />
+  @if (echec(); as message) {
+    <sira-alerte type="erreur" titre="La fiche n’a pas été enregistrée">{{ message }}</sira-alerte>
+  }
+
+  <form class="ra-formulaire" novalidate [formGroup]="page.formulaire" (ngSubmit)="enregistrer()">
+    @if (!page.personne) {
+      <sira-champ
+        [libelleFlottant]="false"
+        libelle="Identifiant unique"
+        aide="Douze chiffres. Laissez vide : le registre en attribue un."
+        identifiant="identifiant"
+        [erreur]="erreurs()['identifiant']"
+      >
+        <input
+          siraSaisie
+          siraFiltre="chiffres"
+          inputmode="numeric"
+          maxlength="12"
+          autocomplete="off"
+          [formControl]="nouvelIdentifiant"
+        />
+      </sira-champ>
+    }
+    @for (champ of page.champs; track champ.nom) {
+      @switch (champ.type) {
+        @case ('BOOLEEN') {
+          <sira-groupe-formulaire
+            [legende]="champ.libelle + (champ.facultatif ? '' : ' *')"
+            [erreur]="erreurs()[champ.nom]"
+          >
+            <label class="sira-choix">
+              <input [id]="champ.nom" type="radio" value="true" [formControlName]="champ.nom" />
+              Oui
+            </label>
+            <label class="sira-choix">
+              <input type="radio" value="false" [formControlName]="champ.nom" />
+              Non
+            </label>
+          </sira-groupe-formulaire>
+        }
+        @case ('CHOIX') {
+          <sira-champ
+            [libelleFlottant]="false"
+            [obligatoire]="!champ.facultatif"
+            [libelle]="champ.libelle"
+            [identifiant]="champ.nom"
+            [erreur]="erreurs()[champ.nom]"
+          >
+            <select siraSaisie [formControlName]="champ.nom">
+              @if (champ.facultatif) {
+                <option value="">Non renseigné</option>
+              } @else {
+                <option value="" disabled>Choisir…</option>
+              }
+              @for (option of choix(champ); track option[0]) {
+                <option [value]="option[0]">{{ option[1] }}</option>
+              }
+            </select>
+          </sira-champ>
+        }
+        @case ('DATE') {
+          <sira-champ
+            [libelleFlottant]="false"
+            [obligatoire]="!champ.facultatif"
+            [libelle]="champ.libelle"
+            [identifiant]="champ.nom"
+            [erreur]="erreurs()[champ.nom]"
+          >
+            <input siraSaisie type="date" [formControlName]="champ.nom" />
+          </sira-champ>
+        }
+        @case ('NOMBRE') {
+          <sira-champ
+            [libelleFlottant]="false"
+            [obligatoire]="!champ.facultatif"
+            [libelle]="champ.libelle"
+            [aide]="'Entre ' + champ.minimum + ' et ' + champ.maximum"
+            [identifiant]="champ.nom"
+            [erreur]="erreurs()[champ.nom]"
+          >
+            <input
+              siraSaisie
+              siraFiltre="decimal"
+              inputmode="decimal"
+              autocomplete="off"
+              [formControlName]="champ.nom"
+            />
+          </sira-champ>
+        }
+        @default {
+          <sira-champ
+            [libelleFlottant]="false"
+            [obligatoire]="!champ.facultatif"
+            [libelle]="champ.libelle"
+            [identifiant]="champ.nom"
+            [erreur]="erreurs()[champ.nom]"
+          >
+            <input siraSaisie autocomplete="off" maxlength="100" [formControlName]="champ.nom" />
+          </sira-champ>
+        }
+      }
+    }
+
+    @if (!page.personne && session.peut('DOCUMENTS_DEPOSER')) {
+      <fieldset class="ra-formulaire__plein ra-pieces-attente">
+        <legend>Documents de la personne</legend>
+        <p class="sira-secondaire">
+          Ajoutez ses pièces (acte, jugement, certificat…) : elles seront enregistrées avec la
+          fiche.
+        </p>
+        @for (piece of enAttente(); track $index) {
+          <div class="ra-document">
+            <span class="ra-document__icone" aria-hidden="true"
+              ><sira-icone nom="file-text"
+            /></span>
+            <span class="ra-document__textes">
+              <span class="ra-document__titre">{{ piece.titre }}</span>
+              <span class="ra-document__note"
+                >{{ piece.fichier.name }} · {{ piece.champs.length }} informations</span
+              >
+            </span>
+            <button
+              type="button"
+              siraAction="trash-2"
+              [libelle]="'Retirer ' + piece.titre"
+              (click)="retirerEnAttente($index)"
+            ></button>
+          </div>
+        }
+        <button siraBouton variante="secondaire" type="button" (click)="depotOuvert.set(true)">
+          <sira-icone nom="plus" />
+          Ajouter un document
+        </button>
+      </fieldset>
+    }
+
+    <div class="sira-groupe-boutons ra-formulaire__boutons">
+      <a
+        siraBouton
+        variante="secondaire"
+        [routerLink]="page.personne ? ['/personnes', page.personne.id] : ['/personnes']"
+        >Annuler</a
+      >
+      <button siraBouton type="submit" [enCours]="envoi()">
+        {{ page.personne ? 'Enregistrer' : 'Ajouter la personne' }}
+      </button>
+    </div>
+  </form>
+
+  @if (depotOuvert()) {
+    <ra-depot-piece
+      [documents]="page.registre.documents"
+      [champs]="page.registre.champs"
+      (valide)="ajouterEnAttente($event)"
+      (annule)="depotOuvert.set(false)"
+    />
+  }
+} @else {
+  <sira-squelette [lignes]="5" libelle="Chargement de la fiche" />
+}

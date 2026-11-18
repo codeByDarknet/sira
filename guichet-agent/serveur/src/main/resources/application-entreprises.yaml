@@ -1,0 +1,18 @@
+sira:
+  service:
+    code: entreprises
+    nom: Créer son entreprise
+    organisme: Centre de formalités des entreprises 
+    demarche: immatriculation-commercant
+    prefixe-dossier: RC
+  formulaire:
+    # Ce que la personne renseigne elle-même ; le reste vient des registres.
+    declarations:
+      - code: telephone
+        libelle: Téléphone de contact
+        aide: Facultatif. Pour vous joindre au sujet de votre dossier.
+        nature: TEXTE
+      - code: justificatif-local
+        libelle: Justificatif d'adresse du local commercial
+        aide: Facultatif. Au format PDF, 2 Mo au plus.
+        nature: PIECE

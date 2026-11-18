@@ -1,0 +1,50 @@
+spring:
+  application:
+    name: service
+  datasource:
+    hikari:
+      maximum-pool-size: 5
+  # Envoi des identifiants aux nouveaux agents. Hôte, compte et mot de passe viennent de
+  # l'environnement (SPRING_MAIL_*), jamais du dépôt.
+  mail:
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.starttls.enable: true
+      mail.smtp.starttls.required: true
+      mail.smtp.connectiontimeout: 10000
+      mail.smtp.timeout: 15000
+      mail.smtp.writetimeout: 15000
+
+sira:
+  http:
+    # Une pièce PDF jointe au dossier pèse jusqu'à 2 Mo. Les autres routes gardent 256 Kio
+    # (LimiteCorpsHorsPieces).
+    taille-corps-max: 2MB
+  mtls:
+    # HTTP sur 8080 derrière le nginx de l'interface ; mTLS sortant vers la passerelle et
+    # l'annuaire des agents.
+    mode: client
+  oidc:
+    client-id: demo-${sira.service.code}
+    scopes: openid,profile
+  agents:
+    administration: ${sira.service.code}
+    nom: ${sira.service.nom}
+    url-application: ${sira.oidc.url-publique}/agent
+  service:
+    # Pièce que le citoyen aurait dû fournir, par registre interrogé.
+    pieces:
+      etat-civil: Extrait d'acte de naissance
+      nationalite: Certificat de nationalité burkinabè
+      casier: Extrait de casier judiciaire (bulletin n°3)
+      diplomes: Copie légalisée du diplôme
+  formulaire:
+    # Champs annoncés à l'écran pour chaque jeu de niveau CHAMPS, avant la réponse du registre.
+    # Ils reprennent la liste du jeu dans l'amorçage de la passerelle (ProfilsTest le vérifie).
+    champs:
+      "[etat-civil.nom-prenoms]": [nom, prenoms]
+      "[etat-civil.identite]": [nom, prenoms, date_naissance]
+      "[diplomes.baccalaureat-detail]": [baccalaureat_serie, baccalaureat_annee, baccalaureat_mention]
+      "[etat-civil.lieu-naissance]": [lieu_naissance]
+      "[etat-civil.filiation]": [nom_pere, nom_mere]
+      "[diplomes.parcours]": [baccalaureat_moyenne, etablissement]

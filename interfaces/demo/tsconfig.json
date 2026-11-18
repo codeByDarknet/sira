@@ -1,0 +1,30 @@
+{
+  "compileOnSave": false,
+  "compilerOptions": {
+    "strict": true,
+    "noImplicitOverride": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "skipLibCheck": true,
+    "isolatedModules": true,
+    "experimentalDecorators": true,
+    "importHelpers": true,
+    "target": "ES2022",
+    "module": "preserve",
+    "baseUrl": ".",
+    "paths": {
+      "@sira/ui": ["./bibliotheques/ui/src/public-api.ts"],
+      "@sira/coquille": ["./bibliotheques/coquille/src/public-api.ts"],
+      "@demo/commun": ["./commun/public-api.ts"],
+      "@demo/agents": ["./commun/agents/pages.ts"],
+      "@demo/apercu": ["./commun/apercu/apercu-pdf.ts"]
+    }
+  },
+  "angularCompilerOptions": {
+    "enableI18nLegacyMessageIdFormat": false,
+    "strictInjectionParameters": true,
+    "strictInputAccessModifiers": true,
+    "strictTemplates": true
+  }
+}

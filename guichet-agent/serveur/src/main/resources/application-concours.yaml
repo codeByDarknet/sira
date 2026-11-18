@@ -1,0 +1,18 @@
+sira:
+  service:
+    code: concours
+    nom: Concours directs 2026
+    organisme: Ministère de la Fonction publique
+    demarche: concours-direct
+    prefixe-dossier: CD
+  formulaire:
+    # Ce que la personne renseigne elle-même ; le reste vient des registres.
+    declarations:
+      - code: telephone
+        libelle: Téléphone de contact
+        aide: Facultatif. Pour vous joindre au sujet de votre dossier.
+        nature: TEXTE
+      - code: cv
+        libelle: Curriculum vitæ
+        aide: Facultatif. Au format PDF, 2 Mo au plus.
+        nature: PIECE

@@ -1,0 +1,69 @@
+<div class="sira-titre-page">
+  <div>
+    <h1>Dossiers reçus</h1>
+    <p>
+      Les dossiers déposés par les citoyens, avec les réponses des registres déjà vérifiées. Ouvrez
+      un dossier pour l’examiner.
+    </p>
+  </div>
+</div>
+
+<div aria-live="polite">
+  @if (probleme(); as message) {
+    <sira-alerte type="erreur" titre="La liste n’a pas pu être chargée">
+      <p>{{ message }}</p>
+      <button siraBouton variante="secondaire" type="button" (click)="resultat.reload()">
+        Réessayer
+      </button>
+    </sira-alerte>
+  } @else if (resultat.value(); as liste) {
+    @if (liste.total === 0) {
+      <sira-etat-vide titre="Aucun dossier pour le moment" icone="inbox" />
+    } @else {
+      <sira-tableau
+        titre="Dossiers"
+        [legende]="liste.total === 1 ? '1 dossier' : liste.total + ' dossiers'"
+        [colonnes]="colonnes"
+        [lignes]="liste.elements"
+        [total]="liste.total"
+        [pageCourante]="liste.page"
+        [parPage]="liste.taille"
+        (requete)="page.set($event.page)"
+        [outils]="false"
+      >
+        <p-select
+          tableau-actions
+          class="sira-tableau__filtre"
+          [options]="choixEtats"
+          optionLabel="libelle"
+          optionValue="etat"
+          appendTo="body"
+          ariaLabel="Filtrer par état du dossier"
+          [ngModel]="etat()"
+          (ngModelChange)="filtrer($event ?? '')"
+        />
+        <ng-template siraCellule="numero" let-ligne>
+          <span class="sira-tableau__principal sira-chiffres">{{ ligne.numero }}</span>
+        </ng-template>
+        <ng-template siraActions let-ligne>
+          <a
+            siraAction="eye"
+            [libelle]="'Examiner le dossier ' + ligne.numero"
+            [routerLink]="ligne.id"
+          ></a>
+        </ng-template>
+        <ng-template siraCellule="etat" let-ligne>
+          <sira-etiquette [etat]="mention(ligne.etat).etat">{{
+            mention(ligne.etat).texte
+          }}</sira-etiquette>
+        </ng-template>
+        <ng-template siraCellule="cree_le" let-ligne>{{ ligne.cree_le | siraDate }}</ng-template>
+        <ng-template siraCellule="modifie_le" let-ligne>{{
+          ligne.modifie_le | siraDate
+        }}</ng-template>
+      </sira-tableau>
+    }
+  } @else {
+    <sira-squelette [lignes]="5" libelle="Chargement des dossiers" />
+  }
+</div>

@@ -1,0 +1,94 @@
+<sira-etapes [etapes]="etapes" [courante]="2" />
+
+@if (demande(); as demande) {
+  @if (fin(); as fin) {
+    <h1>{{ fin.titre }}</h1>
+    <p class="sira-chapeau">{{ fin.texte }}</p>
+    <div class="sira-groupe-boutons">
+      <a siraBouton routerLink="/commencer">Recommencer</a>
+      <a siraBouton variante="secondaire" routerLink="/">Revenir à l’accueil</a>
+    </div>
+  } @else if (demande.etat !== 'EN_ATTENTE_ACCORD') {
+    <h1>Votre accord est enregistré</h1>
+    <sira-squelette [lignes]="3" libelle="Préparation de votre dossier" />
+  } @else {
+    @switch (demande.canal) {
+      @case ('CODE') {
+        <h1>Scannez ce code avec votre téléphone</h1>
+        <p class="sira-chapeau">Puis recopiez sur votre téléphone le code à 6 chiffres.</p>
+        <div class="sira-grille sira-grille--2">
+          <sira-carte titre="Code à scanner">
+            @if (demande.url_accord; as adresse) {
+              <ps-qr-code [contenu]="adresse" libelle="QR code de la demande à ouvrir dans Sira" />
+            }
+            @if (demande.code_court; as court) {
+              <p>
+                Ou saisissez le code court :
+                <strong class="sira-chiffres">{{ court }}</strong>
+              </p>
+            }
+          </sira-carte>
+          <sira-carte titre="Code à recopier sur votre téléphone" teintee>
+            @if (demande.code_verification; as code) {
+              <sira-code [code]="code" />
+            }
+            <p class="sira-petit"><strong>Ne le donnez à personne, même à un agent.</strong></p>
+          </sira-carte>
+        </div>
+      }
+      @case ('NOTIFICATION') {
+        <h1>Ouvrez votre espace Sira sur votre téléphone</h1>
+        <p class="sira-chapeau">Recopiez-y le code à 6 chiffres ci-dessous.</p>
+        <sira-carte titre="Code à recopier sur votre téléphone" teintee>
+          @if (demande.code_verification; as code) {
+            <sira-code [code]="code" />
+          }
+          <p class="sira-petit"><strong>Ne le donnez à personne, même à un agent.</strong></p>
+        </sira-carte>
+      }
+      @default {
+        <h1>Donnez votre accord dans Sira</h1>
+        @if (demande.url_accord; as adresse) {
+          <p>
+            <a siraBouton [href]="adresse">
+              <sira-icone nom="shield-check" />
+              Continuer avec Sira
+            </a>
+          </p>
+        }
+      }
+    }
+
+    <p class="sira-marge-haut">
+      <sira-minuteur [echeance]="demande.expire_le" (expire)="actualiser()" />
+    </p>
+    <div aria-live="polite">
+      @if (coupure()) {
+        <sira-alerte type="attention" titre="Connexion interrompue">
+          <p>Nous réessayons. Vous n’avez rien à refaire.</p>
+        </sira-alerte>
+      } @else {
+        <p class="sira-secondaire">
+          <sira-icone nom="refresh-cw" />
+          En attente de votre accord…
+        </p>
+      }
+    </div>
+    <div class="sira-groupe-boutons">
+      <button
+        siraBouton
+        variante="discret"
+        type="button"
+        [enCours]="annulation()"
+        (click)="annuler()"
+      >
+        Annuler
+      </button>
+    </div>
+  }
+} @else if (coupure()) {
+  <h1>Le service ne répond pas</h1>
+  <p class="sira-chapeau">Votre demande est conservée. Nous réessayons.</p>
+} @else {
+  <sira-squelette [lignes]="4" libelle="Chargement de votre demande" />
+}
