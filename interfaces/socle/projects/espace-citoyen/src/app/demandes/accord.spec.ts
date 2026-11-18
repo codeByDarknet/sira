@@ -236,6 +236,45 @@ describe('Accord', () => {
     expect(page.textContent).toContain('Votre réponse n’a pas été enregistrée');
     expect(page.querySelector('button')).toBeNull();
   });
+
+  it('confirme l’accord quand la réponse se perd mais que la décision est enregistrée', async () => {
+    const { vue, page } = await ouvrir();
+    saisirCode(page, '492113');
+
+    bouton(page, 'Autoriser').click();
+    serveur
+      .expectOne(`${CHEMIN}/decision`)
+      .flush(
+        { status: 503, title: 'Indisponible', detail: 'Service momentanément indisponible' },
+        { status: 503, statusText: 'Service Unavailable' },
+      );
+    serveur.expectOne(CHEMIN).flush({ ...DEMANDE, etat: 'EN_COURS' });
+    await vue.whenStable();
+
+    expect(page.querySelector('h1')?.textContent).toContain('Vous avez autorisé l’accès');
+    expect(page.textContent).toContain('votre accord est bien enregistré');
+    expect(page.textContent).not.toContain('Votre réponse n’a pas été enregistrée');
+  });
+
+  it('dit l’échec quand la réponse se perd et que rien n’est enregistré', async () => {
+    const { vue, page } = await ouvrir();
+    saisirCode(page, '492113');
+
+    bouton(page, 'Autoriser').click();
+    serveur
+      .expectOne(`${CHEMIN}/decision`)
+      .flush(
+        { status: 503, title: 'Indisponible', detail: 'Service momentanément indisponible' },
+        { status: 503, statusText: 'Service Unavailable' },
+      );
+    serveur.expectOne(CHEMIN).flush(DEMANDE);
+    TestBed.tick();
+    serveur.expectOne(CHEMIN).flush(DEMANDE);
+    await vue.whenStable();
+
+    expect(page.textContent).toContain('Votre réponse n’a pas été enregistrée');
+    expect(page.querySelector('h1')?.textContent).toContain('Un service demande vos informations');
+  });
 });
 
 describe('adresseDeRetour', () => {

@@ -16,6 +16,10 @@ const DEMANDES_CLOSES: Partial<Record<EtatDemande, string>> = {
 };
 const DEMANDE_ACCEPTEE = 'Vous avez déjà autorisé cette demande.';
 const CODE_SERVICE = /^[0-9]{6}$/;
+/** Réponse perdue en route (passerelle lente, réseau) : la décision a pu être enregistrée. */
+const REPONSE_PERDUE = new Set([0, 502, 503, 504]);
+const ACCEPTEES = new Set<EtatDemande>(['EN_COURS', 'PARTIELLE', 'COMPLETE']);
+const REFUSEES = new Set<EtatDemande>(['REFUSEE']);
 
 /**
  * Écran d'accord : le citoyen lit qui demande quoi, pourquoi et pour combien de temps,
@@ -77,6 +81,8 @@ export class Accord {
   /** Décision enregistrée, quand le citoyen reste dans son espace. */
   protected readonly decision = signal<Decision | null>(null);
   protected readonly retourEnCours = signal(false);
+  /** La décision est enregistrée, mais sa réponse s'est perdue : pas de retour automatique. */
+  protected readonly reponseTardive = signal(false);
 
   protected decider(decision: Decision): void {
     const code = this.code.value.replace(/\s/g, '');
@@ -106,11 +112,45 @@ export class Accord {
         this.focus('main h1');
       },
       error: (erreur: unknown) => {
+        const probleme = lireProbleme(erreur);
+        if (REPONSE_PERDUE.has(probleme.statut)) {
+          this.verifierApresCoupure(decision, probleme.message);
+          return;
+        }
         this.envoi.set(false);
-        this.echec.set(lireProbleme(erreur).message);
+        this.echec.set(probleme.message);
         this.code.reset();
         // La demande a pu expirer ou être déjà traitée : l'écran se remet à jour.
         this.demande.reload();
+        this.focus('main sira-alerte');
+      },
+    });
+  }
+
+  /**
+   * La réponse ne nous est pas parvenue : relit la demande avant de parler d'échec. Si elle porte
+   * déjà la décision du citoyen, c'est un succès ; sinon l'erreur s'affiche et il peut réessayer.
+   */
+  private verifierApresCoupure(decision: Decision, message: string): void {
+    const attendu = decision === 'ACCEPTER' ? ACCEPTEES : REFUSEES;
+    this.demandes.ouvrir(this.id()).subscribe({
+      next: (demande) => {
+        this.envoi.set(false);
+        if (attendu.has(demande.etat)) {
+          this.reponseTardive.set(true);
+          this.decision.set(decision);
+          this.focus('main h1');
+          return;
+        }
+        this.echec.set(message);
+        this.code.reset();
+        this.demande.reload();
+        this.focus('main sira-alerte');
+      },
+      error: () => {
+        this.envoi.set(false);
+        this.echec.set(message);
+        this.code.reset();
         this.focus('main sira-alerte');
       },
     });
