@@ -1,0 +1,182 @@
+{
+  "realm": "sira-socle",
+  "displayName": "Sira",
+  "displayNameHtml": "Sira - administration",
+  "enabled": true,
+  "sslRequired": "external",
+  "registrationAllowed": false,
+  "resetPasswordAllowed": true,
+  "rememberMe": false,
+  "editUsernameAllowed": false,
+  "loginWithEmailAllowed": true,
+  "verifyEmail": false,
+  "bruteForceProtected": true,
+  "eventsEnabled": true,
+  "eventsListeners": [
+    "jboss-logging"
+  ],
+  "eventsExpiration": 2592000,
+  "adminEventsEnabled": true,
+  "adminEventsDetailsEnabled": false,
+  "failureFactor": 10,
+  "internationalizationEnabled": true,
+  "supportedLocales": [
+    "fr"
+  ],
+  "defaultLocale": "fr",
+  "loginTheme": "sira",
+  "accessTokenLifespan": 300,
+  "accessCodeLifespan": 60,
+  "ssoSessionIdleTimeout": 900,
+  "ssoSessionMaxLifespan": 28800,
+  "passwordPolicy": "length(12) and maxLength(128) and upperCase(1) and lowerCase(1) and digits(1) and specialChars(1) and notUsername and notEmail and passwordHistory(3)",
+  "smtpServer": {
+    "host": "${SIRA_COURRIEL_HOTE}",
+    "port": "${SIRA_COURRIEL_PORT}",
+    "starttls": "true",
+    "ssl": "false",
+    "auth": "true",
+    "user": "${SIRA_COURRIEL_UTILISATEUR}",
+    "password": "${SIRA_COURRIEL_MOT_DE_PASSE}",
+    "from": "${SIRA_COURRIEL_ADRESSE}",
+    "fromDisplayName": "Sira"
+  },
+  "browserFlow": "sira-administration",
+  "authenticationFlows": [
+    {
+      "alias": "sira-administration",
+      "description": "Mot de passe et code TOTP, tous deux obligatoires",
+      "providerId": "basic-flow",
+      "topLevel": true,
+      "builtIn": false,
+      "authenticationExecutions": [
+        {
+          "requirement": "ALTERNATIVE",
+          "priority": 10,
+          "userSetupAllowed": false,
+          "authenticatorFlow": false,
+          "authenticator": "auth-cookie"
+        },
+        {
+          "requirement": "ALTERNATIVE",
+          "priority": 20,
+          "userSetupAllowed": false,
+          "authenticatorFlow": true,
+          "flowAlias": "sira-administration-formulaire"
+        }
+      ]
+    },
+    {
+      "alias": "sira-administration-formulaire",
+      "description": "Mot de passe puis code TOTP",
+      "providerId": "basic-flow",
+      "topLevel": false,
+      "builtIn": false,
+      "authenticationExecutions": [
+        {
+          "requirement": "REQUIRED",
+          "priority": 10,
+          "userSetupAllowed": false,
+          "authenticatorFlow": false,
+          "authenticator": "auth-username-password-form"
+        },
+        {
+          "requirement": "REQUIRED",
+          "priority": 20,
+          "userSetupAllowed": false,
+          "authenticatorFlow": false,
+          "authenticator": "sira-code-totp"
+        }
+      ]
+    }
+  ],
+  "roles": {
+    "realm": [
+      {
+        "name": "instructeur",
+        "description": "Prépare les habilitations"
+      },
+      {
+        "name": "autorite",
+        "description": "Approuve les habilitations"
+      },
+      {
+        "name": "auditeur",
+        "description": "Consulte le journal"
+      }
+    ]
+  },
+  "scopeMappings": [
+    {
+      "client": "console",
+      "roles": [
+        "instructeur",
+        "autorite",
+        "auditeur"
+      ]
+    }
+  ],
+  "clients": [
+    {
+      "clientId": "console",
+      "name": "Console du socle",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "clientAuthenticatorType": "client-x509",
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "fullScopeAllowed": false,
+      "rootUrl": "http://console.sira.localhost:${SIRA_PORT}",
+      "baseUrl": "/",
+      "redirectUris": [
+        "http://console.sira.localhost:${SIRA_PORT}/api/auth/retour"
+      ],
+      "webOrigins": [],
+      "attributes": {
+        "x509.subjectdn": "CN=urn:sira:socle:console,OU=tls,O=Sira",
+        "x509.allow.regex.pattern.comparison": "false",
+        "x509.casubjectdn": "CN=AC Sira,O=Sira",
+        "tls.client.certificate.bound.access.tokens": "true",
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "http://console.sira.localhost:${SIRA_PORT}/"
+      },
+      "defaultClientScopes": [
+        "basic",
+        "acr",
+        "roles",
+        "profile"
+      ],
+      "optionalClientScopes": [],
+      "protocolMappers": [
+        {
+          "name": "audience-passerelle",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": {
+            "included.custom.audience": "sira-passerelle",
+            "access.token.claim": "true",
+            "id.token.claim": "false",
+            "introspection.token.claim": "true"
+          }
+        }
+      ]
+    }
+  ],
+  "components": {
+    "org.keycloak.userprofile.UserProfileProvider": [
+      {
+        "providerId": "declarative-user-profile",
+        "config": {
+          "kc.user.profile.config": [
+            "{\"attributes\": [{\"name\": \"username\", \"displayName\": \"${username}\", \"permissions\": {\"view\": [\"admin\", \"user\"], \"edit\": [\"admin\"]}, \"validations\": {\"length\": {\"min\": 3, \"max\": 64}}}, {\"name\": \"email\", \"displayName\": \"${email}\", \"permissions\": {\"view\": [\"admin\", \"user\"], \"edit\": [\"admin\"]}, \"validations\": {\"email\": {}, \"length\": {\"max\": 255}}}, {\"name\": \"firstName\", \"displayName\": \"${firstName}\", \"permissions\": {\"view\": [\"admin\", \"user\"], \"edit\": [\"admin\"]}, \"validations\": {\"length\": {\"max\": 255}}}, {\"name\": \"lastName\", \"displayName\": \"${lastName}\", \"permissions\": {\"view\": [\"admin\", \"user\"], \"edit\": [\"admin\"]}, \"validations\": {\"length\": {\"max\": 255}}}]}"
+          ]
+        }
+      }
+    ]
+  },
+  "registrationEmailAsUsername": true,
+  "duplicateEmailsAllowed": false
+}
