@@ -1,0 +1,164 @@
+{
+  "realm": "sira-citoyens",
+  "displayName": "Sira",
+  "displayNameHtml": "Sira",
+  "enabled": true,
+  "sslRequired": "external",
+  "registrationAllowed": false,
+  "resetPasswordAllowed": false,
+  "rememberMe": false,
+  "editUsernameAllowed": false,
+  "loginWithEmailAllowed": false,
+  "verifyEmail": false,
+  "bruteForceProtected": true,
+  "eventsEnabled": true,
+  "eventsListeners": ["jboss-logging"],
+  "eventsExpiration": 2592000,
+  "adminEventsEnabled": true,
+  "adminEventsDetailsEnabled": false,
+  "failureFactor": 10,
+  "internationalizationEnabled": true,
+  "supportedLocales": [
+    "fr"
+  ],
+  "defaultLocale": "fr",
+  "loginTheme": "sira",
+  "accessTokenLifespan": 120,
+  "accessCodeLifespan": 60,
+  "ssoSessionIdleTimeout": 900,
+  "ssoSessionMaxLifespan": 28800,
+  "smtpServer": {
+    "host": "${SIRA_MESSAGERIE_HOTE}",
+    "port": "${SIRA_MESSAGERIE_PORT}",
+    "starttls": "${SIRA_MESSAGERIE_STARTTLS}",
+    "ssl": "${SIRA_MESSAGERIE_SSL}",
+    "auth": "${SIRA_MESSAGERIE_AUTH}",
+    "user": "${SIRA_MESSAGERIE_UTILISATEUR}",
+    "password": "${SIRA_MESSAGERIE_MOT_DE_PASSE}",
+    "from": "${SIRA_MESSAGERIE_EXPEDITEUR}",
+    "fromDisplayName": "Sira"
+  },
+  "localizationTexts": {
+    "fr": {
+      "username": "Identifiant unique"
+    }
+  },
+  "browserFlow": "sira-connexion",
+  "authenticationFlows": [
+    {
+      "alias": "sira-connexion",
+      "description": "Identifiant unique, puis clé d'accès ou code à usage unique",
+      "providerId": "basic-flow",
+      "topLevel": true,
+      "builtIn": false,
+      "authenticationExecutions": [
+        {
+          "requirement": "ALTERNATIVE",
+          "priority": 10,
+          "userSetupAllowed": false,
+          "authenticatorFlow": false,
+          "authenticator": "auth-cookie"
+        },
+        {
+          "requirement": "ALTERNATIVE",
+          "priority": 20,
+          "userSetupAllowed": false,
+          "authenticatorFlow": true,
+          "flowAlias": "sira-connexion-formulaire"
+        }
+      ]
+    },
+    {
+      "alias": "sira-connexion-formulaire",
+      "description": "Identifiant unique puis code à usage unique (ou clé d'accès)",
+      "providerId": "basic-flow",
+      "topLevel": false,
+      "builtIn": false,
+      "authenticationExecutions": [
+        {
+          "requirement": "REQUIRED",
+          "priority": 10,
+          "userSetupAllowed": false,
+          "authenticatorFlow": false,
+          "authenticator": "sira-identifiant"
+        }
+      ]
+    }
+  ],
+  "webAuthnPolicyPasswordlessRpEntityName": "Sira",
+  "webAuthnPolicyPasswordlessUserVerificationRequirement": "required",
+  "webAuthnPolicyPasswordlessPasskeysEnabled": true,
+  "clients": [
+    {
+      "clientId": "espace-citoyen",
+      "name": "Espace citoyen",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "clientAuthenticatorType": "client-x509",
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "fullScopeAllowed": false,
+      "rootUrl": "http://citoyen.sira.localhost:${SIRA_PORT}",
+      "baseUrl": "/",
+      "redirectUris": [
+        "http://citoyen.sira.localhost:${SIRA_PORT}/api/auth/retour"
+      ],
+      "webOrigins": [],
+      "attributes": {
+        "x509.subjectdn": "CN=urn:sira:socle:espace-citoyen,OU=tls,O=Sira",
+        "x509.allow.regex.pattern.comparison": "false",
+        "x509.casubjectdn": "CN=AC Sira,O=Sira",
+        "tls.client.certificate.bound.access.tokens": "true",
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "http://citoyen.sira.localhost:${SIRA_PORT}/"
+      },
+      "defaultClientScopes": [
+        "basic",
+        "acr"
+      ],
+      "optionalClientScopes": [],
+      "protocolMappers": [
+        {
+          "name": "audience-passerelle",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": {
+            "included.custom.audience": "sira-passerelle",
+            "access.token.claim": "true",
+            "id.token.claim": "false",
+            "introspection.token.claim": "true"
+          }
+        },
+        {
+          "name": "iue",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "config": {
+            "user.attribute": "iue",
+            "claim.name": "iue",
+            "jsonType.label": "String",
+            "access.token.claim": "true",
+            "id.token.claim": "true",
+            "userinfo.token.claim": "false",
+            "introspection.token.claim": "true"
+          }
+        }
+      ]
+    }
+  ],
+  "components": {
+    "org.keycloak.userprofile.UserProfileProvider": [
+      {
+        "providerId": "declarative-user-profile",
+        "config": {
+          "kc.user.profile.config": [
+            "{\"attributes\": [{\"name\": \"username\", \"displayName\": \"${username}\", \"permissions\": {\"view\": [\"admin\", \"user\"], \"edit\": [\"admin\"]}, \"validations\": {\"length\": {\"min\": 3, \"max\": 64}}}, {\"name\": \"email\", \"displayName\": \"${email}\", \"permissions\": {\"view\": [\"admin\", \"user\"], \"edit\": [\"admin\"]}, \"validations\": {\"email\": {}, \"length\": {\"max\": 255}}}, {\"name\": \"firstName\", \"displayName\": \"${firstName}\", \"permissions\": {\"view\": [\"admin\", \"user\"], \"edit\": [\"admin\"]}, \"validations\": {\"length\": {\"max\": 255}}}, {\"name\": \"lastName\", \"displayName\": \"${lastName}\", \"permissions\": {\"view\": [\"admin\", \"user\"], \"edit\": [\"admin\"]}, \"validations\": {\"length\": {\"max\": 255}}}, {\"name\": \"iue\", \"displayName\": \"Identifiant unique\", \"validations\": {\"pattern\": {\"pattern\": \"^[0-9]{12}$\", \"error-message\": \"Douze chiffres attendus.\"}}, \"permissions\": {\"view\": [\"admin\", \"user\"], \"edit\": [\"admin\"]}}]}"
+          ]
+        }
+      }
+    ]
+  }
+}

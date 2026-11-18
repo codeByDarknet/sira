@@ -1,0 +1,710 @@
+/*
+ * Pages de connexion de Sira : surcharge du thème keycloak.v2, avec la mise en page de
+ * template.ftl (photo à gauche, formulaire à droite), sur le modèle de globalstage.bf/login.
+ * Mêmes couleurs que @sira/ui (projects/ui/styles/jetons.css) : bleu #25aae2 pour agir et pour
+ * le titre, jaune moutarde du logo #f5aa05 en accent. Police Nunito.
+ * Champs gris très clair sans trait visible, icône grise puis trait vertical, libellé dans le
+ * champ qui remonte en petit et en bleu. Ni ombre ni dégradé.
+ * Libellés flottants en CSS seul : les saisies portent placeholder=" " (field.ftl).
+ * Aucune ressource externe : police, photo et icônes sont servies par le thème ou en ligne.
+ * Photo : Pexels 1181406 (licence Pexels, usage libre).
+ */
+@font-face {
+  font-family: 'Nunito';
+  font-style: normal;
+  font-weight: 200 1000;
+  font-display: swap;
+  src: url('../fonts/nunito-latin-wght-normal.woff2') format('woff2');
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+20AC,
+    U+2122, U+2191, U+2193, U+2212, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Nunito';
+  font-style: normal;
+  font-weight: 200 1000;
+  font-display: swap;
+  src: url('../fonts/nunito-latin-ext-wght-normal.woff2') format('woff2');
+  unicode-range:
+    U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+1E00-1E9F, U+1EF2-1EFF,
+    U+2020, U+20A0-20AB, U+20AD-20C0, U+2113;
+}
+
+:root {
+  --sira-primaire: #25aae2;
+  --sira-primaire-survol: #1a96cc;
+  --sira-accent: #f5aa05;
+  --sira-teinte: #cbeaf8;
+  --sira-encre: #333333;
+  --sira-secondaire: #666666;
+  --sira-indice: #999999;
+  --sira-champ: #f7f7f7;
+  --sira-champ-survol: #f0f1f3;
+  --sira-separateur: #dddddd;
+  --sira-fond: #ffffff;
+  --sira-erreur: #c4302b;
+  --sira-rayon: 12px;
+  --sira-police: 'Nunito', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+
+  --keycloak-card-top-color: transparent;
+  --pf-v5-global--primary-color--100: var(--sira-primaire);
+  --pf-v5-global--primary-color--200: var(--sira-primaire-survol);
+  --pf-v5-global--link--Color: var(--sira-primaire-survol);
+  --pf-v5-global--link--Color--hover: #147aa7;
+  --pf-v5-global--Color--100: var(--sira-encre);
+  --pf-v5-global--danger-color--100: var(--sira-erreur);
+  --pf-v5-global--FontFamily--text: var(--sira-police);
+  --pf-v5-global--FontFamily--heading: var(--sira-police);
+  --pf-v5-global--BorderRadius--sm: var(--sira-rayon);
+}
+
+.login-pf body {
+  margin: 0;
+  color: var(--sira-encre);
+  font-family: var(--sira-police);
+  font-size: 1rem;
+  background: var(--sira-fond);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---------- Deux panneaux ---------- */
+
+.pf-v5-c-login.sira-connexion {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: stretch;
+  align-content: stretch;
+  justify-content: stretch;
+  min-height: 100vh;
+  padding: 0;
+  background: var(--sira-fond);
+}
+.sira-connexion__visuel,
+.sira-connexion__colonne {
+  min-height: 100vh;
+}
+@media (min-width: 60rem) {
+  .pf-v5-c-login.sira-connexion {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+}
+
+/*
+ * Panneau d'accueil : photo d'équipe teintée du bleu de Sira (fusion « multiply », puis un voile
+ * uni plus sombre pour que le texte blanc reste lisible), logo posé tel quel, sans cercle.
+ */
+.sira-connexion__visuel {
+  position: relative;
+  isolation: isolate;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 3rem;
+  overflow: hidden;
+  color: #ffffff;
+  text-align: center;
+  background-color: var(--sira-primaire);
+  background-image: url('../img/connexion-equipe.jpg');
+  background-position: center;
+  background-size: cover;
+  background-blend-mode: multiply;
+}
+.sira-connexion__visuel::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: rgb(4 52 78 / 38%);
+}
+@media (min-width: 60rem) {
+  .sira-connexion__visuel {
+    display: flex;
+  }
+}
+.sira-connexion__logo {
+  display: block;
+  width: 13rem;
+  height: auto;
+  margin-bottom: 0.5rem;
+}
+.sira-connexion__bienvenue {
+  margin: 0;
+  font-size: clamp(2.5rem, 4vw, 3.5rem);
+  font-weight: 800;
+  line-height: 1.1;
+}
+.sira-connexion__accroche {
+  max-width: 30rem;
+  margin: 0;
+  font-size: 1.1rem;
+  color: rgb(255 255 255 / 92%);
+}
+.sira-connexion__points {
+  display: grid;
+  gap: 1.1rem;
+  margin: 2rem 0 0;
+  padding: 0;
+  text-align: left;
+  list-style: none;
+}
+.sira-connexion__points li {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+.sira-connexion__points li::before {
+  content: '';
+  flex: none;
+  width: 1.5rem;
+  height: 1.5rem;
+  background: var(--sira-accent)
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E")
+    center / 0.9rem no-repeat;
+  border-radius: 50%;
+}
+
+/* Colonne du formulaire */
+.pf-v5-c-login__container.sira-connexion__colonne {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 2.5rem clamp(1.25rem, 6vw, 6rem);
+  grid-template-columns: none;
+  grid-template-areas: none;
+}
+.sira-connexion__colonne > * {
+  width: 100%;
+  max-width: 30rem;
+  margin-inline: auto;
+}
+
+/* Le nom du royaume : visible seulement sur petit écran, où le panneau d'accueil est masqué. */
+#kc-header {
+  padding: 0;
+}
+#kc-header #kc-header-wrapper {
+  color: var(--sira-primaire) !important;
+  font-family: var(--sira-police);
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: normal;
+  text-transform: none;
+}
+@media (min-width: 60rem) {
+  #kc-header {
+    display: none;
+  }
+}
+
+.pf-v5-c-login__main {
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+.pf-v5-c-login__main-header {
+  display: block;
+  padding: 0 0 2rem;
+}
+/* Titre et sous-titre : mêmes tailles que globalstage (2,2 rem très gras, 1,1 rem gris). */
+#kc-page-title {
+  margin: 0 0 0.5rem;
+  font-size: 2.2rem;
+  font-weight: 800;
+  line-height: 1.2;
+  color: var(--sira-primaire);
+}
+.sira-connexion__sous-titre {
+  margin: 0;
+  font-size: 1.1rem;
+  color: var(--sira-secondaire);
+}
+.pf-v5-c-login__main-body,
+.pf-v5-c-login__main-footer {
+  padding: 0;
+}
+
+/* ---------- Champs : fond gris, icône, trait vertical, libellé flottant ---------- */
+
+.sira-connexion .pf-v5-c-form__group {
+  position: relative;
+  margin-bottom: 0.4rem;
+}
+.sira-connexion .pf-v5-c-form-control {
+  --pf-v5-c-form-control--before--BorderStyle: none;
+  --pf-v5-c-form-control--after--BorderBottomWidth: 0;
+  width: 100%;
+  background: transparent;
+}
+.sira-connexion .pf-v5-c-form-control::before,
+.sira-connexion .pf-v5-c-form-control::after {
+  display: none;
+}
+.sira-connexion .pf-v5-c-form-control > input {
+  box-sizing: border-box;
+  width: 100%;
+  height: 3.75rem;
+  padding: 1.3rem 1rem 0.45rem 4.3rem;
+  font-family: var(--sira-police);
+  font-size: 1rem;
+  color: var(--sira-encre);
+  background-color: var(--sira-champ);
+  background-repeat: no-repeat, no-repeat;
+  background-position:
+    1.35rem center,
+    3.6rem center;
+  background-size:
+    1.15rem,
+    1px 55%;
+  border: 2px solid transparent;
+  border-radius: var(--sira-rayon);
+  outline: none;
+  transition:
+    background-color 0.3s ease,
+    border-color 0.3s ease;
+}
+.sira-connexion .pf-v5-c-form-control > input:hover {
+  background-color: var(--sira-champ-survol);
+}
+.sira-connexion .pf-v5-c-form-control > input:focus {
+  background-color: var(--sira-fond);
+  border-color: var(--sira-primaire);
+}
+.sira-connexion .pf-v5-c-form-control.pf-m-error > input,
+.sira-connexion input[aria-invalid='true'] {
+  border-color: var(--sira-erreur);
+}
+.sira-connexion .pf-v5-c-form-control.pf-m-readonly > input {
+  background-color: #eef0f3;
+}
+
+/* Icônes (Lucide, ISC), grises au repos, bleues au focus, suivies du trait vertical. */
+#username,
+#kc-attempted-username {
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23999999' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2'/%3E%3Ccircle cx='12' cy='7' r='4'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1' height='10'%3E%3Crect width='1' height='10' fill='%23dddddd'/%3E%3C/svg%3E");
+}
+#username:focus {
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2325aae2' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2'/%3E%3Ccircle cx='12' cy='7' r='4'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1' height='10'%3E%3Crect width='1' height='10' fill='%23dddddd'/%3E%3C/svg%3E");
+}
+#password,
+#password-new,
+#password-confirm {
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23999999' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect width='18' height='11' x='3' y='11' rx='2' ry='2'/%3E%3Cpath d='M7 11V7a5 5 0 0 1 10 0v4'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1' height='10'%3E%3Crect width='1' height='10' fill='%23dddddd'/%3E%3C/svg%3E");
+}
+#password:focus,
+#password-new:focus,
+#password-confirm:focus {
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2325aae2' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect width='18' height='11' x='3' y='11' rx='2' ry='2'/%3E%3Cpath d='M7 11V7a5 5 0 0 1 10 0v4'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1' height='10'%3E%3Crect width='1' height='10' fill='%23dddddd'/%3E%3C/svg%3E");
+}
+#code,
+#otp,
+#totp {
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23999999' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1' height='10'%3E%3Crect width='1' height='10' fill='%23dddddd'/%3E%3C/svg%3E");
+  letter-spacing: 0.3em;
+}
+#code:focus,
+#otp:focus,
+#totp:focus {
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2325aae2' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1' height='10'%3E%3Crect width='1' height='10' fill='%23dddddd'/%3E%3C/svg%3E");
+}
+
+/* Libellé posé dans le champ (gris, 1 rem), puis remonté en 0,75 rem bleu et gras. */
+.sira-connexion .pf-v5-c-form__group:has(input[placeholder]) > .pf-v5-c-form__group-label {
+  position: absolute;
+  top: 0;
+  left: 4.3rem;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  height: 3.75rem;
+  padding: 0;
+  pointer-events: none;
+}
+.sira-connexion .pf-v5-c-form__group:has(input[placeholder]) .pf-v5-c-form__label {
+  font-size: 1rem;
+  font-weight: 400;
+  color: var(--sira-indice);
+  transform-origin: left center;
+  transition:
+    transform 0.3s ease,
+    color 0.3s ease;
+}
+.sira-connexion
+  .pf-v5-c-form__group:has(input[placeholder]:focus, input[placeholder]:not(:placeholder-shown))
+  .pf-v5-c-form__label {
+  font-weight: 700;
+  color: var(--sira-primaire);
+  transform: translateY(-0.9rem) scale(0.75);
+}
+@media (prefers-reduced-motion: reduce) {
+  .sira-connexion .pf-v5-c-form__group:has(input[placeholder]) .pf-v5-c-form__label {
+    transition: none;
+  }
+}
+.sira-connexion .pf-v5-c-form__group-label .pf-v5-c-form__label-text {
+  font-weight: inherit;
+}
+
+/* Champ « identifiant tenté » (page du code) : libellé au-dessus, lecture seule */
+.sira-connexion .pf-v5-c-form__group:has(#kc-attempted-username) .pf-v5-c-form__group-label {
+  position: static;
+  height: auto;
+}
+#kc-attempted-username {
+  padding-top: 0.45rem !important;
+}
+
+/*
+ * Bouton « voir le mot de passe » et bouton « recommencer » : posés dans le champ, sur le même
+ * fond gris, sans trait entre les deux.
+ */
+.sira-connexion .pf-v5-c-input-group {
+  position: relative;
+  align-items: stretch;
+}
+.sira-connexion .pf-v5-c-input-group .pf-v5-c-button.pf-m-control {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  bottom: 2px;
+  z-index: 3;
+  min-width: 3.25rem;
+  color: var(--sira-indice);
+  background: transparent;
+  border: 0;
+  border-radius: 0 var(--sira-rayon) var(--sira-rayon) 0;
+}
+.sira-connexion .pf-v5-c-input-group .pf-v5-c-button.pf-m-control:hover,
+.sira-connexion .pf-v5-c-input-group:focus-within .pf-v5-c-button.pf-m-control {
+  color: var(--sira-primaire);
+}
+.sira-connexion .pf-v5-c-input-group .pf-v5-c-button.pf-m-control::after {
+  display: none;
+}
+.sira-connexion .pf-v5-c-input-group:has(.pf-m-control) input {
+  padding-right: 3.5rem;
+}
+
+/* ---------- Boutons ---------- */
+
+.pf-v5-c-button {
+  --pf-v5-c-button--BorderRadius: var(--sira-rayon);
+}
+.pf-v5-c-button.pf-m-primary {
+  --pf-v5-c-button--m-primary--BackgroundColor: var(--sira-primaire);
+  --pf-v5-c-button--m-primary--hover--BackgroundColor: var(--sira-primaire-survol);
+  --pf-v5-c-button--m-primary--focus--BackgroundColor: var(--sira-primaire-survol);
+  --pf-v5-c-button--m-primary--active--BackgroundColor: var(--sira-primaire-survol);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  min-height: 3.6rem;
+  padding: 1rem 1.5rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+/* Icône « entrer » devant le texte du bouton de connexion, comme sur globalstage. */
+#kc-login::before {
+  content: '';
+  width: 1.25rem;
+  height: 1.25rem;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4'/%3E%3Cpath d='m10 17 5-5-5-5'/%3E%3Cpath d='M15 12H3'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+}
+.pf-v5-c-button.pf-m-secondary {
+  --pf-v5-c-button--m-secondary--Color: var(--sira-primaire-survol);
+  --pf-v5-c-button--m-secondary--BorderColor: var(--sira-primaire);
+  --pf-v5-c-button--m-secondary--hover--Color: #147aa7;
+  --pf-v5-c-button--m-secondary--hover--BorderColor: var(--sira-primaire-survol);
+  min-height: 3rem;
+  font-weight: 700;
+}
+.sira-connexion .pf-v5-c-form__actions,
+.sira-connexion #kc-form-buttons {
+  margin-top: 0.25rem;
+}
+/* Zones d'aide vides sous les champs : elles creusaient un grand vide avant le bouton. */
+.sira-connexion .pf-v5-c-form__helper-text:not(:has(.pf-v5-c-helper-text__item, a, input)) {
+  display: none;
+}
+
+/* Messages d'erreur ou d'information */
+.sira-connexion .pf-v5-c-alert {
+  --pf-v5-c-alert--BorderTopWidth: 0;
+  --pf-v5-c-alert--BoxShadow: none;
+  margin-bottom: 1.25rem;
+  border: 0;
+  border-radius: 10px;
+  box-shadow: none;
+}
+/* PatternFly trace le filet de gauche des alertes « inline » par un pseudo-élément. */
+.sira-connexion .pf-v5-c-alert::before,
+.sira-connexion .pf-v5-c-alert::after {
+  display: none;
+  border: 0;
+}
+.sira-connexion .pf-v5-c-alert.pf-m-inline {
+  --pf-v5-c-alert--m-inline--BorderLeftWidth: 0;
+  border-inline-start: 0;
+}
+
+:focus-visible {
+  outline: 3px solid var(--sira-teinte);
+  outline-offset: 1px;
+}
+
+/*
+ * L'infobulle « Recommencer » du thème parent s'ouvre à droite du bouton, qui est déjà au
+ * bord du formulaire : sur téléphone, elle sortait de l'écran et élargissait la page.
+ * Elle s'ouvre donc à gauche.
+ */
+.kc-login-tooltip .kc-tooltip-text {
+  left: auto;
+  right: calc(100% + 8px);
+}
+.kc-login-tooltip .kc-tooltip-text::after {
+  right: auto;
+  left: 100%;
+  border-color: transparent transparent transparent black;
+}
+
+/* ---------- « Changer de compte », écrit en clair dans le champ de l'identifiant ---------- */
+
+.sira-connexion .pf-v5-c-input-group .sira-changer-compte.pf-m-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0 1rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--sira-primaire-survol);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.sira-connexion .pf-v5-c-input-group .sira-changer-compte.pf-m-control:hover {
+  color: #147aa7;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+.sira-connexion .pf-v5-c-input-group:has(.sira-changer-compte) input {
+  padding-right: 11rem;
+}
+
+/* ---------- Page du code : aide ---------- */
+
+.sira-otp-aide {
+  margin: 0 0 0.75rem;
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: var(--sira-secondaire);
+}
+.sira-otp-perdu {
+  margin: 1.5rem 0 0;
+  padding: 0.9rem 1.1rem;
+  font-size: 0.9rem;
+  line-height: 1.55;
+  color: var(--sira-secondaire);
+  background: var(--sira-champ);
+  border-radius: var(--sira-rayon);
+}
+
+/* ---------- Première connexion : ajout de l'application (QR code montré une fois) ---------- */
+
+#userLabel {
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23999999' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect width='14' height='20' x='5' y='2' rx='2' ry='2'/%3E%3Cpath d='M12 18h.01'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1' height='10'%3E%3Crect width='1' height='10' fill='%23dddddd'/%3E%3C/svg%3E");
+}
+#userLabel:focus {
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2325aae2' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect width='14' height='20' x='5' y='2' rx='2' ry='2'/%3E%3Cpath d='M12 18h.01'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1' height='10'%3E%3Crect width='1' height='10' fill='%23dddddd'/%3E%3C/svg%3E");
+}
+.sira-totp-intro {
+  margin: 0 0 1.25rem;
+  font-size: 1rem;
+  line-height: 1.55;
+  color: var(--sira-secondaire);
+}
+.sira-totp-etapes {
+  display: grid;
+  gap: 1rem;
+  margin: 0 0 1.5rem;
+  padding: 0;
+  list-style: none;
+  counter-reset: etape;
+}
+.sira-totp-etapes > li {
+  position: relative;
+  padding-left: 2.6rem;
+  counter-increment: etape;
+}
+.sira-totp-etapes > li::before {
+  content: counter(etape);
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: grid;
+  place-items: center;
+  width: 1.8rem;
+  height: 1.8rem;
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: #ffffff;
+  background: var(--sira-primaire);
+  border-radius: 50%;
+}
+.sira-totp-etapes p {
+  margin: 0.2rem 0 0;
+  font-size: 0.98rem;
+  line-height: 1.55;
+  color: var(--sira-encre);
+}
+.sira-totp-qr {
+  width: 12.5rem;
+  margin: 0.9rem 0 0.75rem;
+  padding: 0.6rem;
+  background: #ffffff;
+  border: 2px solid var(--sira-teinte);
+  border-radius: var(--sira-rayon);
+}
+.sira-totp-qr img,
+.sira-totp-qr svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.sira-totp-etapes .sira-totp-texte {
+  font-size: 0.88rem;
+  color: var(--sira-secondaire);
+}
+.sira-totp-cle {
+  display: inline-block;
+  padding: 0.5rem 0.9rem;
+  font-family: ui-monospace, 'Cascadia Mono', monospace;
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  word-break: break-all;
+  background: var(--sira-champ);
+  border-radius: 10px;
+  user-select: all;
+}
+.sira-totp-une-fois {
+  margin: 1.25rem 0 0;
+  font-size: 0.9rem;
+  color: var(--sira-secondaire);
+}
+.sira-connexion #kc-totp-settings-form .pf-v5-c-check__label {
+  font-size: 0.95rem;
+  color: var(--sira-encre);
+}
+
+/* ---------- Envoi en cours : roue de chargement à la place de l'icône (js/sira-envoi.js) ---------- */
+
+.pf-v5-c-button.pf-m-primary.sira-envoi,
+.pf-v5-c-button.pf-m-primary:disabled {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  color: #ffffff;
+  background-color: var(--sira-primaire-survol);
+  opacity: 1;
+  cursor: progress;
+  pointer-events: none;
+}
+.pf-v5-c-button.pf-m-primary.sira-envoi::before,
+.pf-v5-c-button.pf-m-primary:disabled::before,
+#kc-login.sira-envoi::before,
+#kc-login:disabled::before {
+  content: '';
+  flex: none;
+  width: 1.15rem;
+  height: 1.15rem;
+  background: none;
+  border: 2.5px solid rgb(255 255 255 / 35%);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: sira-tourne 0.7s linear infinite;
+}
+@keyframes sira-tourne {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pf-v5-c-button.pf-m-primary.sira-envoi::before,
+  .pf-v5-c-button.pf-m-primary:disabled::before {
+    animation-duration: 2s;
+  }
+}
+
+/* Téléphone perdu : le bouton qui envoie le lien pour afficher un nouveau QR code */
+.sira-otp-perdu p {
+  margin: 0 0 0.75rem;
+}
+.sira-connexion .sira-otp-qr {
+  display: inline-flex;
+  justify-content: center;
+  width: 100%;
+  text-decoration: none;
+}
+
+/* Page du code (citoyen, démonstration) : lien vers le téléphone qui reçoit le code. */
+.sira-code-telephone {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  margin-top: 1.5rem;
+  padding: 1rem 1.1rem;
+  color: #0c2433;
+  text-decoration: none;
+  background: #eaf7fd;
+  border: 1px solid #cbeaf8;
+  border-radius: 12px;
+}
+.sira-code-telephone:hover {
+  background: #d9f0fb;
+}
+.sira-code-telephone__icone {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  color: #fff;
+  background: #25aae2;
+  border-radius: 50%;
+}
+.sira-code-telephone strong {
+  display: block;
+  font-weight: 800;
+}
+.sira-code-telephone__aide {
+  display: block;
+  font-size: 0.88rem;
+  color: #50606c;
+}
