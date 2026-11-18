@@ -1,0 +1,3 @@
+bf.sira.commun.config.SiraAutoConfiguration
+bf.sira.commun.oidc.ConnexionOidcAutoConfiguration
+bf.sira.commun.agents.AgentsAutoConfiguration
